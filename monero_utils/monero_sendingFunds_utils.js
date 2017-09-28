@@ -33,7 +33,7 @@ const async = require('async')
 const monero_config = require('./monero_config')
 const monero_utils = require('./monero_cryptonote_utils_instance')
 const monero_paymentID_utils = require('./monero_paymentID_utils')
-const monero_openalias_utils = require('../OpenAlias/monero_openalias_utils')
+const monero_openalias_utils = require('./monero_openalias_utils')
 //
 const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
 //
