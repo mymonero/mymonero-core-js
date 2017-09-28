@@ -33,7 +33,6 @@ const async = require('async')
 const monero_config = require('./monero_config')
 const monero_utils = require('./monero_cryptonote_utils_instance')
 const monero_paymentID_utils = require('./monero_paymentID_utils')
-const monero_openalias_utils = require('./monero_openalias_utils')
 //
 const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
 //
@@ -146,6 +145,7 @@ function SendFunds(
 	wallet__private_keys,
 	wallet__public_keys,
 	hostedMoneroAPIClient,
+	monero_openalias_utils,
 	mixin, 
 	payment_id,
 	success_fn,
@@ -201,6 +201,7 @@ function SendFunds(
 		amount: amount
 	}
 	new_moneroReadyTargetDescriptions_fromTargetDescriptions(
+		monero_openalias_utils,
 		[ targetDescription ], // requires a list of descriptions - but SendFunds was
 		// not written with multiple target support as MyMonero does not yet support it
 		function(err, moneroReady_targetDescriptions)
@@ -560,6 +561,7 @@ function SendFunds(
 exports.SendFunds = SendFunds
 //
 function new_moneroReadyTargetDescriptions_fromTargetDescriptions( 
+	monero_openalias_utils,
 	targetDescriptions,
 	fn
 ) // fn: (err, moneroReady_targetDescriptions) -> Void
