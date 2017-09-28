@@ -52,4 +52,4 @@ Suggestions and feedback are very welcome!
 
 ## Pull Requests
 
-We'll merge nearly anything constructive. Contributors welcome, and are credited in releases.
+We'll merge nearly anything constructive. Contributors welcome and credited in releases.
