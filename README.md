@@ -24,7 +24,7 @@ All source code copyright © 2014-2017 by MyMonero. All rights reserved.
 
 ## What's in This Repo?
 
-This repository holds the Javascript source code for the cryptography, protocols, and lightwallet functions which power the official [MyMonero](https://www.mymonero.com) apps.
+This repository holds the Javascript source code for the Monero/CryptoNote cryptography and protocols, plus lightwallet functions which power the official [MyMonero](https://www.mymonero.com) apps.
 
 ### Contents 
 
