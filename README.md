@@ -1,8 +1,5 @@
 # MyMonero Core JS
 
-![Logo](https://raw.githubusercontent.com/mymonero/mymonero-app-js/master/docs/assets/icon_100.png "Logo")
-
-
 ### Info
 
 1. Legal
@@ -15,6 +12,8 @@
 1. QA
 2. Pull Requests
 
+
+# Info
 
 ## Legal
 
