@@ -56,6 +56,7 @@ function New_RequestFunds_URI(
 	}
 	{
 		addParam('tx_amount', args.amount)
+		addParam('tx_amount_ccy', args.amountCcySymbol)
 		addParam('tx_description', args.description)
 		addParam('tx_payment_id', args.payment_id)
 		addParam('tx_message', args.message)
