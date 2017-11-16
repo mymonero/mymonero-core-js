@@ -65,6 +65,9 @@ function Parsed_AddressInfo__sync(
 			total_sent = new JSBigInt(total_sent).subtract(spent_output.amount)
 		}
 	}
+	//
+	const ratesBySymbol = data.rates || {} // jic it's not there
+	//
 	const returnValuesByKey = 
 	{
 		total_received_String: total_received ? total_received.toString() : null,
@@ -76,7 +79,9 @@ function Parsed_AddressInfo__sync(
 		account_scanned_block_height: account_scanned_block_height,
 		account_scan_start_height: account_scan_start_height,
 		transaction_height: transaction_height,
-		blockchain_height: blockchain_height
+		blockchain_height: blockchain_height,
+		//
+		ratesBySymbol: ratesBySymbol
 	}
 	return returnValuesByKey
 }
