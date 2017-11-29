@@ -189,13 +189,8 @@ function VerifiedComponentsForLogIn_sync(
 	wasAGeneratedWallet
 )
 {
-	var spend_key
-	if (typeof spend_key_orUndefinedForViewOnly === 'undefined' && (typeof seed_orUndefined === 'undefined' || seed_orUndefined === '') && wasAGeneratedWallet === false) {
-		spend_key = ''
-	} else {
-		spend_key = spend_key_orUndefinedForViewOnly
-	}
-	const isInViewOnlyMode = (spend_key === '')	
+	var spend_key = typeof spend_key_orUndefinedForViewOnly !== 'undefined' && spend_key_orUndefinedForViewOnly != null && spend_key_orUndefinedForViewOnly != "" ? spend_key_orUndefinedForViewOnly : null
+	var isInViewOnlyMode = spend_key == null;
 	if (!view_key || view_key.length !== 64 || (isInViewOnlyMode ? false : spend_key.length !== 64)) {
 		return { err_str: "invalid secret key length" }
 	}
