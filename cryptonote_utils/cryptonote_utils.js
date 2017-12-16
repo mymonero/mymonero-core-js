@@ -398,6 +398,24 @@ var cnUtil = function(currencyConfig)
 		return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
 	};
 
+	this.new__int_addr_from_addr_and_short_pid = function(
+		address,
+		short_pid
+	) { // throws
+		let decoded_address = this.decode_address(
+			address // TODO/FIXME: not super happy about having to decode just to re-encode… this was a quick hack
+		); // throws
+		if (!short_pid || short_pid.length != 16) {
+			throw "expected valid short_pid";
+		}
+		var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX);
+		var data = prefix + decoded_address.spend + decoded_address.view + short_pid;
+		var checksum = this.cn_fast_hash(data);
+		var encodable__data = data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2);
+		//
+		return cnBase58.encode(encodable__data);
+	};
+
 	// Generate keypair from seed
 	this.generate_keys = function(seed) {
 		if (seed.length !== 64) throw "Invalid input length!";
