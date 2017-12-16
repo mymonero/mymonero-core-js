@@ -258,14 +258,19 @@ var cnUtil = function(currencyConfig)
 		return out.join("");
 	}
 
-	// Generate a 256-bit crypto random
+	// Generate a 256-bit / 64-char / 32-byte crypto random
 	this.rand_32 = function() {
 		return mnemonic.mn_random(256);
 	};
 
-	// Generate a 128-bit crypto random
+	// Generate a 128-bit / 32-char / 16-byte crypto random
 	this.rand_16 = function() {
 		return mnemonic.mn_random(128);
+	};
+
+	// Generate a 64-bit / 16-char / 8-byte crypto random
+	this.rand_8 = function() {
+		return mnemonic.mn_random(64);
 	};
 
 	this.encode_varint = function(i) {

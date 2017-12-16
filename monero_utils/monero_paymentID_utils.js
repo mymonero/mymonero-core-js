@@ -30,17 +30,28 @@
 //
 const monero_utils = require('./monero_cryptonote_utils_instance')
 //
-function New_TransactionID()
+// Note: long (64 char, plaintext) payment ids are deprecated.
+//
+function New_Short_TransactionID()
 {
-	return monero_utils.rand_32()
+	return monero_utils.rand_8()
 }
-exports.New_TransactionID = New_TransactionID
+exports.New_Short_TransactionID = New_Short_TransactionID
+exports.New_TransactionID = New_Short_TransactionID
 //
 function IsValidPaymentIDOrNoPaymentID(payment_id)
 {
 	if (payment_id) {
-		if (payment_id.length !== 64 || !(/^[0-9a-fA-F]{64}$/.test(payment_id))) { // not a valid 64 char pid
-			return false // then not valid
+		let payment_id_length = payment_id.length
+		if (payment_id_length !== 64) { // old plaintext long
+			if (payment_id_length !== 16) { // new encrypted short
+				return false; // invalid length
+			}
+		}
+		if (!(/^[0-9a-fA-F]{16}$/.test(payment_id))) { // not a valid 16 char pid
+			if (!(/^[0-9a-fA-F]{64}$/.test(payment_id))) { // not a valid 64 char pid
+				return false // then not valid
+			}
 		} 
 	}
 	return true // then either no pid or is a valid one
