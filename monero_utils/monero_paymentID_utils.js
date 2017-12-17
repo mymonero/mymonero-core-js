@@ -36,24 +36,50 @@ function New_Short_TransactionID()
 {
 	return monero_utils.rand_8()
 }
-exports.New_Short_TransactionID = New_Short_TransactionID
-exports.New_TransactionID = New_Short_TransactionID
+exports.New_Short_TransactionID = New_Short_TransactionID;
+exports.New_TransactionID = New_Short_TransactionID;
 //
-function IsValidPaymentIDOrNoPaymentID(payment_id)
+function IsValidPaymentIDOrNoPaymentID(payment_id__orNil)
 {
-	if (payment_id) {
-		let payment_id_length = payment_id.length
-		if (payment_id_length !== 64) { // old plaintext long
-			if (payment_id_length !== 16) { // new encrypted short
-				return false; // invalid length
-			}
-		}
-		if (!(/^[0-9a-fA-F]{16}$/.test(payment_id))) { // not a valid 16 char pid
-			if (!(/^[0-9a-fA-F]{64}$/.test(payment_id))) { // not a valid 64 char pid
-				return false // then not valid
-			}
-		} 
+	if (!payment_id__orNil) {
+		return false; // no pid
 	}
-	return true // then either no pid or is a valid one
+	let payment_id = payment_id__orNil;
+	if (IsValidShortPaymentID(payment_id)) {
+		return true;
+	}
+	if (IsValidLongPaymentID(payment_id)) {
+		return true;
+	}
+	return false;
 }
-exports.IsValidPaymentIDOrNoPaymentID = IsValidPaymentIDOrNoPaymentID
+exports.IsValidPaymentIDOrNoPaymentID = IsValidPaymentIDOrNoPaymentID;
+//
+function IsValidShortPaymentID(payment_id)
+{
+	return IsValidPaymentIDOfLength(payment_id, 16);
+}
+exports.IsValidShortPaymentID = IsValidShortPaymentID;
+//
+function IsValidLongPaymentID(payment_id)
+{
+	return IsValidPaymentIDOfLength(payment_id, 64);
+}
+exports.IsValidLongPaymentID = IsValidLongPaymentID;
+//
+function IsValidPaymentIDOfLength(payment_id, required_length)
+{
+	if (required_length != 16 && required_length != 64) {
+		throw "unexpected IsValidPaymentIDOfLength required_length";
+	}
+	let payment_id_length = payment_id.length;
+	if (payment_id_length !== required_length) { // new encrypted short
+		return false; // invalid length
+	}
+	let pattern = RegEx("^[0-9a-fA-F]{" + required_length + "}$");
+	if (pattern.test(payment_id) != true) { // not a valid required_length char pid
+		return false; // then not valid
+	} 
+	return true;
+}
+exports.IsValidShortPaymentID = IsValidShortPaymentID;
