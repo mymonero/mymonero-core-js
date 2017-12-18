@@ -76,7 +76,7 @@ function IsValidPaymentIDOfLength(payment_id, required_length)
 	if (payment_id_length !== required_length) { // new encrypted short
 		return false; // invalid length
 	}
-	let pattern = RegEx("^[0-9a-fA-F]{" + required_length + "}$");
+	let pattern = RegExp("^[0-9a-fA-F]{" + required_length + "}$");
 	if (pattern.test(payment_id) != true) { // not a valid required_length char pid
 		return false; // then not valid
 	} 
