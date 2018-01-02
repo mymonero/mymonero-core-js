@@ -141,6 +141,7 @@ function SendFunds(
 	isRingCT,
 	target_address, // currency-ready wallet address, but not an OA address (resolve before calling)
 	amount, // number
+	wallet__keyImage_cache,
 	wallet__public_address,
 	wallet__private_keys,
 	wallet__public_keys,
@@ -255,7 +256,7 @@ function SendFunds(
 			final__payment_id = address__decode_result.intPaymentId
 			final__pid_encrypt = true // we do want to encrypt if using an integrated address
 		} else if (monero_paymentID_utils.IsValidPaymentIDOrNoPaymentID(final__payment_id) === false) {
-			const errStr = "The payment ID you've entered is not valid"
+			const errStr = "Invalid payment ID."
 			__trampolineFor_err_withStr(errStr)
 			return
 		}
@@ -275,6 +276,7 @@ function SendFunds(
 	)
 	{
 		hostedMoneroAPIClient.UnspentOuts(
+			wallet__keyImage_cache,
 			wallet__public_address,
 			wallet__private_keys.view,
 			wallet__public_keys.spend,

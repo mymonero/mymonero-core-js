@@ -30,19 +30,17 @@
 //
 const monero_utils = require('./monero_cryptonote_utils_instance')
 //
-var key_images = {}
-//
 var Lazy_KeyImage = function(
+	mutable_keyImagesByCacheKey, // pass a mutable JS dictionary 
 	tx_pub_key, 
 	out_index,
 	public_address,
 	view_key__private,
 	spend_key__public,
 	spend_key__private
-)
-{
+) {
 	var cache_index = tx_pub_key + ':' + public_address + ':' + out_index
-	const cached__key_image = key_images[cache_index]
+	const cached__key_image = mutable_keyImagesByCacheKey[cache_index]
 	if (typeof cached__key_image !== 'undefined' && cached__key_image !== null) {
 		return cached__key_image
 	}
@@ -54,7 +52,7 @@ var Lazy_KeyImage = function(
 		out_index
 	).key_image
 	// cache:
-	key_images[cache_index] = key_image
+	mutable_keyImagesByCacheKey[cache_index] = key_image
 	//
 	return key_image
 }

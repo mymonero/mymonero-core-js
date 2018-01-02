@@ -33,6 +33,7 @@ const monero_utils = require('../monero_utils/monero_cryptonote_utils_instance')
 const monero_keyImage_cache_utils = require('../monero_utils/monero_keyImage_cache_utils')
 //
 function Parsed_AddressInfo__sync(
+	keyImage_cache,
 	data,
 	address,
 	view_key__private,
@@ -53,6 +54,7 @@ function Parsed_AddressInfo__sync(
 	//
 	for (let spent_output of spent_outputs) {
 		var key_image = monero_keyImage_cache_utils.Lazy_KeyImage(
+			keyImage_cache,
 			spent_output.tx_pub_key,
 			spent_output.out_index,
 			address,
@@ -86,6 +88,7 @@ function Parsed_AddressInfo__sync(
 	return returnValuesByKey
 }
 function Parsed_AddressInfo(
+	keyImage_cache,
 	data,
 	address,
 	view_key__private,
@@ -95,6 +98,7 @@ function Parsed_AddressInfo(
 )
 {
 	const returnValuesByKey = Parsed_AddressInfo__sync(
+		keyImage_cache,
 		data,
 		address,
 		view_key__private,
@@ -107,6 +111,7 @@ exports.Parsed_AddressInfo = Parsed_AddressInfo
 exports.Parsed_AddressInfo__sync = Parsed_AddressInfo__sync
 //
 function Parsed_AddressTransactions(
+	keyImage_cache,
 	data,
 	address,
 	view_key__private,
@@ -116,6 +121,7 @@ function Parsed_AddressTransactions(
 )
 {
 	const returnValuesByKey = Parsed_AddressTransactions__sync(
+		keyImage_cache,
 		data,
 		address,
 		view_key__private,
@@ -125,6 +131,7 @@ function Parsed_AddressTransactions(
 	fn(null, returnValuesByKey)
 }
 function Parsed_AddressTransactions__sync(
+	keyImage_cache,
 	data,
 	address,
 	view_key__private,
@@ -145,6 +152,7 @@ function Parsed_AddressTransactions__sync(
 		if ((transactions[i].spent_outputs || []).length > 0) {
 			for (var j = 0; j < transactions[i].spent_outputs.length; ++j) {
 				var key_image = monero_keyImage_cache_utils.Lazy_KeyImage(
+					keyImage_cache,
 					transactions[i].spent_outputs[j].tx_pub_key,
 					transactions[i].spent_outputs[j].out_index,
 					address,
@@ -196,6 +204,7 @@ exports.Parsed_AddressTransactions = Parsed_AddressTransactions
 exports.Parsed_AddressTransactions__sync = Parsed_AddressTransactions__sync
 //
 function Parsed_UnspentOuts(
+	keyImage_cache,
 	data,
 	address,
 	view_key__private,
@@ -205,6 +214,7 @@ function Parsed_UnspentOuts(
 )
 {
 	const returnValuesByKey = Parsed_UnspentOuts__sync(
+		keyImage_cache,
 		data,
 		address,
 		view_key__private,
@@ -214,6 +224,7 @@ function Parsed_UnspentOuts(
 	fn(null, returnValuesByKey)
 }
 function Parsed_UnspentOuts__sync(
+	keyImage_cache,
 	data,
 	address,
 	view_key__private,
@@ -248,6 +259,7 @@ function Parsed_UnspentOuts__sync(
 				continue
 			}
 			var key_image = monero_keyImage_cache_utils.Lazy_KeyImage(
+				keyImage_cache,
 				beforeSplice__tx_pub_key,
 				beforeSplice__index,
 				address,
