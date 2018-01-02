@@ -41,8 +41,8 @@ exports.New_TransactionID = New_Short_TransactionID;
 //
 function IsValidPaymentIDOrNoPaymentID(payment_id__orNil)
 {
-	if (!payment_id__orNil) {
-		return false; // no pid
+	if (payment_id__orNil == null || payment_id__orNil == "" || typeof payment_id__orNil == "undefined") {
+		return true; // no pid
 	}
 	let payment_id = payment_id__orNil;
 	if (IsValidShortPaymentID(payment_id)) {
