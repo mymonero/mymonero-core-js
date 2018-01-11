@@ -19,7 +19,7 @@
 
 See `LICENSE.txt` for license.
 
-All source code copyright © 2014-2017 by MyMonero. All rights reserved.
+All source code copyright © 2014-2018 by MyMonero. All rights reserved.
 
 
 ## What's in This Repo?
