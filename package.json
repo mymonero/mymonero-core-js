@@ -1,0 +1,24 @@
+{
+  "name": "mymonero-core",
+  "version": "1.1.0",
+  "description": "lightwallet functions which power the official MyMonero apps",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mymonero/mymonero-core-js.git"
+  },
+  "keywords": [
+    "monero",
+    "mymonero",
+    "core"
+  ],
+  "author": "Paul Shapiro",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mymonero/mymonero-core-js/issues"
+  },
+  "homepage": "https://github.com/mymonero/mymonero-core-js#readme"
+}
