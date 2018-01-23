@@ -1,11 +1,7 @@
 {
-  "name": "mymonero-core",
-  "version": "1.1.0",
-  "description": "lightwallet functions which power the official MyMonero apps",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "name": "mymonero-core-js",
+  "version": "0.9.0",
+  "description": "The JS library containing the Monero crypto plus lightweight wallet functions behind the official MyMonero apps",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
@@ -13,10 +9,18 @@
   "keywords": [
     "monero",
     "mymonero",
-    "core"
+    "javascript",
+    "js",
+    "lightweight",
+    "lightwallet",
+    "wallet",
+    "crypto",
+    "script",
+    "utility",
+    "tool"
   ],
-  "author": "Paul Shapiro",
-  "license": "ISC",
+  "author": "MyMonero",
+  "license": "See LICENSE.TXT. Copyright (c) 2014-2018, MyMonero.com. All rights reserved.",
   "bugs": {
     "url": "https://github.com/mymonero/mymonero-core-js/issues"
   },
