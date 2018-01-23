@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/mymonero/mymonero-core-js/issues"
   },
-  "homepage": "https://github.com/mymonero/mymonero-core-js#readme"
+  "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
+  "dependencies": {
+    "async": "^2.6.0"
+  }
 }
