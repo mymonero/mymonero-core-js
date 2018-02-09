@@ -286,7 +286,8 @@ function Parsed_UnspentOuts__sync(
 	const returnValuesByKey =
 	{
 		unspentOutputs: finalized_unspentOutputs,
-		unusedOuts: unusedOuts
+		unusedOuts: unusedOuts,
+		per_kb_fee: data.per_kb_fee // String
 	}
 	return returnValuesByKey
 }

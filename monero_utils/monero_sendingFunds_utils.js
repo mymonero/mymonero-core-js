@@ -52,14 +52,16 @@ function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier)
 //
 // Fee estimation for SendFunds
 function EstimatedTransaction_ringCT_networkFee(
-	nonZero_mixin_int
+	nonZero_mixin_int,
+	feePerKB_JSBigInt
 )
 {
 	return EstimatedTransaction_networkFee(
 		2, // this might change - might select inputs
 		nonZero_mixin_int,
 		3, // dest + change + mymonero fee
-		true // to be sure
+		true, // to be sure
+		feePerKB_JSBigInt
 	)
 }
 exports.EstimatedTransaction_ringCT_networkFee = EstimatedTransaction_ringCT_networkFee
@@ -68,11 +70,11 @@ function EstimatedTransaction_networkFee(
 	numberOf_inputs,
 	nonZero_mixin_int,
 	numberOf_outputs,
-	doesUseRingCT_orTrue
+	doesUseRingCT_orTrue,
+	feePerKB_JSBigInt
 )
 {
 	const doesUseRingCT = doesUseRingCT_orTrue === false ? false : true // default to true unless false
-	const fee_per_kb_JSBigInt = monero_config.feePerKB_JSBigInt
 	var estimated_txSize;
 	if (doesUseRingCT) {
 		estimated_txSize = EstimatedTransaction_ringCT_txSize(numberOf_inputs, nonZero_mixin_int, numberOf_outputs)
@@ -80,7 +82,7 @@ function EstimatedTransaction_networkFee(
 		estimated_txSize = EstimatedTransaction_preRingCT_txSize(numberOf_inputs, nonZero_mixin_int)
 	}
 	const fee_multiplier = 1 // TODO: expose this
-	const estimated_fee = calculate_fee(fee_per_kb_JSBigInt, estimated_txSize, fee_multiplier)
+	const estimated_fee = calculate_fee(feePerKB_JSBigInt, estimated_txSize, fee_multiplier)
 	//
 	return estimated_fee
 }
@@ -285,19 +287,22 @@ function SendFunds(
 			function(
 				err, 
 				unspentOuts,
-				unusedOuts
+				unusedOuts,
+				dynamic_feePerKB_JSBigInt
 			)
 			{
 				if (err) {
 					__trampolineFor_err_withErr(err)
 					return
 				}
+				console.log("Received dynamic per kb fee", dynamic_feePerKB_JSBigInt)
 				_proceedTo_constructFundTransferListAndSendFundsByUsingUnusedUnspentOutsForMixin(
 					moneroReady_targetDescription_address,
 					totalAmountWithoutFee_JSBigInt,
 					final__payment_id,
 					final__pid_encrypt,
-					unusedOuts
+					unusedOuts,
+					dynamic_feePerKB_JSBigInt
 				)
 			}
 		)
@@ -307,11 +312,12 @@ function SendFunds(
 		totalAmountWithoutFee_JSBigInt,
 		final__payment_id,
 		final__pid_encrypt,
-		unusedOuts
+		unusedOuts,
+		dynamic_feePerKB_JSBigInt
 	) 
 	{
 		// status: constructing transaction…
-		const feePerKB_JSBigInt = monero_config.feePerKB_JSBigInt
+		const feePerKB_JSBigInt = dynamic_feePerKB_JSBigInt
 		// Transaction will need at least 1KB fee (13KB for RingCT)
 		const network_minimumTXSize_kb = isRingCT ? 13 : 1
 		var network_minimumFee = feePerKB_JSBigInt.multiply(network_minimumTXSize_kb)
@@ -322,6 +328,7 @@ function SendFunds(
 			final__payment_id,
 			final__pid_encrypt,
 			unusedOuts,
+			feePerKB_JSBigInt, // obtained from server, so passed in
 			network_minimumFee
 		)
 	}		
@@ -331,6 +338,7 @@ function SendFunds(
 		final__payment_id,
 		final__pid_encrypt,
 		unusedOuts,
+		feePerKB_JSBigInt,
 		passedIn_attemptAt_network_minimumFee
 	) 
 	{ // Now we need to establish some values for balance validation and to construct the transaction
@@ -349,7 +357,7 @@ function SendFunds(
 		var remaining_unusedOuts = usableOutputsAndAmounts.remaining_unusedOuts // this is a copy of the pre-mutation usingOuts
 		if (isRingCT) { 
 			if (usingOuts.length > 1) {
-				var newNeededFee = new JSBigInt(Math.ceil(monero_utils.estimateRctSize(usingOuts.length, mixin, 2) / 1024)).multiply(monero_config.feePerKB_JSBigInt)
+				var newNeededFee = new JSBigInt(Math.ceil(monero_utils.estimateRctSize(usingOuts.length, mixin, 2) / 1024)).multiply(feePerKB_JSBigInt)
 				totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(newNeededFee)
 				// add outputs 1 at a time till we either have them all or can meet the fee
 				while (usingOutsAmount.compare(totalAmountIncludingFees) < 0 && remaining_unusedOuts.length > 0) {
@@ -359,7 +367,7 @@ function SendFunds(
 					console.log("Using output: " + monero_utils.formatMoney(out.amount) + " - " + JSON.stringify(out))
 					newNeededFee = new JSBigInt(
 						Math.ceil(monero_utils.estimateRctSize(usingOuts.length, mixin, 2) / 1024)
-					).multiply(monero_config.feePerKB_JSBigInt)
+					).multiply(feePerKB_JSBigInt)
 					totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(newNeededFee)
 				}
 				console.log("New fee: " + monero_utils.formatMoneySymbol(newNeededFee) + " for " + usingOuts.length + " inputs")
@@ -517,7 +525,7 @@ function SendFunds(
 				numKB++
 			}
 			console.log(txBlobBytes + " bytes <= " + numKB + " KB (current fee: " + monero_utils.formatMoneyFull(attemptAt_network_minimumFee) + ")")
-			const feeActuallyNeededByNetwork = monero_config.feePerKB_JSBigInt.multiply(numKB)
+			const feeActuallyNeededByNetwork = feePerKB_JSBigInt.multiply(numKB)
 			// if we need a higher fee
 			if (feeActuallyNeededByNetwork.compare(attemptAt_network_minimumFee) > 0) {
 				console.log("💬  Need to reconstruct the tx with enough of a network fee. Previous fee: " + monero_utils.formatMoneyFull(attemptAt_network_minimumFee) + " New fee: " + monero_utils.formatMoneyFull(feeActuallyNeededByNetwork))
@@ -527,6 +535,7 @@ function SendFunds(
 					final__payment_id,
 					final__pid_encrypt,
 					unusedOuts,
+					feePerKB_JSBigInt,
 					feeActuallyNeededByNetwork // we are re-entering this codepath after changing this feeActuallyNeededByNetwork
 				)
 				//
