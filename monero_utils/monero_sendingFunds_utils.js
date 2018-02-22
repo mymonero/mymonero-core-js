@@ -59,7 +59,7 @@ function EstimatedTransaction_ringCT_networkFee(
 	return EstimatedTransaction_networkFee(
 		2, // this might change - might select inputs
 		nonZero_mixin_int,
-		3, // dest + change + mymonero fee
+		1/*dest*/ + 1/*change*/ + 0/*no mymonero fee presently*/,
 		true, // to be sure
 		feePerKB_JSBigInt
 	)
