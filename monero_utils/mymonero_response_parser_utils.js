@@ -249,7 +249,7 @@ function Parsed_UnspentOuts__sync(
 		for (var j = 0; j < spend_key_images.length; j++) {
 			const finalized_unspentOutput_atI_beforeSplice = finalized_unspentOutputs[i]
 			if (!finalized_unspentOutput_atI_beforeSplice || typeof finalized_unspentOutput_atI_beforeSplice === 'undefined') {
-				console.warn(`This unspent output at i ${i} was literally undefined! Skipping.`)
+				console.warn(`This unspent output at i ${i} was literally undefined! Skipping.`) // NOTE: Looks like the i-- code below should exit earlier if this is necessary
 				continue
 			}
 			const beforeSplice__tx_pub_key = finalized_unspentOutput_atI_beforeSplice.tx_pub_key

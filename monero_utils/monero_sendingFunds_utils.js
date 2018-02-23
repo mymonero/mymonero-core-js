@@ -42,6 +42,14 @@ const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
 //
 const APPROXIMATE_INPUT_BYTES = 80 // used to choose when to stop adding outputs to a tx
 //
+function fixedMixin() { return 9; }
+function fixedRingsize() { return fixedMixin() + 1; }
+exports.fixedMixin = fixedMixin;
+exports.fixedRingsize = fixedRingsize;
+//
+function default_priority() { return 2; } // aka .mlow or medium low
+exports.default_priority = default_priority;
+//
 function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier)
 {
 	const numberOf_kB_JSBigInt = new JSBigInt((numberOf_bytes + 1023.0) / 1024.0)
@@ -49,29 +57,34 @@ function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier)
 	//
 	return fee
 }
-//
-// Fee estimation for SendFunds
+function calculate_fee__kb(fee_per_kb_JSBigInt, numberOf_kb, fee_multiplier)
+{
+	const numberOf_kB_JSBigInt = new JSBigInt(numberOf_kb)
+	const fee = fee_per_kb_JSBigInt.multiply(fee_multiplier).multiply(numberOf_kB_JSBigInt)
+	//
+	return fee
+}
 const newer_multipliers = [1, 4, 20, 166];
+function fee_multiplier_for_priority(priority__or0ForDefault) {
+	const priority_as_idx = !priority__or0ForDefault || priority__or0ForDefault == 0 
+		? default_priority() 
+		: priority__or0ForDefault;
+	if (priority_as_idx <= 0 || priority_as_idx > 4) {
+		throw "fee_multiplier_for_priority: simple_priority out of bounds"
+	}
+	return newer_multipliers[priority_as_idx - 1]
+}
 function EstimatedTransaction_networkFee(
 	nonZero_mixin_int,
 	feePerKB_JSBigInt,
 	simple_priority
-)
-{
-	if (simple_priority == 0) {
-		simple_priority = 2; // the default (TODO: read this from a domain)
-	}
-	if (simple_priority <= 0 || simple_priority > 4) {
-		throw "EstimatedTransaction_networkFee: simple_priority out of bounds"
-	}
-	//
+) {
 	const numberOf_inputs = 2 // this might change -- might select inputs
 	const numberOf_outputs = 1/*dest*/ + 1/*change*/ + 0/*no mymonero fee presently*/
 	// TODO: update est tx size for bulletproofs
 	// TODO: normalize est tx size fn naming
 	const estimated_txSize = EstimatedTransaction_ringCT_txSize(numberOf_inputs, nonZero_mixin_int, numberOf_outputs)
-	const fee_multiplier = newer_multipliers[simple_priority - 1]
-	const estimated_fee = calculate_fee(feePerKB_JSBigInt, estimated_txSize, fee_multiplier)
+	const estimated_fee = calculate_fee(feePerKB_JSBigInt, estimated_txSize, fee_multiplier_for_priority(simple_priority))
 	//
 	return estimated_fee
 }
@@ -81,8 +94,7 @@ function EstimatedTransaction_ringCT_txSize(
 	numberOf_inputs,
 	mixin_int,
 	numberOf_outputs
-)
-{
+) {
 	var size = 0;
 	// tx prefix
 	// first few bytes
@@ -128,8 +140,8 @@ function SendFunds(
 	wallet__public_keys,
 	hostedMoneroAPIClient,
 	monero_openalias_utils,
-	mixin, 
 	payment_id,
+	simple_priority,
 	success_fn,
 	// success_fn: (
 	//		moneroReady_targetDescription_address?,
@@ -142,10 +154,9 @@ function SendFunds(
 	// failWithErr_fn: (
 	//		err
 	// )
-)
-{
+) {
 	// arg sanitization
-	mixin = parseInt(mixin)
+	const mixin = fixedMixin();
 	//
 	// some callback trampoline function declarations…
 	function __trampolineFor_success(
@@ -274,7 +285,7 @@ function SendFunds(
 					__trampolineFor_err_withErr(err)
 					return
 				}
-				console.log("Received dynamic per kb fee", dynamic_feePerKB_JSBigInt)
+				console.log("Received dynamic per kb fee", monero_utils.formatMoneySymbol(dynamic_feePerKB_JSBigInt))
 				_proceedTo_constructFundTransferListAndSendFundsByUsingUnusedUnspentOutsForMixin(
 					moneroReady_targetDescription_address,
 					totalAmountWithoutFee_JSBigInt,
@@ -293,13 +304,12 @@ function SendFunds(
 		final__pid_encrypt,
 		unusedOuts,
 		dynamic_feePerKB_JSBigInt
-	) 
-	{
+	) {
 		// status: constructing transaction…
 		const feePerKB_JSBigInt = dynamic_feePerKB_JSBigInt
-		// Transaction will need at least 1KB fee (13KB for RingCT)
-		const network_minimumTXSize_kb = isRingCT ? 13 : 1
-		var network_minimumFee = feePerKB_JSBigInt.multiply(network_minimumTXSize_kb)
+		// Transaction will need at least 1KB fee (or 13KB for RingCT)
+		const network_minimumTXSize_kb = /*isRingCT ? */13/* : 1*/
+		const network_minimumFee = calculate_fee__kb(feePerKB_JSBigInt, network_minimumTXSize_kb, fee_multiplier_for_priority(simple_priority))
 		// ^-- now we're going to try using this minimum fee but the codepath has to be able to be re-entered if we find after constructing the whole tx that it is larger in kb than the minimum fee we're attempting to send it off with
 		__reenterable_constructFundTransferListAndSendFunds_findingLowestNetworkFee(
 			moneroReady_targetDescription_address,
@@ -321,7 +331,6 @@ function SendFunds(
 		passedIn_attemptAt_network_minimumFee
 	) 
 	{ // Now we need to establish some values for balance validation and to construct the transaction
-		console.log("Entered re-enterable tx building codepath…", unusedOuts)
 		var attemptAt_network_minimumFee = passedIn_attemptAt_network_minimumFee // we may change this if isRingCT
 		// const hostingService_chargeAmount = hostedMoneroAPIClient.HostingServiceChargeFor_transactionWithNetworkFee(attemptAt_network_minimumFee)
 		var totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(attemptAt_network_minimumFee)/*.add(hostingService_chargeAmount) NOTE service fee removed for now */
@@ -504,7 +513,7 @@ function SendFunds(
 				numKB++
 			}
 			console.log(txBlobBytes + " bytes <= " + numKB + " KB (current fee: " + monero_utils.formatMoneyFull(attemptAt_network_minimumFee) + ")")
-			const feeActuallyNeededByNetwork = feePerKB_JSBigInt.multiply(numKB)
+			const feeActuallyNeededByNetwork = calculate_fee__kb(feePerKB_JSBigInt, numKB, fee_multiplier_for_priority(simple_priority))
 			// if we need a higher fee
 			if (feeActuallyNeededByNetwork.compare(attemptAt_network_minimumFee) > 0) {
 				console.log("💬  Need to reconstruct the tx with enough of a network fee. Previous fee: " + monero_utils.formatMoneyFull(attemptAt_network_minimumFee) + " New fee: " + monero_utils.formatMoneyFull(feeActuallyNeededByNetwork))
