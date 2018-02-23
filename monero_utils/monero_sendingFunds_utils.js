@@ -51,53 +51,32 @@ function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier)
 }
 //
 // Fee estimation for SendFunds
-function EstimatedTransaction_ringCT_networkFee(
-	nonZero_mixin_int,
-	feePerKB_JSBigInt
-)
-{
-	return EstimatedTransaction_networkFee(
-		2, // this might change - might select inputs
-		nonZero_mixin_int,
-		1/*dest*/ + 1/*change*/ + 0/*no mymonero fee presently*/,
-		true, // to be sure
-		feePerKB_JSBigInt
-	)
-}
-exports.EstimatedTransaction_ringCT_networkFee = EstimatedTransaction_ringCT_networkFee
-//
+const newer_multipliers = [1, 4, 20, 166];
 function EstimatedTransaction_networkFee(
-	numberOf_inputs,
 	nonZero_mixin_int,
-	numberOf_outputs,
-	doesUseRingCT_orTrue,
-	feePerKB_JSBigInt
+	feePerKB_JSBigInt,
+	simple_priority
 )
 {
-	const doesUseRingCT = doesUseRingCT_orTrue === false ? false : true // default to true unless false
-	var estimated_txSize;
-	if (doesUseRingCT) {
-		estimated_txSize = EstimatedTransaction_ringCT_txSize(numberOf_inputs, nonZero_mixin_int, numberOf_outputs)
-	} else {
-		estimated_txSize = EstimatedTransaction_preRingCT_txSize(numberOf_inputs, nonZero_mixin_int)
+	if (simple_priority == 0) {
+		simple_priority = 2; // the default (TODO: read this from a domain)
 	}
-	const fee_multiplier = 1 // TODO: expose this
+	if (simple_priority <= 0 || simple_priority > 4) {
+		throw "EstimatedTransaction_networkFee: simple_priority out of bounds"
+	}
+	//
+	const numberOf_inputs = 2 // this might change -- might select inputs
+	const numberOf_outputs = 1/*dest*/ + 1/*change*/ + 0/*no mymonero fee presently*/
+	// TODO: update est tx size for bulletproofs
+	// TODO: normalize est tx size fn naming
+	const estimated_txSize = EstimatedTransaction_ringCT_txSize(numberOf_inputs, nonZero_mixin_int, numberOf_outputs)
+	const fee_multiplier = newer_multipliers[simple_priority - 1]
 	const estimated_fee = calculate_fee(feePerKB_JSBigInt, estimated_txSize, fee_multiplier)
 	//
 	return estimated_fee
 }
 exports.EstimatedTransaction_networkFee = EstimatedTransaction_networkFee
 //
-function EstimatedTransaction_preRingCT_txSize(
-	numberOf_inputs,
-	nonZero_mixin_int
-)
-{
-	const numberOf_fakeOuts = nonZero_mixin_int
-	const size = numberOf_inputs * (numberOf_fakeOuts + 1) * APPROXIMATE_INPUT_BYTES //
-	//
-	return size
-}
 function EstimatedTransaction_ringCT_txSize(
 	numberOf_inputs,
 	mixin_int,
