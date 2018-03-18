@@ -1854,10 +1854,34 @@ var cnUtil = function(currencyConfig)
 
 	this.estimateRctSize = function(inputs, mixin, outputs) {
 		var size = 0;
-		size += outputs * 6306;
-		size += ((mixin + 1) * 4 + 32 + 8) * inputs; //key offsets + key image + amount
-		size += 64 * (mixin + 1) * inputs + 64 * inputs; //signature + pseudoOuts/cc
-		size += 74; //extra + whatever, assume long payment ID
+		// tx prefix
+		// first few bytes
+		size += 1 + 6;
+		size += inputs * (1+6+(mixin+1)*3+32); // original C implementation is *2+32 but author advised to change 2 to 3 as key offsets are variable size and this constitutes a best guess
+		// vout
+		size += outputs * (6+32);
+		// extra
+		size += 40;
+		// rct signatures
+		// type
+		size += 1;
+		// rangeSigs
+		size += (2*64*32+32+64*32) * outputs;
+		// MGs
+		size += inputs * (32 * (mixin+1) + 32);
+		// mixRing - not serialized, can be reconstructed
+		/* size += 2 * 32 * (mixin+1) * inputs; */
+		// pseudoOuts
+		size += 32 * inputs;
+		// ecdhInfo
+		size += 2 * 32 * outputs;
+		// outPk - only commitment is saved
+		size += 32 * outputs;
+		// txnFee
+		size += 4;
+		// const logStr = `estimated rct tx size for ${inputs} at mixin ${mixin} and ${outputs} : ${size}  (${((32 * inputs/*+1*/) + 2 * 32 * (mixin+1) * inputs + 32 * outputs)}) saved)`
+		// console.log(logStr)
+
 		return size;
 	};
 
