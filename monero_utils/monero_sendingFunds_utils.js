@@ -52,7 +52,7 @@ exports.default_priority = default_priority;
 //
 function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier)
 {
-	const numberOf_kB_JSBigInt = new JSBigInt((numberOf_bytes + 1023.0) / 1024.0)
+	const numberOf_kB_JSBigInt = new JSBigInt((numberOf_bytes + 1023.0) / 1024.0) // i.e. ceil
 	const fee = fee_per_kb_JSBigInt.multiply(fee_multiplier).multiply(numberOf_kB_JSBigInt)
 	//
 	return fee
@@ -83,50 +83,12 @@ function EstimatedTransaction_networkFee(
 	const numberOf_outputs = 1/*dest*/ + 1/*change*/ + 0/*no mymonero fee presently*/
 	// TODO: update est tx size for bulletproofs
 	// TODO: normalize est tx size fn naming
-	const estimated_txSize = EstimatedTransaction_ringCT_txSize(numberOf_inputs, nonZero_mixin_int, numberOf_outputs)
+	const estimated_txSize = monero_utils.estimateRctSize(numberOf_inputs, nonZero_mixin_int, numberOf_outputs)
 	const estimated_fee = calculate_fee(feePerKB_JSBigInt, estimated_txSize, fee_multiplier_for_priority(simple_priority))
 	//
 	return estimated_fee
 }
 exports.EstimatedTransaction_networkFee = EstimatedTransaction_networkFee
-//
-function EstimatedTransaction_ringCT_txSize(
-	numberOf_inputs,
-	mixin_int,
-	numberOf_outputs
-) {
-	var size = 0;
-	// tx prefix
-	// first few bytes
-	size += 1 + 6;
-	size += numberOf_inputs * (1+6+(mixin_int+1)*3+32); // original implementation is *2+32 but luigi1111 said change 2 to 3
-	// vout
-	size += numberOf_outputs * (6+32);
-	// extra
-	size += 40;
-	// rct signatures
-	// type
-	size += 1;
-	// rangeSigs
-	size += (2*64*32+32+64*32) * numberOf_outputs;
-	// MGs
-	size += numberOf_inputs * (32 * (mixin_int+1) + 32);
-	// mixRing - not serialized, can be reconstructed
-	/* size += 2 * 32 * (mixin_int+1) * numberOf_inputs; */
-	// pseudoOuts
-	size += 32 * numberOf_inputs;
-	// ecdhInfo
-	size += 2 * 32 * numberOf_outputs;
-	// outPk - only commitment is saved
-	size += 32 * numberOf_outputs;
-	// txnFee
-	size += 4;
-	// const logStr = `estimated rct tx size for ${numberOf_inputs} at mixin ${mixin_int} and ${numberOf_outputs} : ${size}  (${((32 * numberOf_inputs/*+1*/) + 2 * 32 * (mixin_int+1) * numberOf_inputs + 32 * numberOf_outputs)}) saved)`
-	// console.log(logStr)
-
-	return size;
-}
-//
 //
 // Actually sending funds
 // 
@@ -329,8 +291,7 @@ function SendFunds(
 		unusedOuts,
 		feePerKB_JSBigInt,
 		passedIn_attemptAt_network_minimumFee
-	) 
-	{ // Now we need to establish some values for balance validation and to construct the transaction
+	) { // Now we need to establish some values for balance validation and to construct the transaction
 		var attemptAt_network_minimumFee = passedIn_attemptAt_network_minimumFee // we may change this if isRingCT
 		// const hostingService_chargeAmount = hostedMoneroAPIClient.HostingServiceChargeFor_transactionWithNetworkFee(attemptAt_network_minimumFee)
 		var totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(attemptAt_network_minimumFee)/*.add(hostingService_chargeAmount) NOTE service fee removed for now */
@@ -345,7 +306,11 @@ function SendFunds(
 		var remaining_unusedOuts = usableOutputsAndAmounts.remaining_unusedOuts // this is a copy of the pre-mutation usingOuts
 		if (isRingCT) { 
 			if (usingOuts.length > 1) {
-				var newNeededFee = new JSBigInt(Math.ceil(monero_utils.estimateRctSize(usingOuts.length, mixin, 2) / 1024)).multiply(feePerKB_JSBigInt)
+				var newNeededFee = calculate_fee(
+					feePerKB_JSBigInt, 
+					monero_utils.estimateRctSize(usingOuts.length, mixin, 2), 
+					fee_multiplier_for_priority(simple_priority)
+				)
 				totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(newNeededFee)
 				// add outputs 1 at a time till we either have them all or can meet the fee
 				while (usingOutsAmount.compare(totalAmountIncludingFees) < 0 && remaining_unusedOuts.length > 0) {
@@ -353,9 +318,13 @@ function SendFunds(
 					usingOuts.push(out)
 					usingOutsAmount = usingOutsAmount.add(out.amount)
 					console.log("Using output: " + monero_utils.formatMoney(out.amount) + " - " + JSON.stringify(out))
-					newNeededFee = new JSBigInt(
-						Math.ceil(monero_utils.estimateRctSize(usingOuts.length, mixin, 2) / 1024)
-					).multiply(feePerKB_JSBigInt)
+					//
+					// and recalculate invalidated values
+					newNeededFee = calculate_fee(
+						feePerKB_JSBigInt, 
+						monero_utils.estimateRctSize(usingOuts.length, mixin, 2), 
+						fee_multiplier_for_priority(simple_priority)
+					)
 					totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(newNeededFee)
 				}
 				console.log("New fee: " + monero_utils.formatMoneySymbol(newNeededFee) + " for " + usingOuts.length + " inputs")
