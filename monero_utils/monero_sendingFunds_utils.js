@@ -42,10 +42,11 @@ const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
 //
 const APPROXIMATE_INPUT_BYTES = 80 // used to choose when to stop adding outputs to a tx
 //
-function fixedMixin() { return 9; }
-function fixedRingsize() { return fixedMixin() + 1; }
-exports.fixedMixin = fixedMixin;
-exports.fixedRingsize = fixedRingsize;
+function _forkv7_minimumRingSize() { return 7; }
+function thisFork_minRingSize() { return _forkv7_minimumRingSize(); }
+function thisFork_minMixin() { return thisFork_minRingSize() - 1; }
+exports.thisFork_minRingSize = thisFork_minRingSize;
+exports.thisFork_minMixin = thisFork_minMixin;
 //
 function default_priority() { return 2; } // aka .mlow or medium low
 exports.default_priority = default_priority;
@@ -103,6 +104,7 @@ function SendFunds(
 	hostedMoneroAPIClient,
 	monero_openalias_utils,
 	payment_id,
+	mixin,
 	simple_priority,
 	success_fn,
 	// success_fn: (
@@ -117,8 +119,6 @@ function SendFunds(
 	//		err
 	// )
 ) {
-	// arg sanitization
-	const mixin = fixedMixin();
 	//
 	// some callback trampoline function declarations…
 	function __trampolineFor_success(
@@ -127,8 +127,7 @@ function SendFunds(
 		final__payment_id,
 		tx_hash,
 		tx_fee
-	)
-	{
+	) {
 		success_fn(
 			moneroReady_targetDescription_address,
 			sentAmount,
@@ -146,6 +145,10 @@ function SendFunds(
 		const err = new Error(errStr)
 		console.error(errStr)
 		failWithErr_fn(err)
+	}
+	if (mixin < thisFork_minMixin()) {
+		__trampolineFor_err_withStr("Ringsize is below the minimum.")
+		return;
 	}
 	// status: preparing to send funds…
 	//
