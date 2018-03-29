@@ -33,23 +33,26 @@ const async = require('async')
 const monero_config = require('./monero_config')
 const monero_utils = require('./monero_cryptonote_utils_instance')
 const monero_paymentID_utils = require('./monero_paymentID_utils')
-//
 const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
 //
 //
-// Fee calculation port from Monero baseline
-// https://github.com/monero-project/monero/blob/master/src/wallet/wallet2.cpp
+function _forkv7_minimumMixin() { return 6; }
+function _mixinToRingsize(mixin) { return mixin + 1; }
 //
-const APPROXIMATE_INPUT_BYTES = 80 // used to choose when to stop adding outputs to a tx
-//
-function _forkv7_minimumRingSize() { return 7; }
-function thisFork_minRingSize() { return _forkv7_minimumRingSize(); }
-function thisFork_minMixin() { return thisFork_minRingSize() - 1; }
-exports.thisFork_minRingSize = thisFork_minRingSize;
+function thisFork_minMixin() { return _forkv7_minimumMixin(); }
+function thisFork_minRingSize() { return _mixinToRingsize(thisFork_minMixin()); }
 exports.thisFork_minMixin = thisFork_minMixin;
+exports.thisFork_minRingSize = thisFork_minRingSize;
+//
+function fixedMixin() { return thisFork_minMixin(); /* using the monero app default to remove MM user identifiers */ }
+function fixedRingsize() { return _mixinToRingsize(fixedMixin()); }
+exports.fixedMixin = fixedMixin;
+exports.fixedRingsize = fixedRingsize;
+//
 //
 function default_priority() { return 2; } // aka .mlow or medium low
 exports.default_priority = default_priority;
+//
 //
 function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier)
 {
@@ -91,8 +94,7 @@ function EstimatedTransaction_networkFee(
 }
 exports.EstimatedTransaction_networkFee = EstimatedTransaction_networkFee
 //
-// Actually sending funds
-// 
+//
 function SendFunds(
 	isRingCT,
 	target_address, // currency-ready wallet address, but not an OA address (resolve before calling)
