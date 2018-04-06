@@ -1629,21 +1629,32 @@ var cnUtil = function(currencyConfig)
 		var inputs_money = JSBigInt.ZERO;
 		var i, j;
 		console.log('Sources: ');
+		//run the for loop twice to sort ins by key image
+		//first generate key image and other construction data to sort it all in one go
 		for (i = 0; i < sources.length; i++) {
 			console.log(i + ': ' + this.formatMoneyFull(sources[i].amount));
 			if (sources[i].real_out >= sources[i].outputs.length) {
 				throw "real index >= outputs.length";
 			}
-			inputs_money = inputs_money.add(sources[i].amount);
 			var res = this.generate_key_image_helper_rct(keys, sources[i].real_out_tx_key, sources[i].real_out_in_tx, sources[i].mask); //mask will be undefined for non-rct
-			in_contexts.push(res.in_ephemeral);
 			if (res.in_ephemeral.pub !== sources[i].outputs[sources[i].real_out].key) {
 				throw "in_ephemeral.pub != source.real_out.key";
 			}
+			sources[i].key_image = res.image;
+			sources[i].in_ephemeral = res.in_ephemeral;
+		}
+		//sort ins
+		sources.sort(function(a,b){
+			return JSBigInt.parse(a.key_image, 16).compare(JSBigInt.parse(b.key_image, 16)) < 0
+		});
+		//copy the sorted sources data to tx
+		for (i = 0; i < sources.length; i++) {
+			inputs_money = inputs_money.add(sources[i].amount);
+			in_contexts.push(sources[i].in_ephemeral);
 			var input_to_key = {};
 			input_to_key.type = "input_to_key";
 			input_to_key.amount = sources[i].amount;
-			input_to_key.k_image = res.image;
+			input_to_key.k_image = sources[i].key_image;
 			input_to_key.key_offsets = [];
 			for (j = 0; j < sources[i].outputs.length; ++j) {
 				input_to_key.key_offsets.push(sources[i].outputs[j].index);
