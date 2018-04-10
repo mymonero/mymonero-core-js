@@ -39,8 +39,7 @@ function Parsed_AddressInfo__sync(
 	view_key__private,
 	spend_key__public,
 	spend_key__private
-) // -> returnValuesByKey
-{
+) { // -> returnValuesByKey
 	const total_received = new JSBigInt(data.total_received || 0);
 	const locked_balance = new JSBigInt(data.locked_funds || 0);
 	var total_sent = new JSBigInt(data.total_sent || 0) // will be modified in place
@@ -87,6 +86,23 @@ function Parsed_AddressInfo__sync(
 	}
 	return returnValuesByKey
 }
+function Parsed_AddressInfo__sync__keyImageManaged(
+	data,
+	address,
+	view_key__private,
+	spend_key__public,
+	spend_key__private
+) { // -> returnValuesByKey
+	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address)
+	return Parsed_AddressInfo__sync(
+		keyImageCache,
+		data,
+		address,
+		view_key__private,
+		spend_key__public,
+		spend_key__private
+	)
+}
 function Parsed_AddressInfo(
 	keyImage_cache,
 	data,
@@ -95,8 +111,7 @@ function Parsed_AddressInfo(
 	spend_key__public,
 	spend_key__private,
 	fn // (err?, returnValuesByKey) -> Void
-)
-{
+) {
 	const returnValuesByKey = Parsed_AddressInfo__sync(
 		keyImage_cache,
 		data,
@@ -108,6 +123,7 @@ function Parsed_AddressInfo(
 	fn(null, returnValuesByKey)
 }
 exports.Parsed_AddressInfo = Parsed_AddressInfo
+exports.Parsed_AddressInfo__sync__keyImageManaged = Parsed_AddressInfo__sync__keyImageManaged // in case you can't send a mutable key image cache dictionary
 exports.Parsed_AddressInfo__sync = Parsed_AddressInfo__sync
 //
 function Parsed_AddressTransactions(
@@ -118,8 +134,7 @@ function Parsed_AddressTransactions(
 	spend_key__public,
 	spend_key__private,
 	fn // (err?, returnValuesByKey) -> Void
-)
-{
+) {
 	const returnValuesByKey = Parsed_AddressTransactions__sync(
 		keyImage_cache,
 		data,
@@ -137,8 +152,7 @@ function Parsed_AddressTransactions__sync(
 	view_key__private,
 	spend_key__public,
 	spend_key__private
-)
-{
+) {
 	const account_scanned_height = data.scanned_height || 0
 	const account_scanned_block_height = data.scanned_block_height || 0
 	const account_scan_start_height = data.start_height || 0
@@ -200,8 +214,26 @@ function Parsed_AddressTransactions__sync(
 	}
 	return returnValuesByKey
 }
+function Parsed_AddressTransactions__sync__keyImageManaged(
+	data,
+	address,
+	view_key__private,
+	spend_key__public,
+	spend_key__private
+) {
+	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address)
+	return Parsed_AddressTransactions__sync(
+		keyImageCache,
+		data,
+		address,
+		view_key__private,
+		spend_key__public,
+		spend_key__private
+	)
+}
 exports.Parsed_AddressTransactions = Parsed_AddressTransactions
 exports.Parsed_AddressTransactions__sync = Parsed_AddressTransactions__sync
+exports.Parsed_AddressTransactions__sync__keyImageManaged = Parsed_AddressTransactions__sync__keyImageManaged
 //
 function Parsed_UnspentOuts(
 	keyImage_cache,
@@ -211,8 +243,7 @@ function Parsed_UnspentOuts(
 	spend_key__public,
 	spend_key__private,
 	fn // (err?, returnValuesByKey)
-)
-{
+) {
 	const returnValuesByKey = Parsed_UnspentOuts__sync(
 		keyImage_cache,
 		data,
@@ -230,8 +261,7 @@ function Parsed_UnspentOuts__sync(
 	view_key__private,
 	spend_key__public,
 	spend_key__private
-)
-{
+) {
 	const data_outputs = data.outputs
 	const finalized_unspentOutputs = data.outputs || [] // to finalize:
 	for (var i = 0; i < finalized_unspentOutputs.length; i++) {
@@ -291,5 +321,23 @@ function Parsed_UnspentOuts__sync(
 	}
 	return returnValuesByKey
 }
+function Parsed_UnspentOuts__sync__keyImageManaged(
+	data,
+	address,
+	view_key__private,
+	spend_key__public,
+	spend_key__private
+) {
+	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address)
+	return Parsed_UnspentOuts__sync(
+		keyImageCache,
+		data,
+		address,
+		view_key__private,
+		spend_key__public,
+		spend_key__private
+	)
+}
 exports.Parsed_UnspentOuts = Parsed_UnspentOuts
 exports.Parsed_UnspentOuts__sync = Parsed_UnspentOuts__sync
+exports.Parsed_UnspentOuts__sync__keyImageManaged = Parsed_UnspentOuts__sync__keyImageManaged
