@@ -57,9 +57,8 @@ exports.default_priority = default_priority;
 function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier)
 {
 	const numberOf_kB_JSBigInt = new JSBigInt((numberOf_bytes + 1023.0) / 1024.0) // i.e. ceil
-	const fee = fee_per_kb_JSBigInt.multiply(fee_multiplier).multiply(numberOf_kB_JSBigInt)
 	//
-	return fee
+	return calculate_fee__kb(fee_per_kb_JSBigInt, numberOf_kB_JSBigInt, fee_multiplier)
 }
 function calculate_fee__kb(fee_per_kb_JSBigInt, numberOf_kb, fee_multiplier)
 {
@@ -70,13 +69,14 @@ function calculate_fee__kb(fee_per_kb_JSBigInt, numberOf_kb, fee_multiplier)
 }
 const newer_multipliers = [1, 4, 20, 166];
 function fee_multiplier_for_priority(priority__or0ForDefault) {
-	const priority_as_idx = !priority__or0ForDefault || priority__or0ForDefault == 0 
+	const final_priorityInt = !priority__or0ForDefault || priority__or0ForDefault == 0
 		? default_priority() 
 		: priority__or0ForDefault;
-	if (priority_as_idx <= 0 || priority_as_idx > 4) {
-		throw "fee_multiplier_for_priority: simple_priority out of bounds"
+	if (final_priorityInt <= 0 || final_priorityInt > newer_multipliers.length) {
+		throw "fee_multiplier_for_priority: simple_priority out of bounds";
 	}
-	return newer_multipliers[priority_as_idx - 1]
+	const priority_as_idx = final_priorityInt - 1;
+	return newer_multipliers[priority_as_idx];
 }
 function EstimatedTransaction_networkFee(
 	nonZero_mixin_int,
