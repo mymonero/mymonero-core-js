@@ -1645,7 +1645,7 @@ var cnUtil = function(currencyConfig)
 		}
 		//sort ins
 		sources.sort(function(a,b){
-			return JSBigInt.parse(a.key_image, 16).compare(JSBigInt.parse(b.key_image, 16)) < 0
+			return JSBigInt.parse(a.key_image, 16).compare(JSBigInt.parse(b.key_image, 16)) * -1 ;
 		});
 		//copy the sorted sources data to tx
 		for (i = 0; i < sources.length; i++) {
