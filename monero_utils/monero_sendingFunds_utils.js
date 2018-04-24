@@ -340,13 +340,8 @@ function SendFunds(
 		// Now we can validate available balance with usingOutsAmount (TODO? maybe this check can be done before selecting outputs?)
 		const usingOutsAmount_comparedTo_totalAmount = usingOutsAmount.compare(totalAmountIncludingFees)
 		if (usingOutsAmount_comparedTo_totalAmount < 0) {
-			__trampolineFor_err_withStr(
-				"Not enough spendable outputs / balance too low (have: " 
-				+ monero_utils.formatMoneyFull(usingOutsAmount) 
-				+ " need: " 
-				+ monero_utils.formatMoneyFull(totalAmountIncludingFees) 
-				+ ")"
-			)
+			const errStr = `Your spendable balance is too low. Have ${monero_utils.formatMoney(usingOutsAmount)} ${monero_config.coinSymbol} spendable, need ${monero_utils.formatMoney(totalAmountIncludingFees)} ${monero_config.coinSymbol}.`
+			__trampolineFor_err_withStr(errStr)
 			return
 		}
 		// Now we can put together the list of fund transfers we need to perform
