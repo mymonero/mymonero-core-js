@@ -30,16 +30,34 @@
 //
 const monero_config = require('./monero_config')
 //
+const URITypes =
+{
+	addressAsFirstPathComponent: 1,
+	addressAsAuthority: 2
+};
+exports.URITypes = URITypes;
+//
 function New_RequestFunds_URI(
 	args
-)// -> String?
-{
+) { // -> String? 
 	const address = args.address
 	if (!address) {
 		throw "missing address"
 		// return null
 	}
-	var uri = monero_config.coinUriPrefix + "//" + address  // inserting a // so data detectors pick it up… maybe remove if/after not necessary
+	var mutable_uri = ""
+	mutable_uri += monero_config.coinUriPrefix
+	{
+		const uriType = args.uriType;
+		if (uriType === URITypes.addressAsAuthority) {
+			mutable_uri += "//" // use for inserting a // so data detectors pick it up… 
+		} else if (uriType === URITypes.addressAsFirstPathComponent) {
+			// nothing to do
+		} else {
+			throw "Illegal args.uriType"
+		}
+	}
+	mutable_uri += address 
 	var isAppendingParam0 = true
 	function addParam(parameterName, value)
 	{
@@ -51,8 +69,8 @@ function New_RequestFunds_URI(
 			isAppendingParam0 = false
 			conjunctionStr = "?"
 		}
-		uri += conjunctionStr
-		uri += parameterName + '=' + encodeURIComponent(value)
+		mutable_uri += conjunctionStr
+		mutable_uri += parameterName + '=' + encodeURIComponent(value)
 	}
 	{
 		addParam('tx_amount', args.amount)
@@ -61,7 +79,7 @@ function New_RequestFunds_URI(
 		addParam('tx_payment_id', args.payment_id)
 		addParam('tx_message', args.message)
 	}
-	return uri
+	return mutable_uri
 }
 exports.New_RequestFunds_URI = New_RequestFunds_URI
 //
