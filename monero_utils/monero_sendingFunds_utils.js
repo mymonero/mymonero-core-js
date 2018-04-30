@@ -94,6 +94,24 @@ function EstimatedTransaction_networkFee(
 }
 exports.EstimatedTransaction_networkFee = EstimatedTransaction_networkFee
 //
+const SendFunds_ProcessStep_Code =
+{
+	fetchingLatestBalance: 1,
+	calculatingFee: 2,
+	fetchingDecoyOutputs: 3, // may get skipped if 0 mixin
+	constructingTransaction: 4, // may go back to .calculatingFee
+	submittingTransaction: 5
+}
+exports.SendFunds_ProcessStep_Code = SendFunds_ProcessStep_Code
+const SendFunds_ProcessStep_MessageSuffix =
+{
+	1: "Fetching latest balance.",
+	2: "Calculating fee.",
+	3: "Fetching decoy outputs.",
+	4: "Constructing transaction.", // may go back to .calculatingFee
+	5: "Submitting transaction."
+}
+exports.SendFunds_ProcessStep_MessageSuffix = SendFunds_ProcessStep_MessageSuffix
 //
 function SendFunds(
 	isRingCT,
@@ -108,6 +126,7 @@ function SendFunds(
 	payment_id,
 	mixin,
 	simple_priority,
+	preSuccess_nonTerminal_statusUpdate_fn, // (_ stepCode: SendFunds_ProcessStep_Code) -> Void
 	success_fn,
 	// success_fn: (
 	//		moneroReady_targetDescription_address?,
@@ -152,7 +171,6 @@ function SendFunds(
 		__trampolineFor_err_withStr("Ringsize is below the minimum.")
 		return;
 	}
-	// status: preparing to send funds…
 	//
 	// parse & normalize the target descriptions by mapping them to Monero addresses & amounts
 	const targetDescription =
@@ -232,8 +250,8 @@ function SendFunds(
 		totalAmountWithoutFee_JSBigInt,
 		final__payment_id, // non-existent or valid
 		final__pid_encrypt // true or false
-	)
-	{
+	) {
+		preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.fetchingLatestBalance)
 		hostedMoneroAPIClient.UnspentOuts(
 			wallet__keyImage_cache,
 			wallet__public_address,
@@ -297,6 +315,8 @@ function SendFunds(
 		feePerKB_JSBigInt,
 		passedIn_attemptAt_network_minimumFee
 	) { // Now we need to establish some values for balance validation and to construct the transaction
+		preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.calculatingFee)
+		//
 		var attemptAt_network_minimumFee = passedIn_attemptAt_network_minimumFee // we may change this if isRingCT
 		// const hostingService_chargeAmount = hostedMoneroAPIClient.HostingServiceChargeFor_transactionWithNetworkFee(attemptAt_network_minimumFee)
 		var totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(attemptAt_network_minimumFee)/*.add(hostingService_chargeAmount) NOTE service fee removed for now */
@@ -401,6 +421,7 @@ function SendFunds(
 			return
 		}
 		if (mixin > 0) { // first, grab RandomOuts, then enter __createTx 
+			preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.fetchingDecoyOutputs)
 			hostedMoneroAPIClient.RandomOuts(
 				usingOuts,
 				mixin,
@@ -419,6 +440,7 @@ function SendFunds(
 		}
 		function __createTxAndAttemptToSend(mix_outs)
 		{
+			preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.constructingTransaction)
 			var signedTx;
 			try {
 				console.log('Destinations: ')
@@ -486,6 +508,7 @@ function SendFunds(
 			// if we need a higher fee
 			if (feeActuallyNeededByNetwork.compare(attemptAt_network_minimumFee) > 0) {
 				console.log("💬  Need to reconstruct the tx with enough of a network fee. Previous fee: " + monero_utils.formatMoneyFull(attemptAt_network_minimumFee) + " New fee: " + monero_utils.formatMoneyFull(feeActuallyNeededByNetwork))
+				// this will update status back to .calculatingFee
 				__reenterable_constructFundTransferListAndSendFunds_findingLowestNetworkFee(
 					moneroReady_targetDescription_address,
 					totalAmountWithoutFee_JSBigInt,
@@ -503,6 +526,7 @@ function SendFunds(
 			const final_networkFee = attemptAt_network_minimumFee // just to make things clear
 			console.log("💬  Successful tx generation, submitting tx. Going with final_networkFee of ", monero_utils.formatMoney(final_networkFee))
 			// status: submitting…
+			preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.submittingTransaction)
 			hostedMoneroAPIClient.SubmitSerializedSignedTransaction(
 				wallet__public_address,
 				wallet__private_keys.view,
