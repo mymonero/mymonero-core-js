@@ -53,9 +53,7 @@ module.exports =
 	// Prefix code for addresses
 	addressPrefix: 18, // 18 => addresses start with "4"
 	integratedAddressPrefix: 19,
-
-	// Network per kb fee in atomic units
-	feePerKB_JSBigInt: new JSBigInt('2000000000'), // 0.002
+	subaddressPrefix: 42,
 
 	// Dust threshold in atomic units
 	// 10^10 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold

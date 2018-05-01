@@ -54,7 +54,7 @@ var cnUtil = function(currencyConfig)
 	var ENCRYPTED_PAYMENT_ID_TAIL = 141;
 	var CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefix;
 	var CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefix;
-	var CRYPTONOTE_PUBLIC_INTEGRATED_SUBADDRESS_BASE58_PREFIX = 42;
+	var CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subaddressPrefix;
 	var UINT64_MAX = new JSBigInt(2).pow(64);
 	var CURRENT_TX_VERSION = 2;
 	var OLD_TX_VERSION = 1;
@@ -526,9 +526,8 @@ var cnUtil = function(currencyConfig)
 	this.is_subaddress = function(addr) {
 		var decoded = cnBase58.decode(addr);
 		var subaddressPrefix = this.encode_varint(CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX);
-        	var prefix = decoded.slice(0, subaddressPrefix.length);
-        
-        	return (prefix === subaddressPrefix);
+		var prefix = decoded.slice(0, subaddressPrefix.length);
+		return (prefix === subaddressPrefix);
 	};
 
 	this.valid_keys = function(view_pub, view_sec, spend_pub, spend_sec) {
