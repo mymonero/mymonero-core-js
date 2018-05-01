@@ -661,6 +661,16 @@ var cnUtil = function(currencyConfig)
 		var s = this.derivation_to_scalar(derivation, out_index);
 		return bintohex(nacl.ll.ge_add(hextobin(pub), hextobin(this.ge_scalarmult_base(s))));
 	};
+	
+	// D' = P - Hs(aR|i)G
+	this.derive_subaddress_public_key = function(output_key, derivation, out_index) {
+		if(output_key.length !== 64 || derivation.length !== 64) {
+			throw "Invalid input length!";
+		}
+		var scalar = this.derivation_to_scalar(derivation, out_index);
+		var point = this.ge_scalarmult_base(scalar);
+		return this.ge_sub(output_key, point);
+	};
 
 	this.hash_to_ec = function(key) {
 		if (key.length !== (KEY_SIZE * 2)) {
