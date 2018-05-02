@@ -107,11 +107,11 @@ exports.DefaultWalletMnemonicWordsetName = mnemonicWordsetNamesByAppLocaleNames.
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet creation:
 //	
-function NewlyCreatedWallet(mnemonic_wordsetName)
+function NewlyCreatedWallet(mnemonic_wordsetName, nettype)
 {
 	const seed = monero_utils.random_scalar() // to generate a 32-byte (25-word) but reduced seed
 	const mnemonicString = mnemonic.mn_encode(seed, mnemonic_wordsetName)
-	const keys = monero_utils.create_address(seed)
+	const keys = monero_utils.create_address(seed, nettype)
 	//
 	return {
 		seed: seed,
@@ -133,7 +133,7 @@ function MnemonicStringFromSeed(account_seed, mnemonic_wordsetName)
 }
 exports.MnemonicStringFromSeed = MnemonicStringFromSeed
 //
-function SeedAndKeysFromMnemonic_sync(mnemonicString, mnemonic_wordsetName)
+function SeedAndKeysFromMnemonic_sync(mnemonicString, mnemonic_wordsetName, nettype)
 { // -> {err_str?, seed?, keys?}
 	mnemonicString = mnemonicString.toLowerCase() || ""
 	try {
@@ -159,7 +159,7 @@ function SeedAndKeysFromMnemonic_sync(mnemonicString, mnemonic_wordsetName)
 		if (seed === null) {
 			return { err_str: "Unable to derive seed", seed: null, keys: null }
 		}
-		keys = monero_utils.create_address(seed)
+		keys = monero_utils.create_address(seed, nettype)
 		if (keys === null) {
 			return { err_str: "Unable to derive keys from seed", seed: seed, keys: null }
 		}
@@ -171,9 +171,9 @@ function SeedAndKeysFromMnemonic_sync(mnemonicString, mnemonic_wordsetName)
 }
 exports.SeedAndKeysFromMnemonic_sync = SeedAndKeysFromMnemonic_sync
 
-function SeedAndKeysFromMnemonic(mnemonicString, mnemonic_wordsetName, fn) // made available via callback not because it's async but for convenience
+function SeedAndKeysFromMnemonic(mnemonicString, mnemonic_wordsetName, nettype, fn) // made available via callback not because it's async but for convenience
 { // fn: (err?, seed?, keys?)
-	const payload = SeedAndKeysFromMnemonic_sync(mnemonicString, mnemonic_wordsetName)
+	const payload = SeedAndKeysFromMnemonic_sync(mnemonicString, mnemonic_wordsetName, nettype)
 	const err = payload.err_str ? new Error(payload.err_str) : null
 	const seed = payload.seed
 	const keys = payload.keys
@@ -183,12 +183,12 @@ exports.SeedAndKeysFromMnemonic = SeedAndKeysFromMnemonic
 //
 function VerifiedComponentsForLogIn_sync(
 	address, 
+	nettype,
 	view_key, 
 	spend_key_orUndefinedForViewOnly, 
 	seed_orUndefined, 
 	wasAGeneratedWallet
-)
-{
+) {
 	var spend_key = typeof spend_key_orUndefinedForViewOnly !== 'undefined' && spend_key_orUndefinedForViewOnly != null && spend_key_orUndefinedForViewOnly != "" ? spend_key_orUndefinedForViewOnly : null
 	var isInViewOnlyMode = spend_key == null;
 	if (!view_key || view_key.length !== 64 || (isInViewOnlyMode ? false : spend_key.length !== 64)) {
@@ -199,7 +199,7 @@ function VerifiedComponentsForLogIn_sync(
 	}
 	var public_keys;
 	try {
-		public_keys = monero_utils.decode_address(address)
+		public_keys = monero_utils.decode_address(address, nettype)
 	} catch (e) {
 		return { err_str: "invalid address" }
 	}
@@ -232,7 +232,7 @@ function VerifiedComponentsForLogIn_sync(
 	if (typeof seed_orUndefined !== 'undefined' && seed_orUndefined && seed_orUndefined.length != 0) {
 		var expected_account;
 		try {
-			expected_account = monero_utils.create_address(seed_orUndefined)
+			expected_account = monero_utils.create_address(seed_orUndefined, nettype)
 		} catch (e) {
 			return { err_str: "invalid seed" }
 		}
@@ -258,15 +258,16 @@ exports.VerifiedComponentsForLogIn_sync = VerifiedComponentsForLogIn_sync
 //
 function VerifiedComponentsForLogIn(
 	address, 
+	nettype,
 	view_key, 
 	spend_key_orUndefinedForViewOnly, 
 	seed_orUndefined, 
 	wasAGeneratedWallet,
 	fn
-)
-{ // fn: (err?, address, account_seed, public_keys, private_keys, isInViewOnlyMode) -> Void
+) { // fn: (err?, address, account_seed, public_keys, private_keys, isInViewOnlyMode) -> Void
 	const payload = VerifiedComponentsForLogIn_sync(
 		address, 
+		nettype,
 		view_key, 
 		spend_key_orUndefinedForViewOnly, 
 		seed_orUndefined, 

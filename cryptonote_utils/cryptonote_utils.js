@@ -37,6 +37,7 @@ const CNCrypto = require('./cryptonote_crypto_EMSCRIPTEN')
 const mnemonic = require('./mnemonic')
 const nacl = require('./nacl-fast-cn')
 const sha3 = require('./sha3')
+const nettype_utils = require('./nettype')
 
 var cnUtil = function(currencyConfig)
 {
@@ -52,9 +53,7 @@ var cnUtil = function(currencyConfig)
 	var ADDRESS_CHECKSUM_SIZE = 4;
 	var INTEGRATED_ID_SIZE = 8;
 	var ENCRYPTED_PAYMENT_ID_TAIL = 141;
-	var CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = config.addressPrefix;
-	var CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = config.integratedAddressPrefix;
-	var CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = config.subaddressPrefix;
+	//
 	var UINT64_MAX = new JSBigInt(2).pow(64);
 	var CURRENT_TX_VERSION = 2;
 	var OLD_TX_VERSION = 1;
@@ -392,8 +391,8 @@ var cnUtil = function(currencyConfig)
 		return bintohex(nacl.ll.ge_scalarmult(hextobin(pub), hextobin(sec)));
 	};
 
-	this.pubkeys_to_string = function(spend, view) {
-		var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
+	this.pubkeys_to_string = function(spend, view, nettype) {
+		var prefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype));
 		var data = prefix + spend + view;
 		var checksum = this.cn_fast_hash(data);
 		return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
@@ -401,15 +400,17 @@ var cnUtil = function(currencyConfig)
 
 	this.new__int_addr_from_addr_and_short_pid = function(
 		address,
-		short_pid
+		short_pid,
+		nettype
 	) { // throws
 		let decoded_address = this.decode_address(
-			address // TODO/FIXME: not super happy about having to decode just to re-encode… this was a quick hack
+			address, // TODO/FIXME: not super happy about having to decode just to re-encode… this was a quick hack
+			nettype
 		); // throws
 		if (!short_pid || short_pid.length != 16) {
 			throw "expected valid short_pid";
 		}
-		var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX);
+		var prefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForIntegratedAddressOn(nettype));
 		var data = prefix + decoded_address.spend + decoded_address.view + short_pid;
 		var checksum = this.cn_fast_hash(data);
 		var encodable__data = data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2);
@@ -458,7 +459,7 @@ var cnUtil = function(currencyConfig)
 		return bintohex(output);
 	};*/
 
-	this.create_address = function(seed) {
+	this.create_address = function(seed, nettype) {
 		var keys = {};
 		// updated by Luigi and PS to support reduced and non-reduced seeds
 		var first;
@@ -470,11 +471,11 @@ var cnUtil = function(currencyConfig)
 		keys.spend = this.generate_keys(first);
 		var second = this.cn_fast_hash(first);
 		keys.view = this.generate_keys(second);
-		keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub);
+		keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub, nettype);
 		return keys;
 	};
 
-	this.create_addr_prefix = function(seed) {
+	this.create_addr_prefix = function(seed, nettype) {
 		var first;
 		if (seed.length !== 64) {
 			first = this.cn_fast_hash(seed);
@@ -482,15 +483,15 @@ var cnUtil = function(currencyConfig)
 			first = seed;
 		}
 		var spend = this.generate_keys(first);
-		var prefix = this.encode_varint(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
+		var prefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype));
 		return cnBase58.encode(prefix + spend.pub).slice(0, 44);
 	};
 	
-	this.decode_address = function(address) {
+	this.decode_address = function(address, nettype) {
 		var dec = cnBase58.decode(address);
-		var expectedPrefix = this.encode_varint(CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
-		var expectedPrefixInt = this.encode_varint(CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX);
-		var expectedPrefixSub = this.encode_varint(CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX);
+		var expectedPrefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype));
+		var expectedPrefixInt = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForIntegratedAddressOn(nettype));
+		var expectedPrefixSub = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForSubAddressOn(nettype));
 		var prefix = dec.slice(0, expectedPrefix.length);
 		if (prefix !== expectedPrefix && prefix !== expectedPrefixInt && prefix !== expectedPrefixSub) {
 			throw "Invalid address prefix";
@@ -523,9 +524,9 @@ var cnUtil = function(currencyConfig)
 		}
 	};
 	
-	this.is_subaddress = function(addr) {
+	this.is_subaddress = function(addr, nettype) {
 		var decoded = cnBase58.decode(addr);
-		var subaddressPrefix = this.encode_varint(CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX);
+		var subaddressPrefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForSubAddressOn(nettype));
 		var prefix = decoded.slice(0, subaddressPrefix.length);
 		return (prefix === subaddressPrefix);
 	};
@@ -1611,7 +1612,7 @@ var cnUtil = function(currencyConfig)
 		return sigs;
 	};
 
-	this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
+	this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, nettype) {
 		//we move payment ID stuff here, because we need txkey to encrypt
 		var txkey = this.random_keypair();
 		console.log(txkey);
@@ -1687,10 +1688,10 @@ var cnUtil = function(currencyConfig)
 			if (new JSBigInt(dsts[i].amount).compare(0) < 0) {
 				throw "dst.amount < 0"; //amount can be zero if no change
 			}
-			dsts[i].keys = this.decode_address(dsts[i].address);
+			dsts[i].keys = this.decode_address(dsts[i].address, nettype);
 			
 			// R = rD for subaddresses
-			if(this.is_subaddress(dsts[i].address)) {
+			if(this.is_subaddress(dsts[i].address, nettype)) {
 				txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
 			}
 			
@@ -1777,7 +1778,7 @@ var cnUtil = function(currencyConfig)
 		return tx;
 	};
 
-	this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct) {
+	this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, nettype) {
 		unlock_time = unlock_time || 0;
 		mix_outs = mix_outs || [];
 		var i, j;
@@ -1898,7 +1899,7 @@ var cnUtil = function(currencyConfig)
 		} else if (cmp > 0) {
 			throw "Need more money than found! (have: " + cnUtil.formatMoney(found_money) + " need: " + cnUtil.formatMoney(needed_money) + ")";
 		}
-		return this.construct_tx(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct);
+		return this.construct_tx(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, nettype);
 	};
 
 	this.estimateRctSize = function(inputs, mixin, outputs) {

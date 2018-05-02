@@ -116,6 +116,7 @@ exports.SendFunds_ProcessStep_MessageSuffix = SendFunds_ProcessStep_MessageSuffi
 function SendFunds(
 	isRingCT,
 	target_address, // currency-ready wallet address, but not an OA address (resolve before calling)
+	nettype,
 	amount, // number
 	wallet__keyImage_cache,
 	wallet__public_address,
@@ -182,6 +183,7 @@ function SendFunds(
 		monero_openalias_utils,
 		[ targetDescription ], // requires a list of descriptions - but SendFunds was
 		// not written with multiple target support as MyMonero does not yet support it
+		nettype,
 		function(err, moneroReady_targetDescriptions)
 		{
 			if (err) {
@@ -219,7 +221,7 @@ function SendFunds(
 		var final__pid_encrypt = false // we don't want to encrypt payment ID unless we find an integrated one
 		var address__decode_result; 
 		try {
-			address__decode_result = monero_utils.decode_address(moneroReady_targetDescription_address)
+			address__decode_result = monero_utils.decode_address(moneroReady_targetDescription_address, nettype)
 		} catch (e) {
 			__trampolineFor_err_withStr(typeof e === 'string' ? e : e.toString())
 			return
@@ -407,7 +409,7 @@ function SendFunds(
 			}
 		} else if (usingOutsAmount_comparedTo_totalAmount == 0) {
 			if (isRingCT) { // then create random destination to keep 2 outputs always in case of 0 change
-				var fakeAddress = monero_utils.create_address(monero_utils.random_scalar()).public_addr
+				var fakeAddress = monero_utils.create_address(monero_utils.random_scalar(), nettype).public_addr
 				console.log("Sending 0 XMR to a fake address to keep tx uniform (no change exists): " + fakeAddress)
 				fundTransferDescriptions.push({
 					address: fakeAddress,
@@ -448,7 +450,7 @@ function SendFunds(
 				//
 				var realDestViewKey // need to get viewkey for encrypting here, because of splitting and sorting
 				if (final__pid_encrypt) {
-					realDestViewKey = monero_utils.decode_address(moneroReady_targetDescription_address).view
+					realDestViewKey = monero_utils.decode_address(moneroReady_targetDescription_address, nettype).view
 					console.log("got realDestViewKey" , realDestViewKey)
 				}
 				var splitDestinations = monero_utils.decompose_tx_destinations(
@@ -470,7 +472,8 @@ function SendFunds(
 					final__pid_encrypt, 
 					realDestViewKey, 
 					0,
-					isRingCT
+					isRingCT,
+					nettype
 				)
 			} catch (e) {
 				var errStr;
@@ -555,6 +558,7 @@ exports.SendFunds = SendFunds
 function new_moneroReadyTargetDescriptions_fromTargetDescriptions( 
 	monero_openalias_utils,
 	targetDescriptions,
+	nettype,
 	fn
 ) // fn: (err, moneroReady_targetDescriptions) -> Void
 { // parse & normalize the target descriptions by mapping them to currency (Monero)-ready addresses & amounts
@@ -577,7 +581,7 @@ function new_moneroReadyTargetDescriptions_fromTargetDescriptions(
 			}
 			// otherwise this should be a normal, single Monero public address
 			try {
-				monero_utils.decode_address(targetDescription_address) // verify that the address is valid
+				monero_utils.decode_address(targetDescription_address, nettype) // verify that the address is valid
 			} catch (e) {
 				const errStr = "Couldn't decode address " + targetDescription_address + ": " + e
 				const err = new Error(errStr)
