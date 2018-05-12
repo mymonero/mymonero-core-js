@@ -190,6 +190,14 @@ function Parsed_AddressTransactions__sync(
 		transactions[i].amount = new JSBigInt(transactions[i].total_received || 0).subtract(transactions[i].total_sent || 0).toString()
 		transactions[i].approx_float_amount = parseFloat(monero_utils.formatMoney(transactions[i].amount))
 		transactions[i].timestamp = transactions[i].timestamp
+		const record__payment_id = transactions[i].payment_id
+		if (typeof record__payment_id !== 'undefined' && record__payment_id) {
+			if (record__payment_id.length == 16) { // short (encrypted) pid
+				if (transactions[i].approx_float_amount < 0) { // outgoing
+					delete transactions[i]["payment_id"] // need to filter these out .. because the server can't filter out short (encrypted) pids on outgoing txs
+				}
+			}
+		}
 	}
 	transactions.sort(function(a, b)
 	{
