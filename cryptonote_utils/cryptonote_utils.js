@@ -1692,7 +1692,10 @@ var cnUtil = function(currencyConfig)
 			
 			// R = rD for subaddresses
 			if(this.is_subaddress(dsts[i].address, nettype)) {
-				txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
+				if (typeof payment_id !== 'undefined' && payment_id) { // this could stand to be placed earlier in the function but we save repeating a little algo time this way
+					throw "Payment ID must not be supplied when sending to a subaddress"
+				}
+				txkey.pub = this.ge_scalarmult(dsts[i].keys.spend, txkey.sec);
 			}
 			
 			var out_derivation;

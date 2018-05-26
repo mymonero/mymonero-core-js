@@ -226,10 +226,16 @@ function SendFunds(
 			__trampolineFor_err_withStr(typeof e === 'string' ? e : e.toString())
 			return
 		}
-		if (address__decode_result.intPaymentId && payment_id) {
-			const errStr = "Payment ID field must be blank when using an Integrated Address"
-			__trampolineFor_err_withStr(errStr)
-			return
+		if (payment_id) {
+			if (address__decode_result.intPaymentId) {
+				const errStr = "Payment ID must be blank when using an Integrated Address"
+				__trampolineFor_err_withStr(errStr)
+				return
+			} else if (monero_utils.is_subaddress(moneroReady_targetDescription_address, nettype)) {
+				const errStr = "Payment ID must be blank when using a Subaddress"
+				__trampolineFor_err_withStr(errStr)
+				return
+			}
 		}
 		if (address__decode_result.intPaymentId) {
 			final__payment_id = address__decode_result.intPaymentId
