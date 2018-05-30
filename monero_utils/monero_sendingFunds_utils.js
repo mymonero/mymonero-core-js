@@ -575,7 +575,7 @@ function SendFunds(
 				function(err)
 				{
 					if (err) {
-						__trampolineFor_err_withStr("Something unexpected occurred when submitting your transaction:", err)
+						__trampolineFor_err_withStr("Something unexpected occurred when submitting your transaction: " + err)
 						return
 					}
 					const tx_fee = final_networkFee/*.add(hostingService_chargeAmount) NOTE: Service charge removed to reduce bloat for now */
