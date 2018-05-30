@@ -56,8 +56,8 @@ module.exports =
 	subaddressPrefix: 42,
 
 	// Dust threshold in atomic units
-	// 10^10 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
-	dustThreshold: new JSBigInt('10000000000'),
+	// 2*10^9 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
+	dustThreshold: new JSBigInt('2000000000'),
 	
 	// Maximum block number, used for tx unlock time
 	maxBlockNumber: 500000000,

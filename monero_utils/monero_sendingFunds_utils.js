@@ -270,6 +270,7 @@ function SendFunds(
 			wallet__public_keys.spend,
 			wallet__private_keys.spend,
 			mixin,
+			sweeping,
 			function(
 				err, 
 				unspentOuts,
@@ -340,7 +341,8 @@ function SendFunds(
 		const usableOutputsAndAmounts = _outputsAndAmountToUseForMixin(
 			totalAmountIncludingFees,
 			unusedOuts,
-			isRingCT
+			isRingCT,
+			sweeping
 		)
 		// v-- now if RingCT compute fee as closely as possible before hand
 		var usingOuts = usableOutputsAndAmounts.usingOuts
@@ -663,9 +665,9 @@ function _popAndReturnRandomElementFromList(list)
 function _outputsAndAmountToUseForMixin(
 	target_amount,
 	unusedOuts,
-	isRingCT
-)
-{
+	isRingCT,
+	sweeping
+) {
 	console.log("Selecting outputs to use. target: " + monero_utils.formatMoney(target_amount))
 	var toFinalize_usingOutsAmount = new JSBigInt(0)
 	const toFinalize_usingOuts = []
@@ -675,10 +677,22 @@ function _outputsAndAmountToUseForMixin(
 		if (!isRingCT && out.rct) { // out.rct is set by the server
 			continue; // skip rct outputs if not creating rct tx
 		}
-		const out_amount = out.amount
+		const out_amount_JSBigInt = new JSBigInt(out.amount)
+		if (out_amount_JSBigInt.compare(monero_config.dustThreshold) < 0) { // amount is dusty..
+			if (sweeping == false) {
+				console.log("Not sweeping, and found a dusty (though maybe mixable) output... skipping it!") 
+				continue
+			}
+			if (!out.rct || typeof out.rct === 'undefined') {
+				console.log("Sweeping, and found a dusty but unmixable (non-rct) output... skipping it!") 
+				continue
+			} else {
+				console.log("Sweeping and found a dusty but mixable (rct) amount... keeping it!") 
+			}
+		}
 		toFinalize_usingOuts.push(out)
-		toFinalize_usingOutsAmount = toFinalize_usingOutsAmount.add(out_amount)
-		console.log("Using output: " + monero_utils.formatMoney(out_amount) + " - " + JSON.stringify(out))
+		toFinalize_usingOutsAmount = toFinalize_usingOutsAmount.add(out_amount_JSBigInt)
+		console.log("Using output: " + monero_utils.formatMoney(out_amount_JSBigInt) + " - " + JSON.stringify(out))
 	}
 	return {
 		usingOuts: toFinalize_usingOuts,
