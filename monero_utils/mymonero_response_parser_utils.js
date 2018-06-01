@@ -201,6 +201,14 @@ function Parsed_AddressTransactions__sync(
 	}
 	transactions.sort(function(a, b)
 	{
+		if (a.mempool == true) {
+			if (b.mempool != true) {
+				return -1 // a first
+			}
+			// both mempool - fall back to .id compare
+		} else if (b.mempool == true) {
+			return 1 // b first
+		}
 		return b.id - a.id
 	})
 	// prepare transactions to be serialized
