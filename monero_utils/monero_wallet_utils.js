@@ -45,9 +45,44 @@ exports.WordsetNamesByWordsetName = wordsetNamesByWordsetName
 exports.AllWordsetNames = allWordsetNames
 //
 //
+// Mnemonic wordset utilities - Comparison
+// TODO: perhaps move this to mnemonic.js
+function AreEqualMnemonics(
+	a,
+	b,
+	a__wordsetName,
+	b__wordsetName
+) {
+	if (a__wordsetName !== b__wordsetName) {
+		return false
+	}
+	const wordsetName = a__wordsetName
+	const wordset = mnemonic.mn_words[wordsetName]
+	const prefix_len = wordset.prefix_len
+	// since mnemonics can be entered with only the first N letters, we must check equality of mnemonics by prefix
+	let a__mnemonicString_words = a.split(" ")
+	let b__mnemonicString_words = b.split(" ")
+	if (a__mnemonicString_words.length != b__mnemonicString_words.length) {
+		return false
+	}
+	let numberOf_mnemonicString_words = a__mnemonicString_words.length
+	for (var i = 0 ; i < numberOf_mnemonicString_words ; i++) {
+		let a__word = a__mnemonicString_words[i]
+		let b__word = b__mnemonicString_words[i]
+		// ... We're assuming that a and b are already valid mneminics
+		const a_prefix = a__word.slice(0, prefix_len)
+		const b_prefix = b__word.slice(0, prefix_len)
+		if (a_prefix !== b_prefix) {
+			return false
+		}
+	}
+	return true
+}
+exports.AreEqualMnemonics = AreEqualMnemonics
+//
 ////////////////////////////////////////////////////////////////////////////////
 // Mnemonic wordset utilities - Wordset name detection by mnemonic contents
-//	
+// TODO: perhaps move this to mnemonic.js
 function WordsetNameAccordingToMnemonicString(mnemonicString) // throws
 {
 	const mnemonicString_words = mnemonicString.split(' ')
@@ -61,12 +96,22 @@ function WordsetNameAccordingToMnemonicString(mnemonicString) // throws
 			if (wordsetName === 'electrum') {
 				continue // skip because it conflicts with 'english'
 			}
-			const wordsetWords = mnemonic.mn_words[wordsetName].words
-			if (wordsetWords.indexOf(mnemonicString_word) !== -1) {
-				thisWordIsInWordsetNamed = wordsetName
-				break // done looking
+			const wordset = mnemonic.mn_words[wordsetName]
+			const prefix_len = wordset.prefix_len
+			if (mnemonicString_word.length < prefix_len) {
+				throw "Please enter more than " + (prefix_len-1) + " letters per word"
 			}
-			// haven't found it yet
+			const wordsetWords = wordset.words
+			for (let wordsetWord of wordsetWords) {
+				if (wordsetWord.indexOf(mnemonicString_word) == 0) { // we can safely check prefix b/c we've checked mnemonicString_word is of at least min length
+					thisWordIsInWordsetNamed = wordsetName
+					break // done looking; exit interior then exterior loops
+				}
+			}
+			if (thisWordIsInWordsetNamed != null) { // just found
+				break // also exit
+			}
+			// haven't found it yet; keep looking
 		}
 		if (thisWordIsInWordsetNamed === null) { // didn't find this word in any of the mnemonic wordsets
 			throw "Unrecognized mnemonic language"
