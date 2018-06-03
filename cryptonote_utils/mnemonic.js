@@ -1011,7 +1011,7 @@ This version has been reimplemented in javascript and placed in public domain.
 			]
 		},
 		'japanese': {
-			prefix_len: 4,
+			prefix_len: 3,
 			words: [
 				"あいこくしん", "あいさつ", "あいだ", "あおぞら", "あかちゃん", "あきる", "あけがた", "あける",
 				"あこがれる", "あさい", "あさひ", "あしあと", "あじわう", "あずかる", "あずき", "あそぶ",
