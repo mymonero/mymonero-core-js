@@ -50,7 +50,7 @@ exports.fixedMixin = fixedMixin;
 exports.fixedRingsize = fixedRingsize;
 //
 //
-function default_priority() { return 2; } // aka .mlow or medium low
+function default_priority() { return 1; } // aka .low
 exports.default_priority = default_priority;
 //
 //
