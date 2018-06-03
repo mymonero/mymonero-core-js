@@ -29,6 +29,7 @@
 "use strict"
 //
 const monero_config = require('./monero_config')
+const monero_utils = require('./monero_cryptonote_utils_instance')
 //
 const URITypes =
 {
@@ -85,9 +86,34 @@ function New_RequestFunds_URI(
 }
 exports.New_RequestFunds_URI = New_RequestFunds_URI
 //
-function New_ParsedPayload_FromRequestURIString(uriString)
+function New_ParsedPayload_FromPossibleRequestURIString(string, nettype)
 { // throws; -> {}
-	// TODO
+	//
+	// detect no-scheme moneroAddr and possible OA addr - if has no monero: prefix
+	if (string.indexOf(monero_config.coinUriPrefix) !== 0) {
+		const stringHasQMark = string.indexOf("?") !== -1
+		if (stringHasQMark) { // fairly sure this is correct.. (just an extra failsafe/filter)
+			throw "Unrecognized URI format"
+		}
+		let couldBeOAAddress = string.indexOf(".") != -1 // contains period - would be nice to get this from DoesStringContainPeriodChar_excludingAsXMRAddress_qualifyingAsPossibleOAAddress so maybe mymonero_core_js should gain local_modules/OpenAlias
+		if (couldBeOAAddress) {
+			return {
+				address: string
+			}
+		}
+		var address__decode_result; 
+		try {
+			address__decode_result = monero_utils.decode_address(string, nettype)
+		} catch (e) {
+			throw "No Monero request info"
+			return
+		}
+		// then it looks like a monero address
+		return {
+			address: string
+		}
+	}
+	const uriString = string
 	const url = new URL(uriString)
 	const protocol = url.protocol
 	if (protocol !== monero_config.coinUriPrefix) {
@@ -122,4 +148,4 @@ function New_ParsedPayload_FromRequestURIString(uriString)
 	//
 	return payload
 }
-exports.New_ParsedPayload_FromRequestURIString = New_ParsedPayload_FromRequestURIString
+exports.New_ParsedPayload_FromPossibleRequestURIString = New_ParsedPayload_FromPossibleRequestURIString
