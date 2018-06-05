@@ -29,8 +29,8 @@
 "use strict"
 //
 const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
-const monero_utils = require('./monero_cryptonote_utils_instance')
-const monero_keyImage_cache_utils = require('./monero_keyImage_cache_utils')
+const monero_utils = require('../monero_utils/monero_cryptonote_utils_instance')
+const monero_keyImage_cache_utils = require('../monero_utils/monero_keyImage_cache_utils')
 //
 function Parsed_AddressInfo__sync(
 	keyImage_cache,

@@ -35,6 +35,7 @@ const monero_utils = require('./monero_cryptonote_utils_instance')
 const monero_paymentID_utils = require('./monero_paymentID_utils')
 const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
 //
+const hostAPI_net_service_utils = require('../hostAPI/net_service_utils')
 //
 function _forkv7_minimumMixin() { return 6; }
 function _mixinToRingsize(mixin) { return mixin + 1; }

@@ -40,7 +40,7 @@ mymonero_core_js.monero_requestURI_utils = require('./monero_utils/monero_reques
 mymonero_core_js.monero_keyImage_cache_utils = require('./monero_utils/monero_keyImage_cache_utils')
 mymonero_core_js.monero_wallet_locale = require('./monero_utils/monero_wallet_locale')
 mymonero_core_js.monero_paymentID_utils = require('./monero_utils/monero_paymentID_utils')
-mymonero_core_js.api_response_parser_utils = require('./monero_utils/mymonero_response_parser_utils')
+mymonero_core_js.api_response_parser_utils = require('./hostAPI/response_parser_utils')
 //
 mymonero_core_js.nettype_utils = require('./cryptonote_utils/nettype_utils')
 mymonero_core_js.JSBigInt = require('./cryptonote_utils/biginteger').BigInteger // so that it is available to a hypothetical consumer's language-bridging web context for constructing string arguments to the above modules
