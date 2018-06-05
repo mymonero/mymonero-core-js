@@ -29,8 +29,8 @@
 "use strict"
 //
 const JSBigInt = require('../cryptonote_utils/biginteger').BigInteger
-const monero_utils = require('../monero_utils/monero_cryptonote_utils_instance')
-const monero_keyImage_cache_utils = require('../monero_utils/monero_keyImage_cache_utils')
+const monero_utils = require('./monero_cryptonote_utils_instance')
+const monero_keyImage_cache_utils = require('./monero_keyImage_cache_utils')
 //
 function Parsed_AddressInfo__sync(
 	keyImage_cache,
@@ -122,7 +122,26 @@ function Parsed_AddressInfo(
 	)
 	fn(null, returnValuesByKey)
 }
+function Parsed_AddressInfo__keyImageManaged(
+	data,
+	address,
+	view_key__private,
+	spend_key__public,
+	spend_key__private,
+	fn
+) { // -> returnValuesByKey
+	Parsed_AddressInfo(
+		monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address),
+		data,
+		address,
+		view_key__private,
+		spend_key__public,
+		spend_key__private,
+		fn
+	)
+}
 exports.Parsed_AddressInfo = Parsed_AddressInfo
+exports.Parsed_AddressInfo__keyImageManaged = Parsed_AddressInfo__keyImageManaged // in case you can't send a mutable key image cache dictionary
 exports.Parsed_AddressInfo__sync__keyImageManaged = Parsed_AddressInfo__sync__keyImageManaged // in case you can't send a mutable key image cache dictionary
 exports.Parsed_AddressInfo__sync = Parsed_AddressInfo__sync
 //
@@ -247,7 +266,26 @@ function Parsed_AddressTransactions__sync__keyImageManaged(
 		spend_key__private
 	)
 }
+function Parsed_AddressTransactions__keyImageManaged(
+	data,
+	address,
+	view_key__private,
+	spend_key__public,
+	spend_key__private,
+	fn
+) {
+	Parsed_AddressTransactions(
+		monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address),
+		data,
+		address,
+		view_key__private,
+		spend_key__public,
+		spend_key__private,
+		fn
+	)
+}
 exports.Parsed_AddressTransactions = Parsed_AddressTransactions
+exports.Parsed_AddressTransactions__keyImageManaged = Parsed_AddressTransactions__keyImageManaged
 exports.Parsed_AddressTransactions__sync = Parsed_AddressTransactions__sync
 exports.Parsed_AddressTransactions__sync__keyImageManaged = Parsed_AddressTransactions__sync__keyImageManaged
 //
@@ -354,6 +392,25 @@ function Parsed_UnspentOuts__sync__keyImageManaged(
 		spend_key__private
 	)
 }
+function Parsed_UnspentOuts__keyImageManaged(
+	data,
+	address,
+	view_key__private,
+	spend_key__public,
+	spend_key__private,
+	fn
+) {
+	Parsed_UnspentOuts(
+		monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address),
+		data,
+		address,
+		view_key__private,
+		spend_key__public,
+		spend_key__private,
+		fn
+	)
+}
 exports.Parsed_UnspentOuts = Parsed_UnspentOuts
+exports.Parsed_UnspentOuts__keyImageManaged = Parsed_UnspentOuts__keyImageManaged
 exports.Parsed_UnspentOuts__sync = Parsed_UnspentOuts__sync
 exports.Parsed_UnspentOuts__sync__keyImageManaged = Parsed_UnspentOuts__sync__keyImageManaged

@@ -118,7 +118,6 @@ function SendFunds(
 	nettype,
 	amount_orZeroWhenSweep, // number - value will be ignoring for sweep
 	isSweep_orZeroWhenAmount, // send true to sweep - amount_orZeroWhenSweep will be ignored
-	wallet__keyImage_cache,
 	wallet__public_address,
 	wallet__private_keys,
 	wallet__public_keys,
@@ -264,7 +263,6 @@ function SendFunds(
 	) {
 		preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.fetchingLatestBalance)
 		hostedMoneroAPIClient.UnspentOuts(
-			wallet__keyImage_cache,
 			wallet__public_address,
 			wallet__private_keys.view,
 			wallet__public_keys.spend,
