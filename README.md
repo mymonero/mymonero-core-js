@@ -53,3 +53,5 @@ Suggestions and feedback are very welcome!
 ## Pull Requests
 
 We'll merge nearly anything constructive. Contributors welcome and credited in releases.
+
+We often collaborate over IRC in #mymonero on Freenode.
