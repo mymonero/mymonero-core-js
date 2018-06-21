@@ -1,21 +1,21 @@
 // Copyright (c) 2014-2018, MyMonero.com
-// 
+//
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //	conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //	of conditions and the following disclaimer in the documentation and/or other
 //	materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //	used to endorse or promote products derived from this software without specific
 //	prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,22 +26,24 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-"use strict"
+"use strict";
 //
-const monero_utils = require('./monero_cryptonote_utils_instance')
+const monero_utils = require("./monero_cryptonote_utils_instance");
 //
 // Note: long (64 char, plaintext) payment ids are deprecated.
 //
-function New_Short_TransactionID()
-{
-	return monero_utils.rand_8()
+function New_Short_TransactionID() {
+	return monero_utils.rand_8();
 }
 exports.New_Short_TransactionID = New_Short_TransactionID;
 exports.New_TransactionID = New_Short_TransactionID;
 //
-function IsValidPaymentIDOrNoPaymentID(payment_id__orNil)
-{
-	if (payment_id__orNil == null || payment_id__orNil == "" || typeof payment_id__orNil == "undefined") {
+function IsValidPaymentIDOrNoPaymentID(payment_id__orNil) {
+	if (
+		payment_id__orNil == null ||
+		payment_id__orNil == "" ||
+		typeof payment_id__orNil == "undefined"
+	) {
 		return true; // no pid
 	}
 	let payment_id = payment_id__orNil;
@@ -55,31 +57,30 @@ function IsValidPaymentIDOrNoPaymentID(payment_id__orNil)
 }
 exports.IsValidPaymentIDOrNoPaymentID = IsValidPaymentIDOrNoPaymentID;
 //
-function IsValidShortPaymentID(payment_id)
-{
+function IsValidShortPaymentID(payment_id) {
 	return IsValidPaymentIDOfLength(payment_id, 16);
 }
 exports.IsValidShortPaymentID = IsValidShortPaymentID;
 //
-function IsValidLongPaymentID(payment_id)
-{
+function IsValidLongPaymentID(payment_id) {
 	return IsValidPaymentIDOfLength(payment_id, 64);
 }
 exports.IsValidLongPaymentID = IsValidLongPaymentID;
 //
-function IsValidPaymentIDOfLength(payment_id, required_length)
-{
+function IsValidPaymentIDOfLength(payment_id, required_length) {
 	if (required_length != 16 && required_length != 64) {
 		throw "unexpected IsValidPaymentIDOfLength required_length";
 	}
 	let payment_id_length = payment_id.length;
-	if (payment_id_length !== required_length) { // new encrypted short
+	if (payment_id_length !== required_length) {
+		// new encrypted short
 		return false; // invalid length
 	}
 	let pattern = RegExp("^[0-9a-fA-F]{" + required_length + "}$");
-	if (pattern.test(payment_id) != true) { // not a valid required_length char pid
+	if (pattern.test(payment_id) != true) {
+		// not a valid required_length char pid
 		return false; // then not valid
-	} 
+	}
 	return true;
 }
 exports.IsValidShortPaymentID = IsValidShortPaymentID;

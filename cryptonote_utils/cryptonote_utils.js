@@ -1,21 +1,21 @@
 // Copyright (c) 2014-2018, MyMonero.com
-// 
+//
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //	conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //	of conditions and the following disclaimer in the documentation and/or other
 //	materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //	used to endorse or promote products derived from this software without specific
 //	prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -29,23 +29,22 @@
 // Original Author: Lucas Jones
 // Modified to remove jQuery dep and support modular inclusion of deps by Paul Shapiro (2016)
 // Modified to add RingCT support by luigi1111 (2017)
-//	
+//
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
-const JSBigInt = require('./biginteger').BigInteger
-const cnBase58 = require('./cryptonote_base58').cnBase58
-const CNCrypto = require('./cryptonote_crypto_EMSCRIPTEN')
-const mnemonic = require('./mnemonic')
-const nacl = require('./nacl-fast-cn')
-const sha3 = require('./sha3')
-const nettype_utils = require('./nettype')
+const JSBigInt = require("./biginteger").BigInteger;
+const cnBase58 = require("./cryptonote_base58").cnBase58;
+const CNCrypto = require("./cryptonote_crypto_EMSCRIPTEN");
+const mnemonic = require("./mnemonic");
+const nacl = require("./nacl-fast-cn");
+const sha3 = require("./sha3");
+const nettype_utils = require("./nettype");
 
-var cnUtil = function(currencyConfig)
-{
-	var config = {} // shallow copy of initConfig
+var cnUtil = function(currencyConfig) {
+	var config = {}; // shallow copy of initConfig
 	for (var key in currencyConfig) {
-		config[key] = currencyConfig[key]
+		config[key] = currencyConfig[key];
 	}
-	
+
 	config.coinUnits = new JSBigInt(10).pow(config.coinUnitPlaces);
 
 	var HASH_STATE_BYTES = 200;
@@ -61,14 +60,14 @@ var cnUtil = function(currencyConfig)
 	var RCTTypeSimple = 2;
 	var TX_EXTRA_NONCE_MAX_COUNT = 255;
 	var TX_EXTRA_TAGS = {
-		PADDING: '00',
-		PUBKEY: '01',
-		NONCE: '02',
-		MERGE_MINING: '03'
+		PADDING: "00",
+		PUBKEY: "01",
+		NONCE: "02",
+		MERGE_MINING: "03",
 	};
 	var TX_EXTRA_NONCE_TAGS = {
-		PAYMENT_ID: '00',
-		ENCRYPTED_PAYMENT_ID: '01'
+		PAYMENT_ID: "00",
+		ENCRYPTED_PAYMENT_ID: "01",
 	};
 	var KEY_SIZE = 32;
 	var STRUCT_SIZES = {
@@ -80,61 +79,102 @@ var cnUtil = function(currencyConfig)
 		EC_POINT: 32,
 		KEY_IMAGE: 32,
 		GE_DSMP: 160 * 8, // ge_cached * 8
-		SIGNATURE: 64 // ec_scalar * 2
+		SIGNATURE: 64, // ec_scalar * 2
 	};
 
 	//RCT vars
 	var H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94"; //base H for amounts
-	var l = JSBigInt("7237005577332262213973186563042994240857116359379907606001950938285454250989"); //curve order (not RCT specific)
+	var l = JSBigInt(
+		"7237005577332262213973186563042994240857116359379907606001950938285454250989",
+	); //curve order (not RCT specific)
 	var I = "0100000000000000000000000000000000000000000000000000000000000000"; //identity element
 	var Z = "0000000000000000000000000000000000000000000000000000000000000000"; //zero scalar
 	//H2 object to speed up some operations
-	var H2 = ["8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94", "8faa448ae4b3e2bb3d4d130909f55fcd79711c1c83cdbccadd42cbe1515e8712",
-		"12a7d62c7791654a57f3e67694ed50b49a7d9e3fc1e4c7a0bde29d187e9cc71d", "789ab9934b49c4f9e6785c6d57a498b3ead443f04f13df110c5427b4f214c739",
-		"771e9299d94f02ac72e38e44de568ac1dcb2edc6edb61f83ca418e1077ce3de8", "73b96db43039819bdaf5680e5c32d741488884d18d93866d4074a849182a8a64",
-		"8d458e1c2f68ebebccd2fd5d379f5e58f8134df3e0e88cad3d46701063a8d412", "09551edbe494418e81284455d64b35ee8ac093068a5f161fa6637559177ef404",
-		"d05a8866f4df8cee1e268b1d23a4c58c92e760309786cdac0feda1d247a9c9a7", "55cdaad518bd871dd1eb7bc7023e1dc0fdf3339864f88fdd2de269fe9ee1832d",
-		"e7697e951a98cfd5712b84bbe5f34ed733e9473fcb68eda66e3788df1958c306", "f92a970bae72782989bfc83adfaa92a4f49c7e95918b3bba3cdc7fe88acc8d47",
-		"1f66c2d491d75af915c8db6a6d1cb0cd4f7ddcd5e63d3ba9b83c866c39ef3a2b", "3eec9884b43f58e93ef8deea260004efea2a46344fc5965b1a7dd5d18997efa7",
-		"b29f8f0ccb96977fe777d489d6be9e7ebc19c409b5103568f277611d7ea84894", "56b1f51265b9559876d58d249d0c146d69a103636699874d3f90473550fe3f2c",
-		"1d7a36575e22f5d139ff9cc510fa138505576b63815a94e4b012bfd457caaada", "d0ac507a864ecd0593fa67be7d23134392d00e4007e2534878d9b242e10d7620",
-		"f6c6840b9cf145bb2dccf86e940be0fc098e32e31099d56f7fe087bd5deb5094", "28831a3340070eb1db87c12e05980d5f33e9ef90f83a4817c9f4a0a33227e197",
-		"87632273d629ccb7e1ed1a768fa2ebd51760f32e1c0b867a5d368d5271055c6e", "5c7b29424347964d04275517c5ae14b6b5ea2798b573fc94e6e44a5321600cfb",
-		"e6945042d78bc2c3bd6ec58c511a9fe859c0ad63fde494f5039e0e8232612bd5", "36d56907e2ec745db6e54f0b2e1b2300abcb422e712da588a40d3f1ebbbe02f6",
-		"34db6ee4d0608e5f783650495a3b2f5273c5134e5284e4fdf96627bb16e31e6b", "8e7659fb45a3787d674ae86731faa2538ec0fdf442ab26e9c791fada089467e9",
-		"3006cf198b24f31bb4c7e6346000abc701e827cfbb5df52dcfa42e9ca9ff0802", "f5fd403cb6e8be21472e377ffd805a8c6083ea4803b8485389cc3ebc215f002a",
-		"3731b260eb3f9482e45f1c3f3b9dcf834b75e6eef8c40f461ea27e8b6ed9473d", "9f9dab09c3f5e42855c2de971b659328a2dbc454845f396ffc053f0bb192f8c3",
-		"5e055d25f85fdb98f273e4afe08464c003b70f1ef0677bb5e25706400be620a5", "868bcf3679cb6b500b94418c0b8925f9865530303ae4e4b262591865666a4590",
-		"b3db6bd3897afbd1df3f9644ab21c8050e1f0038a52f7ca95ac0c3de7558cb7a", "8119b3a059ff2cac483e69bcd41d6d27149447914288bbeaee3413e6dcc6d1eb",
-		"10fc58f35fc7fe7ae875524bb5850003005b7f978c0c65e2a965464b6d00819c", "5acd94eb3c578379c1ea58a343ec4fcff962776fe35521e475a0e06d887b2db9",
-		"33daf3a214d6e0d42d2300a7b44b39290db8989b427974cd865db011055a2901", "cfc6572f29afd164a494e64e6f1aeb820c3e7da355144e5124a391d06e9f95ea",
-		"d5312a4b0ef615a331f6352c2ed21dac9e7c36398b939aec901c257f6cbc9e8e", "551d67fefc7b5b9f9fdbf6af57c96c8a74d7e45a002078a7b5ba45c6fde93e33",
-		"d50ac7bd5ca593c656928f38428017fc7ba502854c43d8414950e96ecb405dc3", "0773e18ea1be44fe1a97e239573cfae3e4e95ef9aa9faabeac1274d3ad261604",
-		"e9af0e7ca89330d2b8615d1b4137ca617e21297f2f0ded8e31b7d2ead8714660", "7b124583097f1029a0c74191fe7378c9105acc706695ed1493bb76034226a57b",
-		"ec40057b995476650b3db98e9db75738a8cd2f94d863b906150c56aac19caa6b", "01d9ff729efd39d83784c0fe59c4ae81a67034cb53c943fb818b9d8ae7fc33e5",
-		"00dfb3c696328c76424519a7befe8e0f6c76f947b52767916d24823f735baf2e", "461b799b4d9ceea8d580dcb76d11150d535e1639d16003c3fb7e9d1fd13083a8",
-		"ee03039479e5228fdc551cbde7079d3412ea186a517ccc63e46e9fcce4fe3a6c", "a8cfb543524e7f02b9f045acd543c21c373b4c9b98ac20cec417a6ddb5744e94",
-		"932b794bf89c6edaf5d0650c7c4bad9242b25626e37ead5aa75ec8c64e09dd4f", "16b10c779ce5cfef59c7710d2e68441ea6facb68e9b5f7d533ae0bb78e28bf57",
-		"0f77c76743e7396f9910139f4937d837ae54e21038ac5c0b3fd6ef171a28a7e4", "d7e574b7b952f293e80dde905eb509373f3f6cd109a02208b3c1e924080a20ca",
-		"45666f8c381e3da675563ff8ba23f83bfac30c34abdde6e5c0975ef9fd700cb9", "b24612e454607eb1aba447f816d1a4551ef95fa7247fb7c1f503020a7177f0dd",
-		"7e208861856da42c8bb46a7567f8121362d9fb2496f131a4aa9017cf366cdfce", "5b646bff6ad1100165037a055601ea02358c0f41050f9dfe3c95dccbd3087be0",
-		"746d1dccfed2f0ff1e13c51e2d50d5324375fbd5bf7ca82a8931828d801d43ab", "cb98110d4a6bb97d22feadbc6c0d8930c5f8fc508b2fc5b35328d26b88db19ae",
-		"60b626a033b55f27d7676c4095eababc7a2c7ede2624b472e97f64f96b8cfc0e", "e5b52bc927468df71893eb8197ef820cf76cb0aaf6e8e4fe93ad62d803983104",
-		"056541ae5da9961be2b0a5e895e5c5ba153cbb62dd561a427bad0ffd41923199", "f8fef05a3fa5c9f3eba41638b247b711a99f960fe73aa2f90136aeb20329b888"];
+	var H2 = [
+		"8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94",
+		"8faa448ae4b3e2bb3d4d130909f55fcd79711c1c83cdbccadd42cbe1515e8712",
+		"12a7d62c7791654a57f3e67694ed50b49a7d9e3fc1e4c7a0bde29d187e9cc71d",
+		"789ab9934b49c4f9e6785c6d57a498b3ead443f04f13df110c5427b4f214c739",
+		"771e9299d94f02ac72e38e44de568ac1dcb2edc6edb61f83ca418e1077ce3de8",
+		"73b96db43039819bdaf5680e5c32d741488884d18d93866d4074a849182a8a64",
+		"8d458e1c2f68ebebccd2fd5d379f5e58f8134df3e0e88cad3d46701063a8d412",
+		"09551edbe494418e81284455d64b35ee8ac093068a5f161fa6637559177ef404",
+		"d05a8866f4df8cee1e268b1d23a4c58c92e760309786cdac0feda1d247a9c9a7",
+		"55cdaad518bd871dd1eb7bc7023e1dc0fdf3339864f88fdd2de269fe9ee1832d",
+		"e7697e951a98cfd5712b84bbe5f34ed733e9473fcb68eda66e3788df1958c306",
+		"f92a970bae72782989bfc83adfaa92a4f49c7e95918b3bba3cdc7fe88acc8d47",
+		"1f66c2d491d75af915c8db6a6d1cb0cd4f7ddcd5e63d3ba9b83c866c39ef3a2b",
+		"3eec9884b43f58e93ef8deea260004efea2a46344fc5965b1a7dd5d18997efa7",
+		"b29f8f0ccb96977fe777d489d6be9e7ebc19c409b5103568f277611d7ea84894",
+		"56b1f51265b9559876d58d249d0c146d69a103636699874d3f90473550fe3f2c",
+		"1d7a36575e22f5d139ff9cc510fa138505576b63815a94e4b012bfd457caaada",
+		"d0ac507a864ecd0593fa67be7d23134392d00e4007e2534878d9b242e10d7620",
+		"f6c6840b9cf145bb2dccf86e940be0fc098e32e31099d56f7fe087bd5deb5094",
+		"28831a3340070eb1db87c12e05980d5f33e9ef90f83a4817c9f4a0a33227e197",
+		"87632273d629ccb7e1ed1a768fa2ebd51760f32e1c0b867a5d368d5271055c6e",
+		"5c7b29424347964d04275517c5ae14b6b5ea2798b573fc94e6e44a5321600cfb",
+		"e6945042d78bc2c3bd6ec58c511a9fe859c0ad63fde494f5039e0e8232612bd5",
+		"36d56907e2ec745db6e54f0b2e1b2300abcb422e712da588a40d3f1ebbbe02f6",
+		"34db6ee4d0608e5f783650495a3b2f5273c5134e5284e4fdf96627bb16e31e6b",
+		"8e7659fb45a3787d674ae86731faa2538ec0fdf442ab26e9c791fada089467e9",
+		"3006cf198b24f31bb4c7e6346000abc701e827cfbb5df52dcfa42e9ca9ff0802",
+		"f5fd403cb6e8be21472e377ffd805a8c6083ea4803b8485389cc3ebc215f002a",
+		"3731b260eb3f9482e45f1c3f3b9dcf834b75e6eef8c40f461ea27e8b6ed9473d",
+		"9f9dab09c3f5e42855c2de971b659328a2dbc454845f396ffc053f0bb192f8c3",
+		"5e055d25f85fdb98f273e4afe08464c003b70f1ef0677bb5e25706400be620a5",
+		"868bcf3679cb6b500b94418c0b8925f9865530303ae4e4b262591865666a4590",
+		"b3db6bd3897afbd1df3f9644ab21c8050e1f0038a52f7ca95ac0c3de7558cb7a",
+		"8119b3a059ff2cac483e69bcd41d6d27149447914288bbeaee3413e6dcc6d1eb",
+		"10fc58f35fc7fe7ae875524bb5850003005b7f978c0c65e2a965464b6d00819c",
+		"5acd94eb3c578379c1ea58a343ec4fcff962776fe35521e475a0e06d887b2db9",
+		"33daf3a214d6e0d42d2300a7b44b39290db8989b427974cd865db011055a2901",
+		"cfc6572f29afd164a494e64e6f1aeb820c3e7da355144e5124a391d06e9f95ea",
+		"d5312a4b0ef615a331f6352c2ed21dac9e7c36398b939aec901c257f6cbc9e8e",
+		"551d67fefc7b5b9f9fdbf6af57c96c8a74d7e45a002078a7b5ba45c6fde93e33",
+		"d50ac7bd5ca593c656928f38428017fc7ba502854c43d8414950e96ecb405dc3",
+		"0773e18ea1be44fe1a97e239573cfae3e4e95ef9aa9faabeac1274d3ad261604",
+		"e9af0e7ca89330d2b8615d1b4137ca617e21297f2f0ded8e31b7d2ead8714660",
+		"7b124583097f1029a0c74191fe7378c9105acc706695ed1493bb76034226a57b",
+		"ec40057b995476650b3db98e9db75738a8cd2f94d863b906150c56aac19caa6b",
+		"01d9ff729efd39d83784c0fe59c4ae81a67034cb53c943fb818b9d8ae7fc33e5",
+		"00dfb3c696328c76424519a7befe8e0f6c76f947b52767916d24823f735baf2e",
+		"461b799b4d9ceea8d580dcb76d11150d535e1639d16003c3fb7e9d1fd13083a8",
+		"ee03039479e5228fdc551cbde7079d3412ea186a517ccc63e46e9fcce4fe3a6c",
+		"a8cfb543524e7f02b9f045acd543c21c373b4c9b98ac20cec417a6ddb5744e94",
+		"932b794bf89c6edaf5d0650c7c4bad9242b25626e37ead5aa75ec8c64e09dd4f",
+		"16b10c779ce5cfef59c7710d2e68441ea6facb68e9b5f7d533ae0bb78e28bf57",
+		"0f77c76743e7396f9910139f4937d837ae54e21038ac5c0b3fd6ef171a28a7e4",
+		"d7e574b7b952f293e80dde905eb509373f3f6cd109a02208b3c1e924080a20ca",
+		"45666f8c381e3da675563ff8ba23f83bfac30c34abdde6e5c0975ef9fd700cb9",
+		"b24612e454607eb1aba447f816d1a4551ef95fa7247fb7c1f503020a7177f0dd",
+		"7e208861856da42c8bb46a7567f8121362d9fb2496f131a4aa9017cf366cdfce",
+		"5b646bff6ad1100165037a055601ea02358c0f41050f9dfe3c95dccbd3087be0",
+		"746d1dccfed2f0ff1e13c51e2d50d5324375fbd5bf7ca82a8931828d801d43ab",
+		"cb98110d4a6bb97d22feadbc6c0d8930c5f8fc508b2fc5b35328d26b88db19ae",
+		"60b626a033b55f27d7676c4095eababc7a2c7ede2624b472e97f64f96b8cfc0e",
+		"e5b52bc927468df71893eb8197ef820cf76cb0aaf6e8e4fe93ad62d803983104",
+		"056541ae5da9961be2b0a5e895e5c5ba153cbb62dd561a427bad0ffd41923199",
+		"f8fef05a3fa5c9f3eba41638b247b711a99f960fe73aa2f90136aeb20329b888",
+	];
 
 	//begin rct new functions
 	//creates a Pedersen commitment from an amount (in scalar form) and a mask
 	//C = bG + aH where b = mask, a = amount
-	function commit(amount, mask){
-		if (!valid_hex(mask) || mask.length !== 64 || !valid_hex(amount) || amount.length !== 64){
+	function commit(amount, mask) {
+		if (
+			!valid_hex(mask) ||
+			mask.length !== 64 ||
+			!valid_hex(amount) ||
+			amount.length !== 64
+		) {
 			throw "invalid amount or mask!";
 		}
 		var C = this.ge_double_scalarmult_base_vartime(amount, H, mask);
 		return C;
 	}
 
-	function zeroCommit(amount){
-		if (!valid_hex(amount) || amount.length !== 64){
+	function zeroCommit(amount) {
+		if (!valid_hex(amount) || amount.length !== 64) {
 			throw "invalid amount!";
 		}
 		var C = this.ge_double_scalarmult_base_vartime(amount, H, I);
@@ -145,8 +185,8 @@ var cnUtil = function(currencyConfig)
 		var first = this.hash_to_scalar(key);
 		var second = this.hash_to_scalar(first);
 		return {
-			"mask": this.sc_sub(ecdh.mask, first),
-			"amount": this.sc_sub(ecdh.amount, second)
+			mask: this.sc_sub(ecdh.mask, first),
+			amount: this.sc_sub(ecdh.amount, second),
 		};
 	};
 
@@ -154,25 +194,27 @@ var cnUtil = function(currencyConfig)
 		var first = this.hash_to_scalar(key);
 		var second = this.hash_to_scalar(first);
 		return {
-			"mask": this.sc_add(ecdh.mask, first),
-			"amount": this.sc_add(ecdh.amount, second)
+			mask: this.sc_add(ecdh.mask, first),
+			amount: this.sc_add(ecdh.amount, second),
 		};
 	};
 
 	//switch byte order for hex string
-	function swapEndian(hex){
-		if (hex.length % 2 !== 0){return "length must be a multiple of 2!";}
+	function swapEndian(hex) {
+		if (hex.length % 2 !== 0) {
+			return "length must be a multiple of 2!";
+		}
 		var data = "";
-		for (var i=1; i <= hex.length / 2; i++){
+		for (var i = 1; i <= hex.length / 2; i++) {
 			data += hex.substr(0 - 2 * i, 2);
 		}
 		return data;
 	}
 
 	//switch byte order charwise
-	function swapEndianC(string){
+	function swapEndianC(string) {
 		var data = "";
-		for (var i=1; i <= string.length; i++){
+		for (var i = 1; i <= string.length; i++) {
 			data += string.substr(0 - i, 1);
 		}
 		return data;
@@ -180,46 +222,61 @@ var cnUtil = function(currencyConfig)
 
 	//for most uses you'll also want to swapEndian after conversion
 	//mainly to convert integer "scalars" to usable hexadecimal strings
-	function d2h(integer){
-		if (typeof integer !== "string" && integer.toString().length > 15){throw "integer should be entered as a string for precision";}
+	function d2h(integer) {
+		if (typeof integer !== "string" && integer.toString().length > 15) {
+			throw "integer should be entered as a string for precision";
+		}
 		var padding = "";
-		for (i = 0; i < 63; i++){
+		for (i = 0; i < 63; i++) {
 			padding += "0";
 		}
-		return (padding + JSBigInt(integer).toString(16).toLowerCase()).slice(-64);
+		return (
+			padding +
+			JSBigInt(integer)
+				.toString(16)
+				.toLowerCase()
+		).slice(-64);
 	}
 
 	//integer (string) to scalar
-	function d2s(integer){
+	function d2s(integer) {
 		return swapEndian(d2h(integer));
 	}
 
 	//scalar to integer (string)
-	function s2d(scalar){
+	function s2d(scalar) {
 		return JSBigInt.parse(swapEndian(scalar), 16).toString();
 	}
 
 	//convert integer string to 64bit "binary" little-endian string
-	function d2b(integer){
-		if (typeof integer !== "string" && integer.toString().length > 15){throw "integer should be entered as a string for precision";}
+	function d2b(integer) {
+		if (typeof integer !== "string" && integer.toString().length > 15) {
+			throw "integer should be entered as a string for precision";
+		}
 		var padding = "";
-		for (i = 0; i < 63; i++){
+		for (i = 0; i < 63; i++) {
 			padding += "0";
 		}
 		var a = new JSBigInt(integer);
-		if (a.toString(2).length > 64){throw "amount overflows uint64!";}
+		if (a.toString(2).length > 64) {
+			throw "amount overflows uint64!";
+		}
 		return swapEndianC((padding + a.toString(2)).slice(-64));
 	}
 
 	//convert integer string to 64bit base 4 little-endian string
-	function d2b4(integer){
-		if (typeof integer !== "string" && integer.toString().length > 15){throw "integer should be entered as a string for precision";}
+	function d2b4(integer) {
+		if (typeof integer !== "string" && integer.toString().length > 15) {
+			throw "integer should be entered as a string for precision";
+		}
 		var padding = "";
-		for (i = 0; i < 31; i++){
+		for (i = 0; i < 31; i++) {
 			padding += "0";
 		}
 		var a = new JSBigInt(integer);
-		if (a.toString(2).length > 64){throw "amount overflows uint64!";}
+		if (a.toString(2).length > 64) {
+			throw "amount overflows uint64!";
+		}
 		return swapEndianC((padding + a.toString(4)).slice(-32));
 	}
 	//end rct new functions
@@ -231,11 +288,19 @@ var cnUtil = function(currencyConfig)
 
 	//simple exclusive or function for two hex inputs
 	this.hex_xor = function(hex1, hex2) {
-		if (!hex1 || !hex2 || hex1.length !== hex2.length || hex1.length % 2 !== 0 || hex2.length % 2 !== 0){throw "Hex string(s) is/are invalid!";}
+		if (
+			!hex1 ||
+			!hex2 ||
+			hex1.length !== hex2.length ||
+			hex1.length % 2 !== 0 ||
+			hex2.length % 2 !== 0
+		) {
+			throw "Hex string(s) is/are invalid!";
+		}
 		var bin1 = hextobin(hex1);
 		var bin2 = hextobin(hex2);
 		var xor = new Uint8Array(bin1.length);
-		for (i = 0; i < xor.length; i++){
+		for (i = 0; i < xor.length; i++) {
 			xor[i] = bin1[i] ^ bin2[i];
 		}
 		return bintohex(xor);
@@ -275,7 +340,7 @@ var cnUtil = function(currencyConfig)
 
 	this.encode_varint = function(i) {
 		i = new JSBigInt(i);
-		var out = '';
+		var out = "";
 		// While i >= b10000000
 		while (i.compare(0x80) >= 0) {
 			// out.append i & b01111111 | b10000000
@@ -293,7 +358,7 @@ var cnUtil = function(currencyConfig)
 		}
 		var mem = CNCrypto._malloc(64);
 		CNCrypto.HEAPU8.set(input, mem);
-		CNCrypto.ccall('sc_reduce', 'void', ['number'], [mem]);
+		CNCrypto.ccall("sc_reduce", "void", ["number"], [mem]);
 		var output = CNCrypto.HEAPU8.subarray(mem, mem + 64);
 		CNCrypto._free(mem);
 		return bintohex(output);
@@ -306,7 +371,7 @@ var cnUtil = function(currencyConfig)
 		}
 		var mem = CNCrypto._malloc(32);
 		CNCrypto.HEAPU8.set(input, mem);
-		CNCrypto.ccall('sc_reduce32', 'void', ['number'], [mem]);
+		CNCrypto.ccall("sc_reduce32", "void", ["number"], [mem]);
 		var output = CNCrypto.HEAPU8.subarray(mem, mem + 32);
 		CNCrypto._free(mem);
 		return bintohex(output);
@@ -392,28 +457,37 @@ var cnUtil = function(currencyConfig)
 	};
 
 	this.pubkeys_to_string = function(spend, view, nettype) {
-		var prefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype));
+		var prefix = this.encode_varint(
+			nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype),
+		);
 		var data = prefix + spend + view;
 		var checksum = this.cn_fast_hash(data);
-		return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
+		return cnBase58.encode(
+			data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2),
+		);
 	};
 
 	this.new__int_addr_from_addr_and_short_pid = function(
 		address,
 		short_pid,
-		nettype
-	) { // throws
+		nettype,
+	) {
+		// throws
 		let decoded_address = this.decode_address(
 			address, // TODO/FIXME: not super happy about having to decode just to re-encode… this was a quick hack
-			nettype
+			nettype,
 		); // throws
 		if (!short_pid || short_pid.length != 16) {
 			throw "expected valid short_pid";
 		}
-		var prefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForIntegratedAddressOn(nettype));
-		var data = prefix + decoded_address.spend + decoded_address.view + short_pid;
+		var prefix = this.encode_varint(
+			nettype_utils.cryptonoteBase58PrefixForIntegratedAddressOn(nettype),
+		);
+		var data =
+			prefix + decoded_address.spend + decoded_address.view + short_pid;
 		var checksum = this.cn_fast_hash(data);
-		var encodable__data = data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2);
+		var encodable__data =
+			data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2);
 		//
 		return cnBase58.encode(encodable__data);
 	};
@@ -424,8 +498,8 @@ var cnUtil = function(currencyConfig)
 		var sec = this.sc_reduce32(seed);
 		var pub = this.sec_key_to_pub(sec);
 		return {
-			'sec': sec,
-			'pub': pub
+			sec: sec,
+			pub: pub,
 		};
 	};
 
@@ -471,7 +545,11 @@ var cnUtil = function(currencyConfig)
 		keys.spend = this.generate_keys(first);
 		var second = this.cn_fast_hash(first);
 		keys.view = this.generate_keys(second);
-		keys.public_addr = this.pubkeys_to_string(keys.spend.pub, keys.view.pub, nettype);
+		keys.public_addr = this.pubkeys_to_string(
+			keys.spend.pub,
+			keys.view.pub,
+			nettype,
+		);
 		return keys;
 	};
 
@@ -483,58 +561,81 @@ var cnUtil = function(currencyConfig)
 			first = seed;
 		}
 		var spend = this.generate_keys(first);
-		var prefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype));
+		var prefix = this.encode_varint(
+			nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype),
+		);
 		return cnBase58.encode(prefix + spend.pub).slice(0, 44);
 	};
-	
+
 	this.decode_address = function(address, nettype) {
 		var dec = cnBase58.decode(address);
-		var expectedPrefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype));
-		var expectedPrefixInt = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForIntegratedAddressOn(nettype));
-		var expectedPrefixSub = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForSubAddressOn(nettype));
+		var expectedPrefix = this.encode_varint(
+			nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype),
+		);
+		var expectedPrefixInt = this.encode_varint(
+			nettype_utils.cryptonoteBase58PrefixForIntegratedAddressOn(nettype),
+		);
+		var expectedPrefixSub = this.encode_varint(
+			nettype_utils.cryptonoteBase58PrefixForSubAddressOn(nettype),
+		);
 		var prefix = dec.slice(0, expectedPrefix.length);
-		if (prefix !== expectedPrefix && prefix !== expectedPrefixInt && prefix !== expectedPrefixSub) {
+		if (
+			prefix !== expectedPrefix &&
+			prefix !== expectedPrefixInt &&
+			prefix !== expectedPrefixSub
+		) {
 			throw "Invalid address prefix";
 		}
 		dec = dec.slice(expectedPrefix.length);
 		var spend = dec.slice(0, 64);
 		var view = dec.slice(64, 128);
-		if (prefix === expectedPrefixInt){
-			var intPaymentId = dec.slice(128, 128 + (INTEGRATED_ID_SIZE * 2));
-			var checksum = dec.slice(128 + (INTEGRATED_ID_SIZE * 2), 128 + (INTEGRATED_ID_SIZE * 2) + (ADDRESS_CHECKSUM_SIZE * 2));
-			var expectedChecksum = this.cn_fast_hash(prefix + spend + view + intPaymentId).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
+		if (prefix === expectedPrefixInt) {
+			var intPaymentId = dec.slice(128, 128 + INTEGRATED_ID_SIZE * 2);
+			var checksum = dec.slice(
+				128 + INTEGRATED_ID_SIZE * 2,
+				128 + INTEGRATED_ID_SIZE * 2 + ADDRESS_CHECKSUM_SIZE * 2,
+			);
+			var expectedChecksum = this.cn_fast_hash(
+				prefix + spend + view + intPaymentId,
+			).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
 		} else {
-			var checksum = dec.slice(128, 128 + (ADDRESS_CHECKSUM_SIZE * 2));
-			var expectedChecksum = this.cn_fast_hash(prefix + spend + view).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
+			var checksum = dec.slice(128, 128 + ADDRESS_CHECKSUM_SIZE * 2);
+			var expectedChecksum = this.cn_fast_hash(
+				prefix + spend + view,
+			).slice(0, ADDRESS_CHECKSUM_SIZE * 2);
 		}
 		if (checksum !== expectedChecksum) {
 			throw "Invalid checksum";
 		}
-		if (intPaymentId){
+		if (intPaymentId) {
 			return {
 				spend: spend,
 				view: view,
-				intPaymentId: intPaymentId
+				intPaymentId: intPaymentId,
 			};
 		} else {
 			return {
 				spend: spend,
-				view: view
+				view: view,
 			};
 		}
 	};
-	
+
 	this.is_subaddress = function(addr, nettype) {
 		var decoded = cnBase58.decode(addr);
-		var subaddressPrefix = this.encode_varint(nettype_utils.cryptonoteBase58PrefixForSubAddressOn(nettype));
+		var subaddressPrefix = this.encode_varint(
+			nettype_utils.cryptonoteBase58PrefixForSubAddressOn(nettype),
+		);
 		var prefix = decoded.slice(0, subaddressPrefix.length);
-		return (prefix === subaddressPrefix);
+		return prefix === subaddressPrefix;
 	};
 
 	this.valid_keys = function(view_pub, view_sec, spend_pub, spend_sec) {
 		var expected_view_pub = this.sec_key_to_pub(view_sec);
 		var expected_spend_pub = this.sec_key_to_pub(spend_sec);
-		return (expected_spend_pub === spend_pub) && (expected_view_pub === view_pub);
+		return (
+			expected_spend_pub === spend_pub && expected_view_pub === view_pub
+		);
 	};
 
 	this.hash_to_scalar = function(buf) {
@@ -584,7 +685,7 @@ var cnUtil = function(currencyConfig)
 
 	this.derivation_to_scalar = function(derivation, output_index) {
 		var buf = "";
-		if (derivation.length !== (STRUCT_SIZES.EC_POINT * 2)) {
+		if (derivation.length !== STRUCT_SIZES.EC_POINT * 2) {
 			throw "Invalid derivation length!";
 		}
 		buf += derivation;
@@ -601,13 +702,23 @@ var cnUtil = function(currencyConfig)
 			throw "Invalid input length!";
 		}
 		var scalar_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
-		var scalar_b = hextobin(this.derivation_to_scalar(derivation, out_index));
+		var scalar_b = hextobin(
+			this.derivation_to_scalar(derivation, out_index),
+		);
 		CNCrypto.HEAPU8.set(scalar_b, scalar_m);
 		var base_m = CNCrypto._malloc(KEY_SIZE);
 		CNCrypto.HEAPU8.set(hextobin(sec), base_m);
 		var derived_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
-		CNCrypto.ccall("sc_add", "void", ["number", "number", "number"], [derived_m, base_m, scalar_m]);
-		var res = CNCrypto.HEAPU8.subarray(derived_m, derived_m + STRUCT_SIZES.EC_SCALAR);
+		CNCrypto.ccall(
+			"sc_add",
+			"void",
+			["number", "number", "number"],
+			[derived_m, base_m, scalar_m],
+		);
+		var res = CNCrypto.HEAPU8.subarray(
+			derived_m,
+			derived_m + STRUCT_SIZES.EC_SCALAR,
+		);
 		CNCrypto._free(scalar_m);
 		CNCrypto._free(base_m);
 		CNCrypto._free(derived_m);
@@ -659,12 +770,18 @@ var cnUtil = function(currencyConfig)
 			throw "Invalid input length!";
 		}
 		var s = this.derivation_to_scalar(derivation, out_index);
-		return bintohex(nacl.ll.ge_add(hextobin(pub), hextobin(this.ge_scalarmult_base(s))));
+		return bintohex(
+			nacl.ll.ge_add(hextobin(pub), hextobin(this.ge_scalarmult_base(s))),
+		);
 	};
-	
+
 	// D' = P - Hs(aR|i)G
-	this.derive_subaddress_public_key = function(output_key, derivation, out_index) {
-		if(output_key.length !== 64 || derivation.length !== 64) {
+	this.derive_subaddress_public_key = function(
+		output_key,
+		derivation,
+		out_index,
+	) {
+		if (output_key.length !== 64 || derivation.length !== 64) {
 			throw "Invalid input length!";
 		}
 		var scalar = this.derivation_to_scalar(derivation, out_index);
@@ -673,7 +790,7 @@ var cnUtil = function(currencyConfig)
 	};
 
 	this.hash_to_ec = function(key) {
-		if (key.length !== (KEY_SIZE * 2)) {
+		if (key.length !== KEY_SIZE * 2) {
 			throw "Invalid input length";
 		}
 		var h_m = CNCrypto._malloc(HASH_SIZE);
@@ -682,9 +799,24 @@ var cnUtil = function(currencyConfig)
 		var res_m = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
 		var hash = hextobin(this.cn_fast_hash(key, KEY_SIZE));
 		CNCrypto.HEAPU8.set(hash, h_m);
-		CNCrypto.ccall("ge_fromfe_frombytes_vartime", "void", ["number", "number"], [point_m, h_m]);
-		CNCrypto.ccall("ge_mul8", "void", ["number", "number"], [point2_m, point_m]);
-		CNCrypto.ccall("ge_p1p1_to_p3", "void", ["number", "number"], [res_m, point2_m]);
+		CNCrypto.ccall(
+			"ge_fromfe_frombytes_vartime",
+			"void",
+			["number", "number"],
+			[point_m, h_m],
+		);
+		CNCrypto.ccall(
+			"ge_mul8",
+			"void",
+			["number", "number"],
+			[point2_m, point_m],
+		);
+		CNCrypto.ccall(
+			"ge_p1p1_to_p3",
+			"void",
+			["number", "number"],
+			[res_m, point2_m],
+		);
 		var res = CNCrypto.HEAPU8.subarray(res_m, res_m + STRUCT_SIZES.GE_P3);
 		CNCrypto._free(h_m);
 		CNCrypto._free(point_m);
@@ -695,7 +827,7 @@ var cnUtil = function(currencyConfig)
 
 	//returns a 32 byte point via "ge_p3_tobytes" rather than a 160 byte "p3", otherwise same as above;
 	this.hash_to_ec_2 = function(key) {
-		if (key.length !== (KEY_SIZE * 2)) {
+		if (key.length !== KEY_SIZE * 2) {
 			throw "Invalid input length";
 		}
 		var h_m = CNCrypto._malloc(HASH_SIZE);
@@ -705,10 +837,30 @@ var cnUtil = function(currencyConfig)
 		var hash = hextobin(this.cn_fast_hash(key, KEY_SIZE));
 		var res2_m = CNCrypto._malloc(KEY_SIZE);
 		CNCrypto.HEAPU8.set(hash, h_m);
-		CNCrypto.ccall("ge_fromfe_frombytes_vartime", "void", ["number", "number"], [point_m, h_m]);
-		CNCrypto.ccall("ge_mul8", "void", ["number", "number"], [point2_m, point_m]);
-		CNCrypto.ccall("ge_p1p1_to_p3", "void", ["number", "number"], [res_m, point2_m]);
-		CNCrypto.ccall("ge_p3_tobytes", "void", ["number", "number"], [res2_m, res_m]);
+		CNCrypto.ccall(
+			"ge_fromfe_frombytes_vartime",
+			"void",
+			["number", "number"],
+			[point_m, h_m],
+		);
+		CNCrypto.ccall(
+			"ge_mul8",
+			"void",
+			["number", "number"],
+			[point2_m, point_m],
+		);
+		CNCrypto.ccall(
+			"ge_p1p1_to_p3",
+			"void",
+			["number", "number"],
+			[res_m, point2_m],
+		);
+		CNCrypto.ccall(
+			"ge_p3_tobytes",
+			"void",
+			["number", "number"],
+			[res2_m, res_m],
+		);
 		var res = CNCrypto.HEAPU8.subarray(res2_m, res2_m + KEY_SIZE);
 		CNCrypto._free(h_m);
 		CNCrypto._free(point_m);
@@ -734,9 +886,22 @@ var cnUtil = function(currencyConfig)
 		var point_b = hextobin(this.hash_to_ec(pub));
 		CNCrypto.HEAPU8.set(point_b, point_m);
 		var image_m = CNCrypto._malloc(STRUCT_SIZES.KEY_IMAGE);
-		CNCrypto.ccall("ge_scalarmult", "void", ["number", "number", "number"], [point2_m, sec_m, point_m]);
-		CNCrypto.ccall("ge_tobytes", "void", ["number", "number"], [image_m, point2_m]);
-		var res = CNCrypto.HEAPU8.subarray(image_m, image_m + STRUCT_SIZES.KEY_IMAGE);
+		CNCrypto.ccall(
+			"ge_scalarmult",
+			"void",
+			["number", "number", "number"],
+			[point2_m, sec_m, point_m],
+		);
+		CNCrypto.ccall(
+			"ge_tobytes",
+			"void",
+			["number", "number"],
+			[image_m, point2_m],
+		);
+		var res = CNCrypto.HEAPU8.subarray(
+			image_m,
+			image_m + STRUCT_SIZES.KEY_IMAGE,
+		);
 		CNCrypto._free(pub_m);
 		CNCrypto._free(sec_m);
 		CNCrypto._free(point_m);
@@ -745,7 +910,13 @@ var cnUtil = function(currencyConfig)
 		return bintohex(res);
 	};
 
-	this.generate_key_image = function(tx_pub, view_sec, spend_pub, spend_sec, output_index) {
+	this.generate_key_image = function(
+		tx_pub,
+		view_sec,
+		spend_pub,
+		spend_sec,
+		output_index,
+	) {
 		if (tx_pub.length !== 64) {
 			throw "Invalid tx_pub length";
 		}
@@ -759,40 +930,75 @@ var cnUtil = function(currencyConfig)
 			throw "Invalid spend_sec length";
 		}
 		var recv_derivation = this.generate_key_derivation(tx_pub, view_sec);
-		var ephemeral_pub = this.derive_public_key(recv_derivation, output_index, spend_pub);
-		var ephemeral_sec = this.derive_secret_key(recv_derivation, output_index, spend_sec);
+		var ephemeral_pub = this.derive_public_key(
+			recv_derivation,
+			output_index,
+			spend_pub,
+		);
+		var ephemeral_sec = this.derive_secret_key(
+			recv_derivation,
+			output_index,
+			spend_sec,
+		);
 		var k_image = this.generate_key_image_2(ephemeral_pub, ephemeral_sec);
 		return {
 			ephemeral_pub: ephemeral_pub,
-			key_image: k_image
+			key_image: k_image,
 		};
 	};
 
-	this.generate_key_image_helper_rct = function(keys, tx_pub_key, out_index, enc_mask) {
-		var recv_derivation = this.generate_key_derivation(tx_pub_key, keys.view.sec);
+	this.generate_key_image_helper_rct = function(
+		keys,
+		tx_pub_key,
+		out_index,
+		enc_mask,
+	) {
+		var recv_derivation = this.generate_key_derivation(
+			tx_pub_key,
+			keys.view.sec,
+		);
 		if (!recv_derivation) throw "Failed to generate key image";
-		var mask = enc_mask ? sc_sub(enc_mask, hash_to_scalar(derivation_to_scalar(recv_derivation, out_index))) : I; //decode mask, or d2s(1) if no mask
-		var ephemeral_pub = this.derive_public_key(recv_derivation, out_index, keys.spend.pub);
+		var mask = enc_mask
+			? sc_sub(
+					enc_mask,
+					hash_to_scalar(
+						derivation_to_scalar(recv_derivation, out_index),
+					),
+			  )
+			: I; //decode mask, or d2s(1) if no mask
+		var ephemeral_pub = this.derive_public_key(
+			recv_derivation,
+			out_index,
+			keys.spend.pub,
+		);
 		if (!ephemeral_pub) throw "Failed to generate key image";
-		var ephemeral_sec = this.derive_secret_key(recv_derivation, out_index, keys.spend.sec);
+		var ephemeral_sec = this.derive_secret_key(
+			recv_derivation,
+			out_index,
+			keys.spend.sec,
+		);
 		var image = this.generate_key_image_2(ephemeral_pub, ephemeral_sec);
 		return {
 			in_ephemeral: {
 				pub: ephemeral_pub,
 				sec: ephemeral_sec,
-				mask: mask
+				mask: mask,
 			},
-			image: image
+			image: image,
 		};
 	};
 
 	//curve and scalar functions; split out to make their host functions cleaner and more readable
 	//inverts X coordinate -- this seems correct ^_^ -luigi1111
 	this.ge_neg = function(point) {
-		if (point.length !== 64){
-		throw "expected 64 char hex string";
+		if (point.length !== 64) {
+			throw "expected 64 char hex string";
 		}
-		return point.slice(0,62) + ((parseInt(point.slice(62,63), 16) + 8) % 16).toString(16) + point.slice(63,64);
+		return (
+			point.slice(0, 62) +
+			((parseInt(point.slice(62, 63), 16) + 8) % 16).toString(16) +
+			point.slice(63, 64)
+		);
 	};
 
 	//adds two points together, order does not matter
@@ -852,8 +1058,16 @@ var cnUtil = function(currencyConfig)
 		CNCrypto.HEAPU8.set(hextobin(scalar1), scalar1_m);
 		CNCrypto.HEAPU8.set(hextobin(scalar2), scalar2_m);
 		var derived_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
-		CNCrypto.ccall("sc_add", "void", ["number", "number", "number"], [derived_m, scalar1_m, scalar2_m]);
-		var res = CNCrypto.HEAPU8.subarray(derived_m, derived_m + STRUCT_SIZES.EC_SCALAR);
+		CNCrypto.ccall(
+			"sc_add",
+			"void",
+			["number", "number", "number"],
+			[derived_m, scalar1_m, scalar2_m],
+		);
+		var res = CNCrypto.HEAPU8.subarray(
+			derived_m,
+			derived_m + STRUCT_SIZES.EC_SCALAR,
+		);
 		CNCrypto._free(scalar1_m);
 		CNCrypto._free(scalar2_m);
 		CNCrypto._free(derived_m);
@@ -870,8 +1084,16 @@ var cnUtil = function(currencyConfig)
 		CNCrypto.HEAPU8.set(hextobin(scalar1), scalar1_m);
 		CNCrypto.HEAPU8.set(hextobin(scalar2), scalar2_m);
 		var derived_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
-		CNCrypto.ccall("sc_sub", "void", ["number", "number", "number"], [derived_m, scalar1_m, scalar2_m]);
-		var res = CNCrypto.HEAPU8.subarray(derived_m, derived_m + STRUCT_SIZES.EC_SCALAR);
+		CNCrypto.ccall(
+			"sc_sub",
+			"void",
+			["number", "number", "number"],
+			[derived_m, scalar1_m, scalar2_m],
+		);
+		var res = CNCrypto.HEAPU8.subarray(
+			derived_m,
+			derived_m + STRUCT_SIZES.EC_SCALAR,
+		);
 		CNCrypto._free(scalar1_m);
 		CNCrypto._free(scalar2_m);
 		CNCrypto._free(derived_m);
@@ -883,12 +1105,24 @@ var cnUtil = function(currencyConfig)
 		if (scalar1.length !== 64 || scalar2.length !== 64) {
 			throw "Invalid input length!";
 		}
-		return d2s(JSBigInt(s2d(scalar1)).multiply(JSBigInt(s2d(scalar2))).remainder(l).toString());
+		return d2s(
+			JSBigInt(s2d(scalar1))
+				.multiply(JSBigInt(s2d(scalar2)))
+				.remainder(l)
+				.toString(),
+		);
 	};
 
 	//res = c - (ab) mod l; argument names copied from the signature implementation
 	this.sc_mulsub = function(sigc, sec, k) {
-		if (k.length !== KEY_SIZE * 2 || sigc.length !== KEY_SIZE * 2 || sec.length !== KEY_SIZE * 2 || !this.valid_hex(k) || !this.valid_hex(sigc) || !this.valid_hex(sec)) {
+		if (
+			k.length !== KEY_SIZE * 2 ||
+			sigc.length !== KEY_SIZE * 2 ||
+			sec.length !== KEY_SIZE * 2 ||
+			!this.valid_hex(k) ||
+			!this.valid_hex(sigc) ||
+			!this.valid_hex(sec)
+		) {
 			throw "bad scalar";
 		}
 		var sec_m = CNCrypto._malloc(KEY_SIZE);
@@ -899,7 +1133,12 @@ var cnUtil = function(currencyConfig)
 		CNCrypto.HEAPU8.set(hextobin(k), k_m);
 		var res_m = CNCrypto._malloc(KEY_SIZE);
 
-		CNCrypto.ccall("sc_mulsub", "void", ["number", "number", "number", "number"], [res_m, sigc_m, sec_m, k_m]);
+		CNCrypto.ccall(
+			"sc_mulsub",
+			"void",
+			["number", "number", "number", "number"],
+			[res_m, sigc_m, sec_m, k_m],
+		);
 		res = CNCrypto.HEAPU8.subarray(res_m, res_m + KEY_SIZE);
 		CNCrypto._free(k_m);
 		CNCrypto._free(sec_m);
@@ -941,7 +1180,13 @@ var cnUtil = function(currencyConfig)
 		if (c.length !== 64 || P.length !== 64 || r.length !== 64) {
 			throw "Invalid input length!";
 		}
-		return bintohex(nacl.ll.ge_double_scalarmult_base_vartime(hextobin(c), hextobin(P), hextobin(r)));
+		return bintohex(
+			nacl.ll.ge_double_scalarmult_base_vartime(
+				hextobin(c),
+				hextobin(P),
+				hextobin(r),
+			),
+		);
 	};
 
 	//res = a * Hp(B) + c*D
@@ -979,14 +1224,24 @@ var cnUtil = function(currencyConfig)
 	};*/
 
 	this.ge_double_scalarmult_postcomp_vartime = function(r, P, c, I) {
-		if (c.length !== 64 || P.length !== 64 || r.length !== 64 || I.length !== 64) {
+		if (
+			c.length !== 64 ||
+			P.length !== 64 ||
+			r.length !== 64 ||
+			I.length !== 64
+		) {
 			throw "Invalid input length!";
 		}
 		var Pb = this.hash_to_ec_2(P);
-		return bintohex(nacl.ll.ge_double_scalarmult_postcomp_vartime(hextobin(r), hextobin(Pb), hextobin(c), hextobin(I)));
+		return bintohex(
+			nacl.ll.ge_double_scalarmult_postcomp_vartime(
+				hextobin(r),
+				hextobin(Pb),
+				hextobin(c),
+				hextobin(I),
+			),
+		);
 	};
-		
-		
 
 	//begin RCT functions
 
@@ -996,70 +1251,78 @@ var cnUtil = function(currencyConfig)
 	//size: ring size
 	//nrings: number of rings
 	//extensible borromean signatures
-	this.genBorromean = function(xv, pm, iv, size, nrings){
-		if (xv.length !== nrings){
-		throw "wrong xv length " + xv.length;
+	this.genBorromean = function(xv, pm, iv, size, nrings) {
+		if (xv.length !== nrings) {
+			throw "wrong xv length " + xv.length;
 		}
-		if (pm.length !== size){
-		throw "wrong pm size " + pm.length;
+		if (pm.length !== size) {
+			throw "wrong pm size " + pm.length;
 		}
-		for (var i = 0; i < pm.length; i++){
-		if (pm[i].length !== nrings){
-			throw "wrong pm[" + i + "] length " + pm[i].length;
+		for (var i = 0; i < pm.length; i++) {
+			if (pm[i].length !== nrings) {
+				throw "wrong pm[" + i + "] length " + pm[i].length;
+			}
 		}
+		if (iv.length !== nrings) {
+			throw "wrong iv length " + iv.length;
 		}
-		if (iv.length !== nrings){
-		throw "wrong iv length " + iv.length;
-		}
-		for (var i = 0; i < iv.length; i++){
-		if (iv[i] >= size){
-			throw "bad indices value at: " + i + ": " + iv[i];
-		}
+		for (var i = 0; i < iv.length; i++) {
+			if (iv[i] >= size) {
+				throw "bad indices value at: " + i + ": " + iv[i];
+			}
 		}
 		//signature struct
 		var bb = {
-		s: [],
-		ee: ""
+			s: [],
+			ee: "",
 		};
 		//signature pubkey matrix
 		var L = [];
 		//add needed sub vectors (1 per ring size)
-		for (var i = 0; i < size; i++){
-		bb.s[i] = [];
-		L[i] = [];
+		for (var i = 0; i < size; i++) {
+			bb.s[i] = [];
+			L[i] = [];
 		}
 		//compute starting at the secret index to the last row
 		var index;
 		var alpha = [];
-		for (var i = 0; i < nrings; i++){
-		index = parseInt(iv[i]);
-		alpha[i] = random_scalar();
-		L[index][i] = ge_scalarmult_base(alpha[i]);
-		for (var j = index + 1; j < size; j++){
-			bb.s[j][i] = random_scalar();
-			var c = hash_to_scalar(L[j-1][i]);
-			L[j][i] = ge_double_scalarmult_base_vartime(c, pm[j][i], bb.s[j][i]);
-		}
+		for (var i = 0; i < nrings; i++) {
+			index = parseInt(iv[i]);
+			alpha[i] = random_scalar();
+			L[index][i] = ge_scalarmult_base(alpha[i]);
+			for (var j = index + 1; j < size; j++) {
+				bb.s[j][i] = random_scalar();
+				var c = hash_to_scalar(L[j - 1][i]);
+				L[j][i] = ge_double_scalarmult_base_vartime(
+					c,
+					pm[j][i],
+					bb.s[j][i],
+				);
+			}
 		}
 		//hash last row to create ee
 		var ltemp = "";
-		for (var i = 0; i < nrings; i++){
-		ltemp += L[size-1][i];
+		for (var i = 0; i < nrings; i++) {
+			ltemp += L[size - 1][i];
 		}
 		bb.ee = hash_to_scalar(ltemp);
 		//compute the rest from 0 to secret index
-		for (var i = 0; i < nrings; i++){
-		var cc = bb.ee
-		for (var j = 0; j < iv[i]; j++){
-			bb.s[j][i] = random_scalar();
-			var LL = ge_double_scalarmult_base_vartime(cc, pm[j][i], bb.s[j][i]);
-			cc = hash_to_scalar(LL);
-		}
-		bb.s[j][i] = sc_mulsub(xv[i], cc, alpha[i]);
+		for (var i = 0; i < nrings; i++) {
+			var cc = bb.ee;
+			for (var j = 0; j < iv[i]; j++) {
+				bb.s[j][i] = random_scalar();
+				var LL = ge_double_scalarmult_base_vartime(
+					cc,
+					pm[j][i],
+					bb.s[j][i],
+				);
+				cc = hash_to_scalar(LL);
+			}
+			bb.s[j][i] = sc_mulsub(xv[i], cc, alpha[i]);
 		}
 		return bb;
 	};
-	
+
 	//proveRange
 	//proveRange gives C, and mask such that \sumCi = C
 	//	 c.f. http://eprint.iacr.org/2015/1098 section 5.1
@@ -1067,15 +1330,21 @@ var cnUtil = function(currencyConfig)
 	//	 thus this proves that "amount" is in [0, s^n] (we assume s to be 4) (2 for now with v2 txes)
 	//	 mask is a such that C = aG + bH, and b = amount
 	//commitMaskObj = {C: commit, mask: mask}
-	this.proveRange = function(commitMaskObj, amount, nrings, enc_seed, exponent){
+	this.proveRange = function(
+		commitMaskObj,
+		amount,
+		nrings,
+		enc_seed,
+		exponent,
+	) {
 		var size = 2;
 		var C = I; //identity
 		var mask = Z; //zero scalar
 		var indices = d2b(amount); //base 2 for now
 		var sig = {
-		Ci: []
-		//exp: exponent //doesn't exist for now
-		}
+			Ci: [],
+			//exp: exponent //doesn't exist for now
+		};
 		/*payload stuff - ignore for now
 		seeds = new Array(3);
 		for (var i = 0; i < seeds.length; i++){
@@ -1085,34 +1354,34 @@ var cnUtil = function(currencyConfig)
 		*/
 		var ai = [];
 		var PM = [];
-		for (var i = 0; i < size; i++){
-		PM[i] = [];
+		for (var i = 0; i < size; i++) {
+			PM[i] = [];
 		}
 		var j;
 		//start at index and fill PM left and right -- PM[0] holds Ci
-		for (i = 0; i < nrings; i++){
-		ai[i] = random_scalar();
-		j = indices[i];
-		PM[j][i] = ge_scalarmult_base(ai[i]);
-		while (j > 0){
-			j--;
-			PM[j][i] = ge_add(PM[j+1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
-		}
-		j = indices[i];
-		while (j < size - 1){
-			j++;
-			PM[j][i] = ge_sub(PM[j-1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
-		}
-		mask = sc_add(mask, ai[i]);
+		for (i = 0; i < nrings; i++) {
+			ai[i] = random_scalar();
+			j = indices[i];
+			PM[j][i] = ge_scalarmult_base(ai[i]);
+			while (j > 0) {
+				j--;
+				PM[j][i] = ge_add(PM[j + 1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
+			}
+			j = indices[i];
+			while (j < size - 1) {
+				j++;
+				PM[j][i] = ge_sub(PM[j - 1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
+			}
+			mask = sc_add(mask, ai[i]);
 		}
 		/*
 		* some more payload stuff here
 		*/
 		//copy commitments to sig and sum them to commitment
-		for (i = 0; i < nrings; i++){
-		//if (i < nrings - 1) //for later version
-		sig.Ci[i] = PM[0][i];
-		C = ge_add(C, PM[0][i]);
+		for (i = 0; i < nrings; i++) {
+			//if (i < nrings - 1) //for later version
+			sig.Ci[i] = PM[0][i];
+			C = ge_add(C, PM[0][i]);
 		}
 		/* exponent stuff - ignore for now
 		if (exponent){
@@ -1126,45 +1395,54 @@ var cnUtil = function(currencyConfig)
 		commitMaskObj.mask = mask;
 		return sig;
 	};
-	
-	
-	function array_hash_to_scalar(array){
-		var buf = ""
-		for (var i = 0; i < array.length; i++){
-		if (typeof array[i] !== "string"){throw "unexpected array element";}
-		buf += array[i];
+
+	function array_hash_to_scalar(array) {
+		var buf = "";
+		for (var i = 0; i < array.length; i++) {
+			if (typeof array[i] !== "string") {
+				throw "unexpected array element";
+			}
+			buf += array[i];
 		}
 		return hash_to_scalar(buf);
 	}
-	
+
 	// Gen creates a signature which proves that for some column in the keymatrix "pk"
 	//	 the signer knows a secret key for each row in that column
 	// we presently only support matrices of 2 rows (pubkey, commitment)
 	// this is a simplied MLSAG_Gen function to reflect that
 	// because we don't want to force same secret column for all inputs
-	this.MLSAG_Gen = function(message, pk, xx, kimg, index){
+	this.MLSAG_Gen = function(message, pk, xx, kimg, index) {
 		var cols = pk.length; //ring size
-		if (index >= cols){throw "index out of range";}
-		var rows = pk[0].length; //number of signature rows (always 2)
-		if (rows !== 2){throw "wrong row count";}
-		for (var i = 0; i < cols; i++){
-		if (pk[i].length !== rows){throw "pk is not rectangular";}
+		if (index >= cols) {
+			throw "index out of range";
 		}
-		if (xx.length !== rows){throw "bad xx size";}
-	
+		var rows = pk[0].length; //number of signature rows (always 2)
+		if (rows !== 2) {
+			throw "wrong row count";
+		}
+		for (var i = 0; i < cols; i++) {
+			if (pk[i].length !== rows) {
+				throw "pk is not rectangular";
+			}
+		}
+		if (xx.length !== rows) {
+			throw "bad xx size";
+		}
+
 		var c_old = "";
 		var alpha = [];
-	
+
 		var rv = {
-		ss: [],
-		cc: null
+			ss: [],
+			cc: null,
 		};
-		for (i = 0; i < cols; i++){
-		rv.ss[i] = [];
+		for (i = 0; i < cols; i++) {
+			rv.ss[i] = [];
 		}
 		var toHash = []; //holds 6 elements: message, pubkey, dsRow L, dsRow R, commitment, ndsRow L
 		toHash[0] = message;
-		
+
 		//secret index (pubkey section)
 		alpha[0] = random_scalar(); //need to save alphas for later
 		toHash[1] = pk[index][0]; //secret index pubkey
@@ -1174,47 +1452,62 @@ var cnUtil = function(currencyConfig)
 		alpha[1] = random_scalar();
 		toHash[4] = pk[index][1]; //secret index commitment
 		toHash[5] = ge_scalarmult_base(alpha[1]); //ndsRow L
-	
+
 		c_old = array_hash_to_scalar(toHash);
-	
+
 		i = (index + 1) % cols;
-		if (i === 0){
-		rv.cc = c_old;
-		}
-		while (i != index){
-		rv.ss[i][0] = random_scalar(); //dsRow ss
-		rv.ss[i][1] = random_scalar(); //ndsRow ss
-	
-		//!secret index (pubkey section)
-		toHash[1] = pk[i][0];
-		toHash[2] = ge_double_scalarmult_base_vartime(c_old, pk[i][0], rv.ss[i][0]);
-		toHash[3] = ge_double_scalarmult_postcomp_vartime(rv.ss[i][0], pk[i][0], c_old, kimg);
-		//!secret index (commitment section)
-		toHash[4] = pk[i][1];
-		toHash[5] = ge_double_scalarmult_base_vartime(c_old, pk[i][1], rv.ss[i][1]);
-		c_old = array_hash_to_scalar(toHash); //hash to get next column c
-		i = (i + 1) % cols;
-		if (i === 0){
+		if (i === 0) {
 			rv.cc = c_old;
 		}
+		while (i != index) {
+			rv.ss[i][0] = random_scalar(); //dsRow ss
+			rv.ss[i][1] = random_scalar(); //ndsRow ss
+
+			//!secret index (pubkey section)
+			toHash[1] = pk[i][0];
+			toHash[2] = ge_double_scalarmult_base_vartime(
+				c_old,
+				pk[i][0],
+				rv.ss[i][0],
+			);
+			toHash[3] = ge_double_scalarmult_postcomp_vartime(
+				rv.ss[i][0],
+				pk[i][0],
+				c_old,
+				kimg,
+			);
+			//!secret index (commitment section)
+			toHash[4] = pk[i][1];
+			toHash[5] = ge_double_scalarmult_base_vartime(
+				c_old,
+				pk[i][1],
+				rv.ss[i][1],
+			);
+			c_old = array_hash_to_scalar(toHash); //hash to get next column c
+			i = (i + 1) % cols;
+			if (i === 0) {
+				rv.cc = c_old;
+			}
 		}
-		for (i = 0; i < rows; i++){
-		rv.ss[index][i] = sc_mulsub(c_old, xx[i], alpha[i]);
+		for (i = 0; i < rows; i++) {
+			rv.ss[index][i] = sc_mulsub(c_old, xx[i], alpha[i]);
 		}
 		return rv;
 	};
-	
+
 	//prepares for MLSAG_Gen
-	this.proveRctMG = function(message, pubs, inSk, kimg, mask, Cout, index){
+	this.proveRctMG = function(message, pubs, inSk, kimg, mask, Cout, index) {
 		var cols = pubs.length;
-		if (cols < 3){throw "cols must be > 2 (mixin)";}
+		if (cols < 3) {
+			throw "cols must be > 2 (mixin)";
+		}
 		var xx = [];
 		var PK = [];
 		//fill pubkey matrix (copy destination, subtract commitments)
-		for (var i = 0; i < cols; i++){
-		PK[i] = [];
-		PK[i][0] = pubs[i].dest;
-		PK[i][1] = ge_sub(pubs[i].mask, Cout);
+		for (var i = 0; i < cols; i++) {
+			PK[i] = [];
+			PK[i][0] = pubs[i].dest;
+			PK[i][1] = ge_sub(pubs[i].mask, Cout);
 		}
 		xx[0] = inSk.x;
 		xx[1] = sc_sub(inSk.a, mask);
@@ -1228,7 +1521,7 @@ var cnUtil = function(currencyConfig)
 		var buf = serialize_range_proofs(rv);
 		hashes += this.cn_fast_hash(buf);
 		return this.cn_fast_hash(hashes);
-	}
+	};
 
 	function serialize_range_proofs(rv) {
 		var buf = "";
@@ -1245,7 +1538,7 @@ var cnUtil = function(currencyConfig)
 		}
 		return buf;
 	}
-	
+
 	//message is normal prefix hash
 	//inSk is vector of x,a
 	//kimg is vector of kimg
@@ -1256,76 +1549,124 @@ var cnUtil = function(currencyConfig)
 	//amountKeys is vector of scalars
 	//indices is vector
 	//txnFee is string
-	this.genRct = function(message, inSk, kimg, /*destinations, */inAmounts, outAmounts, mixRing, amountKeys, indices, txnFee){
-		if (outAmounts.length !== amountKeys.length ){throw "different number of amounts/amount_keys";}
-		for (var i = 0; i < mixRing.length; i++){
-		if (mixRing[i].length <= indices[i]){throw "bad mixRing/index size";}
+	this.genRct = function(
+		message,
+		inSk,
+		kimg,
+		/*destinations, */ inAmounts,
+		outAmounts,
+		mixRing,
+		amountKeys,
+		indices,
+		txnFee,
+	) {
+		if (outAmounts.length !== amountKeys.length) {
+			throw "different number of amounts/amount_keys";
 		}
-		if (mixRing.length !== inSk.length){throw "mismatched mixRing/inSk";}
-		if (inAmounts.length !== inSk.length){throw "mismatched inAmounts/inSk";}
-		if (indices.length !== inSk.length){throw "mismatched indices/inSk";}
-		
+		for (var i = 0; i < mixRing.length; i++) {
+			if (mixRing[i].length <= indices[i]) {
+				throw "bad mixRing/index size";
+			}
+		}
+		if (mixRing.length !== inSk.length) {
+			throw "mismatched mixRing/inSk";
+		}
+		if (inAmounts.length !== inSk.length) {
+			throw "mismatched inAmounts/inSk";
+		}
+		if (indices.length !== inSk.length) {
+			throw "mismatched indices/inSk";
+		}
+
 		rv = {
-		type: inSk.length === 1 ? RCTTypeFull : RCTTypeSimple,
-		message: message,
-		outPk: [],
-		p: {
-			rangeSigs: [],
-			MGs: []
-		},
-		ecdhInfo: [],
-		txnFee: txnFee.toString(),
-		pseudoOuts: []
+			type: inSk.length === 1 ? RCTTypeFull : RCTTypeSimple,
+			message: message,
+			outPk: [],
+			p: {
+				rangeSigs: [],
+				MGs: [],
+			},
+			ecdhInfo: [],
+			txnFee: txnFee.toString(),
+			pseudoOuts: [],
 		};
-		
+
 		var sumout = Z;
 		var cmObj = {
-		C: null,
-		mask: null
+			C: null,
+			mask: null,
 		};
 		var nrings = 64; //for base 2/current
 		//compute range proofs, etc
-		for (i = 0; i < outAmounts.length; i++){
-		var teststart = new Date().getTime();
-		rv.p.rangeSigs[i] = this.proveRange(cmObj, outAmounts[i], nrings, 0, 0);
-		var testfinish = new Date().getTime() - teststart;
-		console.log("Time take for range proof " + i + ": " + testfinish);
-		rv.outPk[i] = cmObj.C;
-		sumout = sc_add(sumout, cmObj.mask);
-		rv.ecdhInfo[i] = this.encode_rct_ecdh({mask: cmObj.mask, amount: d2s(outAmounts[i])}, amountKeys[i]);
+		for (i = 0; i < outAmounts.length; i++) {
+			var teststart = new Date().getTime();
+			rv.p.rangeSigs[i] = this.proveRange(
+				cmObj,
+				outAmounts[i],
+				nrings,
+				0,
+				0,
+			);
+			var testfinish = new Date().getTime() - teststart;
+			console.log("Time take for range proof " + i + ": " + testfinish);
+			rv.outPk[i] = cmObj.C;
+			sumout = sc_add(sumout, cmObj.mask);
+			rv.ecdhInfo[i] = this.encode_rct_ecdh(
+				{ mask: cmObj.mask, amount: d2s(outAmounts[i]) },
+				amountKeys[i],
+			);
 		}
 
 		//simple
-		if (rv.type === 2){
-		var ai = [];
-		var sumpouts = Z;
-		//create pseudoOuts
-		for (i = 0; i < inAmounts.length - 1; i++){
-			ai[i] = random_scalar();
-			sumpouts = sc_add(sumpouts, ai[i]);
+		if (rv.type === 2) {
+			var ai = [];
+			var sumpouts = Z;
+			//create pseudoOuts
+			for (i = 0; i < inAmounts.length - 1; i++) {
+				ai[i] = random_scalar();
+				sumpouts = sc_add(sumpouts, ai[i]);
+				rv.pseudoOuts[i] = commit(d2s(inAmounts[i]), ai[i]);
+			}
+			ai[i] = sc_sub(sumout, sumpouts);
 			rv.pseudoOuts[i] = commit(d2s(inAmounts[i]), ai[i]);
-		}
-		ai[i] = sc_sub(sumout, sumpouts);
-		rv.pseudoOuts[i] = commit(d2s(inAmounts[i]), ai[i]);
-		var full_message = this.get_pre_mlsag_hash(rv);
-		for (i = 0; i < inAmounts.length; i++){
-			rv.p.MGs.push(this.proveRctMG(full_message, mixRing[i], inSk[i], kimg[i], ai[i], rv.pseudoOuts[i], indices[i]));
-		}
+			var full_message = this.get_pre_mlsag_hash(rv);
+			for (i = 0; i < inAmounts.length; i++) {
+				rv.p.MGs.push(
+					this.proveRctMG(
+						full_message,
+						mixRing[i],
+						inSk[i],
+						kimg[i],
+						ai[i],
+						rv.pseudoOuts[i],
+						indices[i],
+					),
+				);
+			}
 		} else {
-		var sumC = I;
-		//get sum of output commitments to use in MLSAG
-		for (i = 0; i < rv.outPk.length; i++){
-			sumC = ge_add(sumC, rv.outPk[i]);
-		}
-		sumC = ge_add(sumC, ge_scalarmult(H, d2s(rv.txnFee)));
-		var full_message = this.get_pre_mlsag_hash(rv);
-		rv.p.MGs.push(this.proveRctMG(full_message, mixRing[0], inSk[0], kimg[0], sumout, sumC, indices[0]));
+			var sumC = I;
+			//get sum of output commitments to use in MLSAG
+			for (i = 0; i < rv.outPk.length; i++) {
+				sumC = ge_add(sumC, rv.outPk[i]);
+			}
+			sumC = ge_add(sumC, ge_scalarmult(H, d2s(rv.txnFee)));
+			var full_message = this.get_pre_mlsag_hash(rv);
+			rv.p.MGs.push(
+				this.proveRctMG(
+					full_message,
+					mixRing[0],
+					inSk[0],
+					kimg[0],
+					sumout,
+					sumC,
+					indices[0],
+				),
+			);
 		}
 		return rv;
 	};
 
 	//end RCT functions
-
 
 	this.add_pub_key_to_extra = function(extra, pubkey) {
 		if (pubkey.length !== 64) throw "Invalid pubkey length";
@@ -1336,16 +1677,18 @@ var cnUtil = function(currencyConfig)
 
 	this.add_nonce_to_extra = function(extra, nonce) {
 		// Append extra nonce
-		if ((nonce.length % 2) !== 0) {
+		if (nonce.length % 2 !== 0) {
 			throw "Invalid extra nonce";
 		}
-		if ((nonce.length / 2) > TX_EXTRA_NONCE_MAX_COUNT) {
-			throw "Extra nonce must be at most " + TX_EXTRA_NONCE_MAX_COUNT + " bytes";
+		if (nonce.length / 2 > TX_EXTRA_NONCE_MAX_COUNT) {
+			throw "Extra nonce must be at most " +
+				TX_EXTRA_NONCE_MAX_COUNT +
+				" bytes";
 		}
 		// Add nonce tag
 		extra += TX_EXTRA_TAGS.NONCE;
 		// Encode length of nonce
-		extra += ('0' + (nonce.length / 2).toString(16)).slice(-2);
+		extra += ("0" + (nonce.length / 2).toString(16)).slice(-2);
 		// Write nonce
 		extra += nonce;
 		return extra;
@@ -1355,7 +1698,7 @@ var cnUtil = function(currencyConfig)
 		if (payment_id.length !== 64 && payment_id.length !== 16) {
 			throw "Invalid payment id";
 		}
-		var res = '';
+		var res = "";
 		if (pid_encrypt) {
 			res += TX_EXTRA_NONCE_TAGS.ENCRYPTED_PAYMENT_ID;
 		} else {
@@ -1368,7 +1711,9 @@ var cnUtil = function(currencyConfig)
 	this.abs_to_rel_offsets = function(offsets) {
 		if (offsets.length === 0) return offsets;
 		for (var i = offsets.length - 1; i >= 1; --i) {
-			offsets[i] = new JSBigInt(offsets[i]).subtract(offsets[i - 1]).toString();
+			offsets[i] = new JSBigInt(offsets[i])
+				.subtract(offsets[i - 1])
+				.toString();
 		}
 		return offsets;
 	};
@@ -1379,7 +1724,7 @@ var cnUtil = function(currencyConfig)
 	};
 
 	this.get_tx_hash = function(tx) {
-		if (typeof(tx) === 'string') {
+		if (typeof tx === "string") {
 			return this.cn_fast_hash(tx);
 		} else {
 			return this.cn_fast_hash(this.serialize_tx(tx));
@@ -1472,7 +1817,7 @@ var cnUtil = function(currencyConfig)
 		var hash = this.cn_fast_hash(hashes);
 		return {
 			raw: buf,
-			hash: hash
+			hash: hash,
 		};
 	};
 
@@ -1498,31 +1843,81 @@ var cnUtil = function(currencyConfig)
 		return buf;
 	};
 
-	this.generate_ring_signature = function(prefix_hash, k_image, keys, sec, real_index) {
+	this.generate_ring_signature = function(
+		prefix_hash,
+		k_image,
+		keys,
+		sec,
+		real_index,
+	) {
 		if (k_image.length !== STRUCT_SIZES.KEY_IMAGE * 2) {
 			throw "invalid key image length";
 		}
 		if (sec.length !== KEY_SIZE * 2) {
 			throw "Invalid secret key length";
 		}
-		if (prefix_hash.length !== HASH_SIZE * 2 || !this.valid_hex(prefix_hash)) {
+		if (
+			prefix_hash.length !== HASH_SIZE * 2 ||
+			!this.valid_hex(prefix_hash)
+		) {
 			throw "Invalid prefix hash";
 		}
 		if (real_index >= keys.length || real_index < 0) {
 			throw "real_index is invalid";
 		}
-		var _ge_tobytes = CNCrypto.cwrap("ge_tobytes", "void", ["number", "number"]);
-		var _ge_p3_tobytes = CNCrypto.cwrap("ge_p3_tobytes", "void", ["number", "number"]);
-		var _ge_scalarmult_base = CNCrypto.cwrap("ge_scalarmult_base", "void", ["number", "number"]);
-		var _ge_scalarmult = CNCrypto.cwrap("ge_scalarmult", "void", ["number", "number", "number"]);
-		var _sc_add = CNCrypto.cwrap("sc_add", "void", ["number", "number", "number"]);
-		var _sc_sub = CNCrypto.cwrap("sc_sub", "void", ["number", "number", "number"]);
-		var _sc_mulsub = CNCrypto.cwrap("sc_mulsub", "void", ["number", "number", "number", "number"]);
+		var _ge_tobytes = CNCrypto.cwrap("ge_tobytes", "void", [
+			"number",
+			"number",
+		]);
+		var _ge_p3_tobytes = CNCrypto.cwrap("ge_p3_tobytes", "void", [
+			"number",
+			"number",
+		]);
+		var _ge_scalarmult_base = CNCrypto.cwrap("ge_scalarmult_base", "void", [
+			"number",
+			"number",
+		]);
+		var _ge_scalarmult = CNCrypto.cwrap("ge_scalarmult", "void", [
+			"number",
+			"number",
+			"number",
+		]);
+		var _sc_add = CNCrypto.cwrap("sc_add", "void", [
+			"number",
+			"number",
+			"number",
+		]);
+		var _sc_sub = CNCrypto.cwrap("sc_sub", "void", [
+			"number",
+			"number",
+			"number",
+		]);
+		var _sc_mulsub = CNCrypto.cwrap("sc_mulsub", "void", [
+			"number",
+			"number",
+			"number",
+			"number",
+		]);
 		var _sc_0 = CNCrypto.cwrap("sc_0", "void", ["number"]);
-		var _ge_double_scalarmult_base_vartime = CNCrypto.cwrap("ge_double_scalarmult_base_vartime", "void", ["number", "number", "number", "number"]);
-		var _ge_double_scalarmult_precomp_vartime = CNCrypto.cwrap("ge_double_scalarmult_precomp_vartime", "void", ["number", "number", "number", "number", "number"]);
-		var _ge_frombytes_vartime = CNCrypto.cwrap("ge_frombytes_vartime", "number", ["number", "number"]);
-		var _ge_dsm_precomp = CNCrypto.cwrap("ge_dsm_precomp", "void", ["number", "number"]);
+		var _ge_double_scalarmult_base_vartime = CNCrypto.cwrap(
+			"ge_double_scalarmult_base_vartime",
+			"void",
+			["number", "number", "number", "number"],
+		);
+		var _ge_double_scalarmult_precomp_vartime = CNCrypto.cwrap(
+			"ge_double_scalarmult_precomp_vartime",
+			"void",
+			["number", "number", "number", "number", "number"],
+		);
+		var _ge_frombytes_vartime = CNCrypto.cwrap(
+			"ge_frombytes_vartime",
+			"number",
+			["number", "number"],
+		);
+		var _ge_dsm_precomp = CNCrypto.cwrap("ge_dsm_precomp", "void", [
+			"number",
+			"number",
+		]);
 
 		var buf_size = STRUCT_SIZES.EC_POINT * 2 * keys.length;
 		var buf_m = CNCrypto._malloc(buf_size);
@@ -1575,14 +1970,32 @@ var cnUtil = function(currencyConfig)
 				CNCrypto.HEAPU8.set(hextobin(this.random_scalar()), sig_c(i));
 				CNCrypto.HEAPU8.set(hextobin(this.random_scalar()), sig_r(i));
 				CNCrypto.HEAPU8.set(hextobin(keys[i]), pub_m);
-				if (CNCrypto.ccall("ge_frombytes_vartime", "void", ["number", "number"], [tmp3_m, pub_m]) !== 0) {
+				if (
+					CNCrypto.ccall(
+						"ge_frombytes_vartime",
+						"void",
+						["number", "number"],
+						[tmp3_m, pub_m],
+					) !== 0
+				) {
 					throw "Failed to call ge_frombytes_vartime";
 				}
-				_ge_double_scalarmult_base_vartime(tmp2_m, sig_c(i), tmp3_m, sig_r(i));
+				_ge_double_scalarmult_base_vartime(
+					tmp2_m,
+					sig_c(i),
+					tmp3_m,
+					sig_r(i),
+				);
 				_ge_tobytes(buf_a(i), tmp2_m);
 				var ec = this.hash_to_ec(keys[i]);
 				CNCrypto.HEAPU8.set(hextobin(ec), tmp3_m);
-				_ge_double_scalarmult_precomp_vartime(tmp2_m, sig_r(i), tmp3_m, sig_c(i), image_pre_m);
+				_ge_double_scalarmult_precomp_vartime(
+					tmp2_m,
+					sig_r(i),
+					tmp3_m,
+					sig_c(i),
+					image_pre_m,
+				);
 				_ge_tobytes(buf_b(i), tmp2_m);
 				_sc_add(sum_m, sum_m, sig_c(i));
 			}
@@ -1592,10 +2005,17 @@ var cnUtil = function(currencyConfig)
 		CNCrypto.HEAPU8.set(hextobin(scalar), h_m);
 		_sc_sub(sig_c(real_index), h_m, sum_m);
 		_sc_mulsub(sig_r(real_index), sig_c(real_index), sec_m, k_m);
-		var sig_data = bintohex(CNCrypto.HEAPU8.subarray(sig_m, sig_m + sig_size));
+		var sig_data = bintohex(
+			CNCrypto.HEAPU8.subarray(sig_m, sig_m + sig_size),
+		);
 		var sigs = [];
 		for (var k = 0; k < keys.length; k++) {
-			sigs.push(sig_data.slice(STRUCT_SIZES.SIGNATURE * 2 * k, STRUCT_SIZES.SIGNATURE * 2 * (k + 1)));
+			sigs.push(
+				sig_data.slice(
+					STRUCT_SIZES.SIGNATURE * 2 * k,
+					STRUCT_SIZES.SIGNATURE * 2 * (k + 1),
+				),
+			);
 		}
 		CNCrypto._free(image_m);
 		CNCrypto._free(image_unp_m);
@@ -1612,18 +2032,35 @@ var cnUtil = function(currencyConfig)
 		return sigs;
 	};
 
-	this.construct_tx = function(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, nettype) {
+	this.construct_tx = function(
+		keys,
+		sources,
+		dsts,
+		fee_amount,
+		payment_id,
+		pid_encrypt,
+		realDestViewKey,
+		unlock_time,
+		rct,
+		nettype,
+	) {
 		//we move payment ID stuff here, because we need txkey to encrypt
 		var txkey = this.random_keypair();
 		console.log(txkey);
-		var extra = '';
+		var extra = "";
 		if (payment_id) {
 			if (pid_encrypt && payment_id.length !== INTEGRATED_ID_SIZE * 2) {
-				throw "payment ID must be " + INTEGRATED_ID_SIZE + " bytes to be encrypted!";
+				throw "payment ID must be " +
+					INTEGRATED_ID_SIZE +
+					" bytes to be encrypted!";
 			}
 			console.log("Adding payment id: " + payment_id);
-			if (pid_encrypt) { //get the derivation from our passed viewkey, then hash that + tail to get encryption key
-				var pid_key = this.cn_fast_hash(this.generate_key_derivation(realDestViewKey, txkey.sec) + ENCRYPTED_PAYMENT_ID_TAIL.toString(16)).slice(0, INTEGRATED_ID_SIZE * 2);
+			if (pid_encrypt) {
+				//get the derivation from our passed viewkey, then hash that + tail to get encryption key
+				var pid_key = this.cn_fast_hash(
+					this.generate_key_derivation(realDestViewKey, txkey.sec) +
+						ENCRYPTED_PAYMENT_ID_TAIL.toString(16),
+				).slice(0, INTEGRATED_ID_SIZE * 2);
 				console.log("Txkeys:", txkey, "Payment ID key:", pid_key);
 				payment_id = this.hex_xor(payment_id, pid_key);
 			}
@@ -1636,7 +2073,7 @@ var cnUtil = function(currencyConfig)
 			version: rct ? CURRENT_TX_VERSION : OLD_TX_VERSION,
 			extra: extra,
 			vin: [],
-			vout: []
+			vout: [],
 		};
 		if (rct) {
 			tx.rct_signatures = {};
@@ -1647,24 +2084,36 @@ var cnUtil = function(currencyConfig)
 		var in_contexts = [];
 		var inputs_money = JSBigInt.ZERO;
 		var i, j;
-		console.log('Sources: ');
+		console.log("Sources: ");
 		//run the for loop twice to sort ins by key image
 		//first generate key image and other construction data to sort it all in one go
 		for (i = 0; i < sources.length; i++) {
-			console.log(i + ': ' + this.formatMoneyFull(sources[i].amount));
+			console.log(i + ": " + this.formatMoneyFull(sources[i].amount));
 			if (sources[i].real_out >= sources[i].outputs.length) {
 				throw "real index >= outputs.length";
 			}
-			var res = this.generate_key_image_helper_rct(keys, sources[i].real_out_tx_key, sources[i].real_out_in_tx, sources[i].mask); //mask will be undefined for non-rct
-			if (res.in_ephemeral.pub !== sources[i].outputs[sources[i].real_out].key) {
+			var res = this.generate_key_image_helper_rct(
+				keys,
+				sources[i].real_out_tx_key,
+				sources[i].real_out_in_tx,
+				sources[i].mask,
+			); //mask will be undefined for non-rct
+			if (
+				res.in_ephemeral.pub !==
+				sources[i].outputs[sources[i].real_out].key
+			) {
 				throw "in_ephemeral.pub != source.real_out.key";
 			}
 			sources[i].key_image = res.image;
 			sources[i].in_ephemeral = res.in_ephemeral;
 		}
 		//sort ins
-		sources.sort(function(a,b){
-			return JSBigInt.parse(a.key_image, 16).compare(JSBigInt.parse(b.key_image, 16)) * -1 ;
+		sources.sort(function(a, b) {
+			return (
+				JSBigInt.parse(a.key_image, 16).compare(
+					JSBigInt.parse(b.key_image, 16),
+				) * -1
+			);
 		});
 		//copy the sorted sources data to tx
 		for (i = 0; i < sources.length; i++) {
@@ -1678,7 +2127,9 @@ var cnUtil = function(currencyConfig)
 			for (j = 0; j < sources[i].outputs.length; ++j) {
 				input_to_key.key_offsets.push(sources[i].outputs[j].index);
 			}
-			input_to_key.key_offsets = this.abs_to_rel_offsets(input_to_key.key_offsets);
+			input_to_key.key_offsets = this.abs_to_rel_offsets(
+				input_to_key.key_offsets,
+			);
 			tx.vin.push(input_to_key);
 		}
 		var outputs_money = JSBigInt.ZERO;
@@ -1689,48 +2140,65 @@ var cnUtil = function(currencyConfig)
 				throw "dst.amount < 0"; //amount can be zero if no change
 			}
 			dsts[i].keys = this.decode_address(dsts[i].address, nettype);
-			
+
 			// R = rD for subaddresses
-			if(this.is_subaddress(dsts[i].address, nettype)) {
-				if (typeof payment_id !== 'undefined' && payment_id) { // this could stand to be placed earlier in the function but we save repeating a little algo time this way
-					throw "Payment ID must not be supplied when sending to a subaddress"
+			if (this.is_subaddress(dsts[i].address, nettype)) {
+				if (typeof payment_id !== "undefined" && payment_id) {
+					// this could stand to be placed earlier in the function but we save repeating a little algo time this way
+					throw "Payment ID must not be supplied when sending to a subaddress";
 				}
 				txkey.pub = this.ge_scalarmult(dsts[i].keys.spend, txkey.sec);
 			}
-			
+
 			var out_derivation;
-			
+
 			// send change to ourselves
-			if(dsts[i].keys.view == keys.view.pub) {
-				out_derivation = this.generate_key_derivation(txkey.pub, keys.view.sec);
+			if (dsts[i].keys.view == keys.view.pub) {
+				out_derivation = this.generate_key_derivation(
+					txkey.pub,
+					keys.view.sec,
+				);
+			} else {
+				out_derivation = this.generate_key_derivation(
+					dsts[i].keys.view,
+					txkey.sec,
+				);
 			}
-			
-			else {
-				out_derivation = this.generate_key_derivation(dsts[i].keys.view, txkey.sec);
-			}
-			
+
 			if (rct) {
-				amountKeys.push(this.derivation_to_scalar(out_derivation, out_index));
+				amountKeys.push(
+					this.derivation_to_scalar(out_derivation, out_index),
+				);
 			}
-			var out_ephemeral_pub = this.derive_public_key(out_derivation, out_index, dsts[i].keys.spend);
+			var out_ephemeral_pub = this.derive_public_key(
+				out_derivation,
+				out_index,
+				dsts[i].keys.spend,
+			);
 			var out = {
-				amount: dsts[i].amount.toString()
+				amount: dsts[i].amount.toString(),
 			};
 			// txout_to_key
 			out.target = {
 				type: "txout_to_key",
-				key: out_ephemeral_pub
+				key: out_ephemeral_pub,
 			};
 			tx.vout.push(out);
 			++out_index;
 			outputs_money = outputs_money.add(dsts[i].amount);
 		}
-		
+
 		// add pub key to extra after we know whether to use R = rG or R = rD
 		tx.extra = this.add_pub_key_to_extra(tx.extra, txkey.pub);
-		
+
 		if (outputs_money.add(fee_amount).compare(inputs_money) > 0) {
-			throw "outputs money (" + this.formatMoneyFull(outputs_money) + ") + fee (" + this.formatMoneyFull(fee_amount) + ") > inputs money (" + this.formatMoneyFull(inputs_money) + ")";
+			throw "outputs money (" +
+				this.formatMoneyFull(outputs_money) +
+				") + fee (" +
+				this.formatMoneyFull(fee_amount) +
+				") > inputs money (" +
+				this.formatMoneyFull(inputs_money) +
+				")";
 		}
 		if (!rct) {
 			for (i = 0; i < sources.length; ++i) {
@@ -1738,11 +2206,17 @@ var cnUtil = function(currencyConfig)
 				for (j = 0; j < sources[i].outputs.length; ++j) {
 					src_keys.push(sources[i].outputs[j].key);
 				}
-				var sigs = this.generate_ring_signature(this.get_tx_prefix_hash(tx), tx.vin[i].k_image, src_keys,
-					in_contexts[i].sec, sources[i].real_out);
+				var sigs = this.generate_ring_signature(
+					this.get_tx_prefix_hash(tx),
+					tx.vin[i].k_image,
+					src_keys,
+					in_contexts[i].sec,
+					sources[i].real_out,
+				);
 				tx.signatures.push(sigs);
 			}
-		} else { //rct
+		} else {
+			//rct
 			var txnFee = fee_amount;
 			var keyimages = [];
 			var inSk = [];
@@ -1753,17 +2227,18 @@ var cnUtil = function(currencyConfig)
 				keyimages.push(tx.vin[i].k_image);
 				inSk.push({
 					x: in_contexts[i].sec,
-					a: in_contexts[i].mask
+					a: in_contexts[i].mask,
 				});
 				inAmounts.push(tx.vin[i].amount);
-				if (in_contexts[i].mask !== I) {//if input is rct (has a valid mask), 0 out amount
+				if (in_contexts[i].mask !== I) {
+					//if input is rct (has a valid mask), 0 out amount
 					tx.vin[i].amount = "0";
 				}
 				mixRing[i] = [];
 				for (j = 0; j < sources[i].outputs.length; j++) {
 					mixRing[i].push({
 						dest: sources[i].outputs[j].key,
-						mask: sources[i].outputs[j].commit
+						mask: sources[i].outputs[j].commit,
 					});
 				}
 				indices.push(sources[i].real_out);
@@ -1774,39 +2249,73 @@ var cnUtil = function(currencyConfig)
 				tx.vout[i].amount = "0"; //zero out all rct outputs
 			}
 			var tx_prefix_hash = this.get_tx_prefix_hash(tx);
-			tx.rct_signatures = genRct(tx_prefix_hash, inSk, keyimages, /*destinations, */inAmounts, outAmounts, mixRing, amountKeys, indices, txnFee);
-
+			tx.rct_signatures = genRct(
+				tx_prefix_hash,
+				inSk,
+				keyimages,
+				/*destinations, */ inAmounts,
+				outAmounts,
+				mixRing,
+				amountKeys,
+				indices,
+				txnFee,
+			);
 		}
 		console.log(tx);
 		return tx;
 	};
 
-	this.create_transaction = function(pub_keys, sec_keys, dsts, outputs, mix_outs, fake_outputs_count, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, nettype) {
+	this.create_transaction = function(
+		pub_keys,
+		sec_keys,
+		dsts,
+		outputs,
+		mix_outs,
+		fake_outputs_count,
+		fee_amount,
+		payment_id,
+		pid_encrypt,
+		realDestViewKey,
+		unlock_time,
+		rct,
+		nettype,
+	) {
 		unlock_time = unlock_time || 0;
 		mix_outs = mix_outs || [];
 		var i, j;
 		if (dsts.length === 0) {
-			throw 'Destinations empty';
+			throw "Destinations empty";
 		}
 		if (mix_outs.length !== outputs.length && fake_outputs_count !== 0) {
-			throw 'Wrong number of mix outs provided (' + outputs.length + ' outputs, ' + mix_outs.length + ' mix outs)';
+			throw "Wrong number of mix outs provided (" +
+				outputs.length +
+				" outputs, " +
+				mix_outs.length +
+				" mix outs)";
 		}
 		for (i = 0; i < mix_outs.length; i++) {
 			if ((mix_outs[i].outputs || []).length < fake_outputs_count) {
-				throw 'Not enough outputs to mix with';
+				throw "Not enough outputs to mix with";
 			}
 		}
 		var keys = {
 			view: {
 				pub: pub_keys.view,
-				sec: sec_keys.view
+				sec: sec_keys.view,
 			},
 			spend: {
 				pub: pub_keys.spend,
-				sec: sec_keys.spend
-			}
+				sec: sec_keys.spend,
+			},
 		};
-		if (!this.valid_keys(keys.view.pub, keys.view.sec, keys.spend.pub, keys.spend.sec)) {
+		if (
+			!this.valid_keys(
+				keys.view.pub,
+				keys.view.sec,
+				keys.spend.pub,
+				keys.spend.sec,
+			)
+		) {
 			throw "Invalid secret keys!";
 		}
 		var needed_money = JSBigInt.ZERO;
@@ -1818,14 +2327,14 @@ var cnUtil = function(currencyConfig)
 		}
 		var found_money = JSBigInt.ZERO;
 		var sources = [];
-		console.log('Selected transfers: ', outputs);
+		console.log("Selected transfers: ", outputs);
 		for (i = 0; i < outputs.length; ++i) {
 			found_money = found_money.add(outputs[i].amount);
 			if (found_money.compare(UINT64_MAX) !== -1) {
 				throw "Input overflow!";
 			}
 			var src = {
-				outputs: []
+				outputs: [],
 			};
 			src.amount = new JSBigInt(outputs[i].amount).toString();
 			if (mix_outs.length !== 0) {
@@ -1834,21 +2343,26 @@ var cnUtil = function(currencyConfig)
 					return new JSBigInt(a.global_index).compare(b.global_index);
 				});
 				j = 0;
-				while ((src.outputs.length < fake_outputs_count) && (j < mix_outs[i].outputs.length)) {
+				while (
+					src.outputs.length < fake_outputs_count &&
+					j < mix_outs[i].outputs.length
+				) {
 					var out = mix_outs[i].outputs[j];
 					if (out.global_index === outputs[i].global_index) {
-						console.log('got mixin the same as output, skipping');
+						console.log("got mixin the same as output, skipping");
 						j++;
 						continue;
 					}
 					var oe = {};
 					oe.index = out.global_index.toString();
 					oe.key = out.public_key;
-					if (rct){
-						if (out.rct){
-							oe.commit = out.rct.slice(0,64); //add commitment from rct mix outs
+					if (rct) {
+						if (out.rct) {
+							oe.commit = out.rct.slice(0, 64); //add commitment from rct mix outs
 						} else {
-							if (outputs[i].rct) {throw "mix rct outs missing commit";}
+							if (outputs[i].rct) {
+								throw "mix rct outs missing commit";
+							}
 							oe.commit = zeroCommit(d2s(src.amount)); //create identity-masked commitment for non-rct mix input
 						}
 					}
@@ -1857,18 +2371,23 @@ var cnUtil = function(currencyConfig)
 				}
 			}
 			var real_oe = {};
-			real_oe.index = new JSBigInt(outputs[i].global_index || 0).toString();
+			real_oe.index = new JSBigInt(
+				outputs[i].global_index || 0,
+			).toString();
 			real_oe.key = outputs[i].public_key;
-			if (rct){
+			if (rct) {
 				if (outputs[i].rct) {
-					real_oe.commit = outputs[i].rct.slice(0,64); //add commitment for real input
+					real_oe.commit = outputs[i].rct.slice(0, 64); //add commitment for real input
 				} else {
 					real_oe.commit = zeroCommit(d2s(src.amount)); //create identity-masked commitment for non-rct input
 				}
 			}
 			var real_index = src.outputs.length;
 			for (j = 0; j < src.outputs.length; j++) {
-				if (new JSBigInt(real_oe.index).compare(src.outputs[j].index) < 0) {
+				if (
+					new JSBigInt(real_oe.index).compare(src.outputs[j].index) <
+					0
+				) {
 					real_index = j;
 					break;
 				}
@@ -1879,19 +2398,18 @@ var cnUtil = function(currencyConfig)
 			// Real output entry index
 			src.real_out = real_index;
 			src.real_out_in_tx = outputs[i].index;
-			if (rct){
+			if (rct) {
 				if (outputs[i].rct) {
-
-					src.mask = outputs[i].rct.slice(64,128); //encrypted
+					src.mask = outputs[i].rct.slice(64, 128); //encrypted
 				} else {
 					src.mask = null; //will be set by generate_key_image_helper_rct
 				}
 			}
 			sources.push(src);
 		}
-		console.log('sources: ', sources);
+		console.log("sources: ", sources);
 		var change = {
-			amount: JSBigInt.ZERO
+			amount: JSBigInt.ZERO,
 		};
 		var cmp = needed_money.compare(found_money);
 		if (cmp < 0) {
@@ -1900,9 +2418,24 @@ var cnUtil = function(currencyConfig)
 				throw "early fee calculation != later";
 			}
 		} else if (cmp > 0) {
-			throw "Need more money than found! (have: " + cnUtil.formatMoney(found_money) + " need: " + cnUtil.formatMoney(needed_money) + ")";
+			throw "Need more money than found! (have: " +
+				cnUtil.formatMoney(found_money) +
+				" need: " +
+				cnUtil.formatMoney(needed_money) +
+				")";
 		}
-		return this.construct_tx(keys, sources, dsts, fee_amount, payment_id, pid_encrypt, realDestViewKey, unlock_time, rct, nettype);
+		return this.construct_tx(
+			keys,
+			sources,
+			dsts,
+			fee_amount,
+			payment_id,
+			pid_encrypt,
+			realDestViewKey,
+			unlock_time,
+			rct,
+			nettype,
+		);
 	};
 
 	this.estimateRctSize = function(inputs, mixin, outputs) {
@@ -1910,18 +2443,18 @@ var cnUtil = function(currencyConfig)
 		// tx prefix
 		// first few bytes
 		size += 1 + 6;
-		size += inputs * (1+6+(mixin+1)*3+32); // original C implementation is *2+32 but author advised to change 2 to 3 as key offsets are variable size and this constitutes a best guess
+		size += inputs * (1 + 6 + (mixin + 1) * 3 + 32); // original C implementation is *2+32 but author advised to change 2 to 3 as key offsets are variable size and this constitutes a best guess
 		// vout
-		size += outputs * (6+32);
+		size += outputs * (6 + 32);
 		// extra
 		size += 40;
 		// rct signatures
 		// type
 		size += 1;
 		// rangeSigs
-		size += (2*64*32+32+64*32) * outputs;
+		size += (2 * 64 * 32 + 32 + 64 * 32) * outputs;
 		// MGs
-		size += inputs * (32 * (mixin+1) + 32);
+		size += inputs * (32 * (mixin + 1) + 32);
 		// mixRing - not serialized, can be reconstructed
 		/* size += 2 * 32 * (mixin+1) * inputs; */
 		// pseudoOuts
@@ -1952,48 +2485,58 @@ var cnUtil = function(currencyConfig)
 
 	this.printDsts = function(dsts) {
 		for (var i = 0; i < dsts.length; i++) {
-			console.log(dsts[i].address + ': ' + this.formatMoneyFull(dsts[i].amount));
+			console.log(
+				dsts[i].address + ": " + this.formatMoneyFull(dsts[i].amount),
+			);
 		}
 	};
 
 	this.formatMoneyFull = function(units) {
 		units = units.toString();
-		var symbol = units[0] === '-' ? '-' : '';
-		if (symbol === '-') {
+		var symbol = units[0] === "-" ? "-" : "";
+		if (symbol === "-") {
 			units = units.slice(1);
 		}
 		var decimal;
 		if (units.length >= config.coinUnitPlaces) {
-			decimal = units.substr(units.length - config.coinUnitPlaces, config.coinUnitPlaces);
+			decimal = units.substr(
+				units.length - config.coinUnitPlaces,
+				config.coinUnitPlaces,
+			);
 		} else {
-			decimal = padLeft(units, config.coinUnitPlaces, '0');
+			decimal = padLeft(units, config.coinUnitPlaces, "0");
 		}
-		return symbol + (units.substr(0, units.length - config.coinUnitPlaces) || '0') + '.' + decimal;
+		return (
+			symbol +
+			(units.substr(0, units.length - config.coinUnitPlaces) || "0") +
+			"." +
+			decimal
+		);
 	};
 
 	this.formatMoneyFullSymbol = function(units) {
-		return this.formatMoneyFull(units) + ' ' + config.coinSymbol;
+		return this.formatMoneyFull(units) + " " + config.coinSymbol;
 	};
 
 	this.formatMoney = function(units) {
-		var f = trimRight(this.formatMoneyFull(units), '0');
-		if (f[f.length - 1] === '.') {
+		var f = trimRight(this.formatMoneyFull(units), "0");
+		if (f[f.length - 1] === ".") {
 			return f.slice(0, f.length - 1);
 		}
 		return f;
 	};
 
 	this.formatMoneySymbol = function(units) {
-		return this.formatMoney(units) + ' ' + config.coinSymbol;
+		return this.formatMoney(units) + " " + config.coinSymbol;
 	};
 
 	this.parseMoney = function(str) {
 		if (!str) return JSBigInt.ZERO;
-		var negative = str[0] === '-';
+		var negative = str[0] === "-";
 		if (negative) {
 			str = str.slice(1);
 		}
-		var decimalIndex = str.indexOf('.');
+		var decimalIndex = str.indexOf(".");
 		if (decimalIndex == -1) {
 			if (negative) {
 				return JSBigInt.multiply(str, config.coinUnits).negate();
@@ -2004,11 +2547,21 @@ var cnUtil = function(currencyConfig)
 			str = str.substr(0, decimalIndex + config.coinUnitPlaces + 1);
 		}
 		if (negative) {
-			return new JSBigInt(str.substr(0, decimalIndex)).exp10(config.coinUnitPlaces)
-				.add(new JSBigInt(str.substr(decimalIndex + 1)).exp10(decimalIndex + config.coinUnitPlaces - str.length + 1)).negate;
+			return new JSBigInt(str.substr(0, decimalIndex))
+				.exp10(config.coinUnitPlaces)
+				.add(
+					new JSBigInt(str.substr(decimalIndex + 1)).exp10(
+						decimalIndex + config.coinUnitPlaces - str.length + 1,
+					),
+				).negate;
 		}
-		return new JSBigInt(str.substr(0, decimalIndex)).exp10(config.coinUnitPlaces)
-			.add(new JSBigInt(str.substr(decimalIndex + 1)).exp10(decimalIndex + config.coinUnitPlaces - str.length + 1));
+		return new JSBigInt(str.substr(0, decimalIndex))
+			.exp10(config.coinUnitPlaces)
+			.add(
+				new JSBigInt(str.substr(decimalIndex + 1)).exp10(
+					decimalIndex + config.coinUnitPlaces - str.length + 1,
+				),
+			);
 	};
 
 	this.decompose_amount_into_digits = function(amount) {
@@ -2027,7 +2580,7 @@ var cnUtil = function(currencyConfig)
 				break;
 			}*/
 			//check so we don't create 0s
-			if (amount[0] !== "0"){
+			if (amount[0] !== "0") {
 				var digit = amount[0];
 				while (digit.length < amount.length) {
 					digit += "0";
@@ -2045,7 +2598,7 @@ var cnUtil = function(currencyConfig)
 			for (var i = 0; i < dsts.length; i++) {
 				out.push({
 					address: dsts[i].address,
-					amount: dsts[i].amount
+					amount: dsts[i].amount,
 				});
 			}
 		} else {
@@ -2055,17 +2608,17 @@ var cnUtil = function(currencyConfig)
 					if (digits[j].compare(0) > 0) {
 						out.push({
 							address: dsts[i].address,
-							amount: digits[j]
+							amount: digits[j],
 						});
 					}
 				}
 			}
 		}
-		return out.sort(function(a,b){
+		return out.sort(function(a, b) {
 			return a["amount"] - b["amount"];
 		});
 	};
- 
+
 	this.is_tx_unlocked = function(unlock_time, blockchain_height) {
 		if (!config.maxBlockNumber) {
 			throw "Max block number is not set in config!";
@@ -2087,26 +2640,42 @@ var cnUtil = function(currencyConfig)
 			if (numBlocks <= 0) {
 				return "Transaction is unlocked";
 			}
-			var unlock_prediction = moment().add(numBlocks * config.avgBlockTime, 'seconds');
-			return "Will be unlocked in " + numBlocks + " blocks, ~" + unlock_prediction.fromNow(true) + ", " + unlock_prediction.calendar() + "";
+			var unlock_prediction = moment().add(
+				numBlocks * config.avgBlockTime,
+				"seconds",
+			);
+			return (
+				"Will be unlocked in " +
+				numBlocks +
+				" blocks, ~" +
+				unlock_prediction.fromNow(true) +
+				", " +
+				unlock_prediction.calendar() +
+				""
+			);
 		} else {
 			// unlock time is timestamp
 			var current_time = Math.round(new Date().getTime() / 1000);
 			var time_difference = unlock_time - current_time;
-			if(time_difference <= 0) {
+			if (time_difference <= 0) {
 				return "Transaction is unlocked";
 			}
 			var unlock_moment = moment(unlock_time * 1000);
-			return "Will be unlocked " + unlock_moment.fromNow() + ", " + unlock_moment.calendar();
+			return (
+				"Will be unlocked " +
+				unlock_moment.fromNow() +
+				", " +
+				unlock_moment.calendar()
+			);
 		}
 	};
 
 	function assert(stmt, val) {
 		if (!stmt) {
-			throw "assert failed" + (val !== undefined ? ': ' + val : '');
+			throw "assert failed" + (val !== undefined ? ": " + val : "");
 		}
 	}
 
 	return this;
-}
-exports.cnUtil = cnUtil
+};
+exports.cnUtil = cnUtil;

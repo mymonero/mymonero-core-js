@@ -7,6 +7,9 @@
     "type": "git",
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
   },
+  "scripts": {
+    "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override"
+  },
   "keywords": [
     "monero",
     "mymonero",
