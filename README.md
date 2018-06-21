@@ -55,3 +55,5 @@ Suggestions and feedback are very welcome!
 We'll merge nearly anything constructive. Contributors welcome and credited in releases.
 
 We often collaborate over IRC in #mymonero on Freenode.
+
+**All development happens off the `develop` branch like the Gitflow Workflow.**
