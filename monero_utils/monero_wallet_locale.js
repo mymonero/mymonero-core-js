@@ -26,22 +26,24 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-"use strict"
+"use strict";
 //
-const monero_wallet_utils = require('./monero_wallet_utils')
+const monero_wallet_utils = require("./monero_wallet_utils");
 //
-function MnemonicWordsetNameWithLocale(currentLocale) // e.g. 'en'
-{
-	const mnemonicWordsetNamesByAppLocaleNames = monero_wallet_utils.MnemonicWordsetNamesByAppLocaleNames
-	if (currentLocale.indexOf('en') === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.English
-	} else if (currentLocale.indexOf('es') === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.Spanish
-	} else if (currentLocale.indexOf('pt') === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.Portuguese
-	} else if (currentLocale.indexOf('ja') === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.Japanese
+function MnemonicWordsetNameWithLocale(
+	currentLocale, // e.g. 'en'
+) {
+	const mnemonicWordsetNamesByAppLocaleNames =
+		monero_wallet_utils.MnemonicWordsetNamesByAppLocaleNames;
+	if (currentLocale.indexOf("en") === 0) {
+		return mnemonicWordsetNamesByAppLocaleNames.English;
+	} else if (currentLocale.indexOf("es") === 0) {
+		return mnemonicWordsetNamesByAppLocaleNames.Spanish;
+	} else if (currentLocale.indexOf("pt") === 0) {
+		return mnemonicWordsetNamesByAppLocaleNames.Portuguese;
+	} else if (currentLocale.indexOf("ja") === 0) {
+		return mnemonicWordsetNamesByAppLocaleNames.Japanese;
 	}
-	return monero_wallet_utils.DefaultWalletMnemonicWordsetName // which would be .English
+	return monero_wallet_utils.DefaultWalletMnemonicWordsetName; // which would be .English
 }
-exports.MnemonicWordsetNameWithLocale = MnemonicWordsetNameWithLocale
+exports.MnemonicWordsetNameWithLocale = MnemonicWordsetNameWithLocale;
