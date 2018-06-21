@@ -57,3 +57,15 @@ We'll merge nearly anything constructive. Contributors welcome and credited in r
 We often collaborate over IRC in #mymonero on Freenode.
 
 **All development happens off the `develop` branch like the Gitflow Workflow.**
+
+## Regular contributors
+
+* 💿 `endogenic` ([Paul Shapiro](https://github.com/paulshapiro)) Maintainer
+
+* 🍄 `luigi` Major core crypto and Monero routine implementation contributor; Advisor
+
+* 🏄‍♂️ `paullinator` ([Paul Puey](https://github.com/paullinator)) API design
+
+* 🔒 `cryptochangement` Subaddress send & decode support; Initial tests
+
+* 💩 `henrynguyen5` Code quality, modernization, tests; HW wallet support *(in progress)*
