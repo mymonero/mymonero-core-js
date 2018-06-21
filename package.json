@@ -8,7 +8,9 @@
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
   },
   "scripts": {
-    "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override"
+    "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "monero",
@@ -31,5 +33,15 @@
   "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
   "dependencies": {
     "async": "^2.6.0"
+  },
+  "devDependencies": {
+    "jest": "^23.1.0"
+  },
+  "jest" : {
+    "coveragePathIgnorePatterns": [
+      "node_modules", 
+      "cryptonote_utils/biginteger.js",
+      "cryptonote_utils/sha3.js",
+      "cryptonote_utils/cryptonote_crypto_EMSCRIPTEN.js"]
   }
 }
