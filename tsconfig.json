@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"outDir": "dist",
+		"target": "es2017",
+		"sourceMap": true,
+		"module": "es2015",
+		"baseUrl": "./",
+		"lib": ["es2017", "dom"],
+		"allowSyntheticDefaultImports": true,
+		"paths": {
+			"@src*": ["src*"],
+			"@test*": ["__test__*"]
+		},
+		"moduleResolution": "node",
+		"noEmitOnError": false,
+		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"strictNullChecks": true,
+		"strictPropertyInitialization": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitThis": true,
+		"noErrorTruncation": true,
+		"pretty": true
+	},
+	"include": ["./src/", "./__test__/", "examples", "./"]
+}

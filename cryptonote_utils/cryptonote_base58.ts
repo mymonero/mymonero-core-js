@@ -27,7 +27,7 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // v--- These should maybe be injected into context
-const JSBigInt = require("./biginteger").BigInteger;
+import { BigInteger as JSBigInt } from "./biginteger";
 
 var cnBase58 = (function() {
 	var b58 = {};
@@ -258,4 +258,5 @@ var cnBase58 = (function() {
 	return b58;
 })();
 
-exports.cnBase58 = cnBase58;
+const _cnBase58 = cnBase58;
+export { _cnBase58 as cnBase58 };
