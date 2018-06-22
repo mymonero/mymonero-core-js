@@ -26,11 +26,10 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-"use strict";
 //
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 //
-module.exports = {
+export default {
 	// Number of atomic units in one unit of currency. e.g. 12 => 10^12 = 1000000000000
 	coinUnitPlaces: 12,
 
