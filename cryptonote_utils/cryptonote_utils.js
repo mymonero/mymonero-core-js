@@ -222,6 +222,7 @@ var cnUtil = function(currencyConfig) {
 
 	//for most uses you'll also want to swapEndian after conversion
 	//mainly to convert integer "scalars" to usable hexadecimal strings
+	//uint long long to 32 byte key
 	function d2h(integer) {
 		if (typeof integer !== "string" && integer.toString().length > 15) {
 			throw "integer should be entered as a string for precision";
@@ -237,12 +238,14 @@ var cnUtil = function(currencyConfig) {
 				.toLowerCase()
 		).slice(-64);
 	}
+	this.d2h = d2h;
 
 	//integer (string) to scalar
 	function d2s(integer) {
 		return swapEndian(d2h(integer));
 	}
 
+	this.d2s = d2s;
 	//scalar to integer (string)
 	function s2d(scalar) {
 		return JSBigInt.parse(swapEndian(scalar), 16).toString();
