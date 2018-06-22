@@ -28,235 +28,210 @@
 
 // v--- These should maybe be injected into context
 import { BigInteger as JSBigInt } from "./biginteger";
+import { strtobin, bintohex } from "./str_bin_converters";
 
-var cnBase58 = (function() {
-	var b58 = {};
-	//
-	var alphabet_str =
-		"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-	var alphabet = [];
-	for (var i = 0; i < alphabet_str.length; i++) {
-		alphabet.push(alphabet_str.charCodeAt(i));
+const alphabet_str =
+	"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const alphabet: number[] = [];
+for (let i = 0; i < alphabet_str.length; i++) {
+	alphabet.push(alphabet_str.charCodeAt(i));
+}
+const encoded_block_sizes = [0, 2, 3, 5, 6, 7, 9, 10, 11];
+
+const alphabet_size = alphabet.length;
+const full_block_size = 8;
+const full_encoded_block_size = 11;
+
+const UINT64_MAX = new JSBigInt(2).pow(64);
+
+function hextobin(hex: string) {
+	if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
+	const res = new Uint8Array(hex.length / 2);
+	for (let i = 0; i < hex.length / 2; ++i) {
+		res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
 	}
-	var encoded_block_sizes = [0, 2, 3, 5, 6, 7, 9, 10, 11];
+	return res;
+}
 
-	var alphabet_size = alphabet.length;
-	var full_block_size = 8;
-	var full_encoded_block_size = 11;
+function bintostr(bin: Uint8Array) {
+	const out = [];
+	for (let i = 0; i < bin.length; i++) {
+		out.push(String.fromCharCode(bin[i]));
+	}
+	return out.join("");
+}
 
-	var UINT64_MAX = new JSBigInt(2).pow(64);
+function uint8_be_to_64(data: Uint8Array) {
+	if (data.length < 1 || data.length > 8) {
+		throw "Invalid input length";
+	}
+	let res = JSBigInt.ZERO;
+	const twopow8 = new JSBigInt(2).pow(8);
+	let i = 0;
+	switch (9 - data.length) {
+		case 1:
+			res = res.add(data[i++]);
+		case 2:
+			res = res.multiply(twopow8).add(data[i++]);
+		case 3:
+			res = res.multiply(twopow8).add(data[i++]);
+		case 4:
+			res = res.multiply(twopow8).add(data[i++]);
+		case 5:
+			res = res.multiply(twopow8).add(data[i++]);
+		case 6:
+			res = res.multiply(twopow8).add(data[i++]);
+		case 7:
+			res = res.multiply(twopow8).add(data[i++]);
+		case 8:
+			res = res.multiply(twopow8).add(data[i++]);
+			break;
+		default:
+			throw "Impossible condition";
+	}
+	return res;
+}
 
-	function hextobin(hex) {
-		if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
-		var res = new Uint8Array(hex.length / 2);
-		for (var i = 0; i < hex.length / 2; ++i) {
-			res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-		}
-		return res;
+function uint64_to_8be(num, size: number) {
+	const res = new Uint8Array(size);
+	if (size < 1 || size > 8) {
+		throw "Invalid input length";
+	}
+	const twopow8 = new JSBigInt(2).pow(8);
+	for (let i = size - 1; i >= 0; i--) {
+		res[i] = num.remainder(twopow8).toJSValue();
+		num = num.divide(twopow8);
+	}
+	return res;
+}
+
+function encode_block(data: Uint8Array, buf: Uint8Array, index: number) {
+	if (data.length < 1 || data.length > full_encoded_block_size) {
+		throw "Invalid block length: " + data.length;
+	}
+	let num = uint8_be_to_64(data);
+	let i = encoded_block_sizes[data.length] - 1;
+	// while num > 0
+	while (num.compare(0) === 1) {
+		const div = num.divRem(alphabet_size);
+		// remainder = num % alphabet_size
+		const remainder = div[1];
+		// num = num / alphabet_size
+		num = div[0];
+		buf[index + i] = alphabet[remainder.toJSValue()];
+		i--;
+	}
+	return buf;
+}
+
+function decode_block(data: Uint8Array, buf: Uint8Array, index: number) {
+	if (data.length < 1 || data.length > full_encoded_block_size) {
+		throw "Invalid block length: " + data.length;
 	}
 
-	function bintohex(bin) {
-		var out = [];
-		for (var i = 0; i < bin.length; ++i) {
-			out.push(("0" + bin[i].toString(16)).slice(-2));
-		}
-		return out.join("");
+	const res_size = encoded_block_sizes.indexOf(data.length);
+	if (res_size <= 0) {
+		throw "Invalid block size";
 	}
-
-	function strtobin(str) {
-		var res = new Uint8Array(str.length);
-		for (var i = 0; i < str.length; i++) {
-			res[i] = str.charCodeAt(i);
+	let res_num = new JSBigInt(0);
+	let order = new JSBigInt(1);
+	for (let i = data.length - 1; i >= 0; i--) {
+		const digit = alphabet.indexOf(data[i]);
+		if (digit < 0) {
+			throw "Invalid symbol";
 		}
-		return res;
+		const product = order.multiply(digit).add(res_num);
+		// if product > UINT64_MAX
+		if (product.compare(UINT64_MAX) === 1) {
+			throw "Overflow";
+		}
+		res_num = product;
+		order = order.multiply(alphabet_size);
 	}
-
-	function bintostr(bin) {
-		var out = [];
-		for (var i = 0; i < bin.length; i++) {
-			out.push(String.fromCharCode(bin[i]));
-		}
-		return out.join("");
+	if (
+		res_size < full_block_size &&
+		new JSBigInt(2).pow(8 * res_size).compare(res_num) <= 0
+	) {
+		throw "Overflow 2";
 	}
+	buf.set(uint64_to_8be(res_num, res_size), index);
+	return buf;
+}
 
-	function uint8_be_to_64(data) {
-		if (data.length < 1 || data.length > 8) {
-			throw "Invalid input length";
-		}
-		var res = JSBigInt.ZERO;
-		var twopow8 = new JSBigInt(2).pow(8);
-		var i = 0;
-		switch (9 - data.length) {
-			case 1:
-				res = res.add(data[i++]);
-			case 2:
-				res = res.multiply(twopow8).add(data[i++]);
-			case 3:
-				res = res.multiply(twopow8).add(data[i++]);
-			case 4:
-				res = res.multiply(twopow8).add(data[i++]);
-			case 5:
-				res = res.multiply(twopow8).add(data[i++]);
-			case 6:
-				res = res.multiply(twopow8).add(data[i++]);
-			case 7:
-				res = res.multiply(twopow8).add(data[i++]);
-			case 8:
-				res = res.multiply(twopow8).add(data[i++]);
-				break;
-			default:
-				throw "Impossible condition";
-		}
-		return res;
+export function encode(hex: string) {
+	const data = hextobin(hex);
+	if (data.length === 0) {
+		return "";
 	}
+	const full_block_count = Math.floor(data.length / full_block_size);
+	const last_block_size = data.length % full_block_size;
+	const res_size =
+		full_block_count * full_encoded_block_size +
+		encoded_block_sizes[last_block_size];
 
-	function uint64_to_8be(num, size) {
-		var res = new Uint8Array(size);
-		if (size < 1 || size > 8) {
-			throw "Invalid input length";
-		}
-		var twopow8 = new JSBigInt(2).pow(8);
-		for (var i = size - 1; i >= 0; i--) {
-			res[i] = num.remainder(twopow8).toJSValue();
-			num = num.divide(twopow8);
-		}
-		return res;
+	let res = new Uint8Array(res_size);
+	let i: number;
+	for (i = 0; i < res_size; ++i) {
+		res[i] = alphabet[0];
 	}
-
-	b58.encode_block = function(data, buf, index) {
-		if (data.length < 1 || data.length > full_encoded_block_size) {
-			throw "Invalid block length: " + data.length;
-		}
-		var num = uint8_be_to_64(data);
-		var i = encoded_block_sizes[data.length] - 1;
-		// while num > 0
-		while (num.compare(0) === 1) {
-			var div = num.divRem(alphabet_size);
-			// remainder = num % alphabet_size
-			var remainder = div[1];
-			// num = num / alphabet_size
-			num = div[0];
-			buf[index + i] = alphabet[remainder.toJSValue()];
-			i--;
-		}
-		return buf;
-	};
-
-	b58.encode = function(hex) {
-		var data = hextobin(hex);
-		if (data.length === 0) {
-			return "";
-		}
-		var full_block_count = Math.floor(data.length / full_block_size);
-		var last_block_size = data.length % full_block_size;
-		var res_size =
-			full_block_count * full_encoded_block_size +
-			encoded_block_sizes[last_block_size];
-
-		var res = new Uint8Array(res_size);
-		var i;
-		for (i = 0; i < res_size; ++i) {
-			res[i] = alphabet[0];
-		}
-		for (i = 0; i < full_block_count; i++) {
-			res = b58.encode_block(
-				data.subarray(
-					i * full_block_size,
-					i * full_block_size + full_block_size,
-				),
-				res,
-				i * full_encoded_block_size,
-			);
-		}
-		if (last_block_size > 0) {
-			res = b58.encode_block(
-				data.subarray(
-					full_block_count * full_block_size,
-					full_block_count * full_block_size + last_block_size,
-				),
-				res,
-				full_block_count * full_encoded_block_size,
-			);
-		}
-		return bintostr(res);
-	};
-
-	b58.decode_block = function(data, buf, index) {
-		if (data.length < 1 || data.length > full_encoded_block_size) {
-			throw "Invalid block length: " + data.length;
-		}
-
-		var res_size = encoded_block_sizes.indexOf(data.length);
-		if (res_size <= 0) {
-			throw "Invalid block size";
-		}
-		var res_num = new JSBigInt(0);
-		var order = new JSBigInt(1);
-		for (var i = data.length - 1; i >= 0; i--) {
-			var digit = alphabet.indexOf(data[i]);
-			if (digit < 0) {
-				throw "Invalid symbol";
-			}
-			var product = order.multiply(digit).add(res_num);
-			// if product > UINT64_MAX
-			if (product.compare(UINT64_MAX) === 1) {
-				throw "Overflow";
-			}
-			res_num = product;
-			order = order.multiply(alphabet_size);
-		}
-		if (
-			res_size < full_block_size &&
-			new JSBigInt(2).pow(8 * res_size).compare(res_num) <= 0
-		) {
-			throw "Overflow 2";
-		}
-		buf.set(uint64_to_8be(res_num, res_size), index);
-		return buf;
-	};
-
-	b58.decode = function(enc) {
-		enc = strtobin(enc);
-		if (enc.length === 0) {
-			return "";
-		}
-		var full_block_count = Math.floor(enc.length / full_encoded_block_size);
-		var last_block_size = enc.length % full_encoded_block_size;
-		var last_block_decoded_size = encoded_block_sizes.indexOf(
-			last_block_size,
-		);
-		if (last_block_decoded_size < 0) {
-			throw "Invalid encoded length";
-		}
-		var data_size =
-			full_block_count * full_block_size + last_block_decoded_size;
-		var data = new Uint8Array(data_size);
-		for (var i = 0; i < full_block_count; i++) {
-			data = b58.decode_block(
-				enc.subarray(
-					i * full_encoded_block_size,
-					i * full_encoded_block_size + full_encoded_block_size,
-				),
-				data,
+	for (i = 0; i < full_block_count; i++) {
+		res = encode_block(
+			data.subarray(
 				i * full_block_size,
-			);
-		}
-		if (last_block_size > 0) {
-			data = b58.decode_block(
-				enc.subarray(
-					full_block_count * full_encoded_block_size,
-					full_block_count * full_encoded_block_size +
-						last_block_size,
-				),
-				data,
+				i * full_block_size + full_block_size,
+			),
+			res,
+			i * full_encoded_block_size,
+		);
+	}
+	if (last_block_size > 0) {
+		res = encode_block(
+			data.subarray(
 				full_block_count * full_block_size,
-			);
-		}
-		return bintohex(data);
-	};
+				full_block_count * full_block_size + last_block_size,
+			),
+			res,
+			full_block_count * full_encoded_block_size,
+		);
+	}
+	return bintostr(res);
+}
 
-	return b58;
-})();
-
-const _cnBase58 = cnBase58;
-export { _cnBase58 as cnBase58 };
+export function decode(str_enc: string) {
+	const enc = strtobin(str_enc);
+	if (enc.length === 0) {
+		return "";
+	}
+	const full_block_count = Math.floor(enc.length / full_encoded_block_size);
+	const last_block_size = enc.length % full_encoded_block_size;
+	const last_block_decoded_size = encoded_block_sizes.indexOf(
+		last_block_size,
+	);
+	if (last_block_decoded_size < 0) {
+		throw "Invalid encoded length";
+	}
+	const data_size =
+		full_block_count * full_block_size + last_block_decoded_size;
+	let data = new Uint8Array(data_size);
+	for (let i = 0; i < full_block_count; i++) {
+		data = decode_block(
+			enc.subarray(
+				i * full_encoded_block_size,
+				i * full_encoded_block_size + full_encoded_block_size,
+			),
+			data,
+			i * full_block_size,
+		);
+	}
+	if (last_block_size > 0) {
+		data = decode_block(
+			enc.subarray(
+				full_block_count * full_encoded_block_size,
+				full_block_count * full_encoded_block_size + last_block_size,
+			),
+			data,
+			full_block_count * full_block_size,
+		);
+	}
+	return bintohex(data);
+}
