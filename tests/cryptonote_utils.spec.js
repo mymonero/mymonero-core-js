@@ -28,8 +28,6 @@ describe("cryptonote_utils tests", function() {
 			new JSBigInt("123456789123456789"),
 		];
 
-		console.log(monero_utils.random_keypair());
-
 		for (const amount of test_amounts) {
 			const k = monero_utils.random_scalar();
 			const scalar = monero_utils.random_scalar(); /*?*/
