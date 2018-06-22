@@ -157,6 +157,8 @@ var cnUtil = function(currencyConfig) {
 		"f8fef05a3fa5c9f3eba41638b247b711a99f960fe73aa2f90136aeb20329b888",
 	];
 
+	this.H2 = H2;
+
 	//begin rct new functions
 	//creates a Pedersen commitment from an amount (in scalar form) and a mask
 	//C = bG + aH where b = mask, a = amount
@@ -317,6 +319,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		return res;
 	}
+	this.hextobin = hextobin;
 
 	function bintohex(bin) {
 		var out = [];
@@ -1251,8 +1254,8 @@ var cnUtil = function(currencyConfig) {
 	//xv: vector of secret keys, 1 per ring (nrings)
 	//pm: matrix of pubkeys, indexed by size first
 	//iv: vector of indexes, 1 per ring (nrings), can be a string
-	//size: ring size
-	//nrings: number of rings
+	//size: ring size, default 2
+	//nrings: number of rings, default 64
 	//extensible borromean signatures
 	this.genBorromean = function(xv, pm, iv, size, nrings) {
 		if (xv.length !== nrings) {
@@ -1275,6 +1278,8 @@ var cnUtil = function(currencyConfig) {
 			}
 		}
 		//signature struct
+		// in the case of size 2 and nrings 64
+		// bb.s = [[64], [64]]
 		var bb = {
 			s: [],
 			ee: "",
@@ -1326,6 +1331,37 @@ var cnUtil = function(currencyConfig) {
 		return bb;
 	};
 
+	this.verifyBorromean = function(bb, P1, P2) {
+		let Lv1 = [];
+		let chash;
+		let LL;
+
+		let p2 = "";
+		for (let ii = 0; ii < 64; ii++) {
+			p2 = this.ge_double_scalarmult_base_vartime(
+				bb.ee,
+				P1[ii],
+				bb.s[0][ii],
+			);
+			LL = p2;
+			chash = this.hash_to_scalar(LL);
+
+			p2 = this.ge_double_scalarmult_base_vartime(
+				chash,
+				P2[ii],
+				bb.s[1][ii],
+			);
+			Lv1[ii] = p2;
+		}
+		const eeComputed = this.array_hash_to_scalar(Lv1);
+		const equalKeys = eeComputed === bb.ee;
+		console.log(`Keys equal? ${equalKeys}
+		${eeComputed}
+		${bb.ee}`);
+
+		return equalKeys;
+	};
+
 	//proveRange
 	//proveRange gives C, and mask such that \sumCi = C
 	//	 c.f. http://eprint.iacr.org/2015/1098 section 5.1
@@ -1333,13 +1369,7 @@ var cnUtil = function(currencyConfig) {
 	//	 thus this proves that "amount" is in [0, s^n] (we assume s to be 4) (2 for now with v2 txes)
 	//	 mask is a such that C = aG + bH, and b = amount
 	//commitMaskObj = {C: commit, mask: mask}
-	this.proveRange = function(
-		commitMaskObj,
-		amount,
-		nrings,
-		enc_seed,
-		exponent,
-	) {
+	this.proveRange = function(commitMaskObj, amount, nrings) {
 		var size = 2;
 		var C = I; //identity
 		var mask = Z; //zero scalar
@@ -1409,6 +1439,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		return hash_to_scalar(buf);
 	}
+	this.array_hash_to_scalar = array_hash_to_scalar;
 
 	// Gen creates a signature which proves that for some column in the keymatrix "pk"
 	//	 the signer knows a secret key for each row in that column
@@ -2485,6 +2516,8 @@ var cnUtil = function(currencyConfig) {
 		}
 		return str;
 	}
+
+	this.padLeft = padLeft;
 
 	this.printDsts = function(dsts) {
 		for (var i = 0; i < dsts.length; i++) {

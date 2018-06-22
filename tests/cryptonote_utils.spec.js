@@ -2,6 +2,7 @@
 const mymonero = require("../");
 const assert = require("assert");
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
+const mnemonic = require("../cryptonote_utils/mnemonic");
 
 var public_key =
 	"904e49462268d771cc1649084c35aa1296bfb214880fe2e7f373620a3e2ba597";
@@ -12,6 +13,63 @@ var nettype = mymonero.nettype_utils.network_type.MAINNET;
 const monero_utils = mymonero.monero_utils;
 
 describe("cryptonote_utils tests", function() {
+	it("borromean", () => {
+		function randomBit() {
+			// get random 32 bits in hex
+			const rand32bits = mnemonic.mn_random(32);
+			// take 4 bits "nibble" and convert to binary
+			// then take last index
+			return monero_utils.padLeft(
+				parseInt(rand32bits[0], 16).toString(2),
+				4,
+				0,
+			)[3];
+		}
+
+		//Tests for Borromean signatures
+		//#boro true one, false one, C != sum Ci, and one out of the range..
+		const N = 64;
+		let xv = [], // vector of secret keys, 1 per ring (nrings)
+			P1v = [], //key64, arr of commitments Ci
+			P2v = [], //key64
+			indi = []; // vector of secret indexes, 1 per ring (nrings), can be a string
+
+		for (let j = 0; j < N; j++) {
+			indi[j] = randomBit();
+
+			xv[j] = monero_utils.random_scalar();
+
+			if (+indi[j] === 0) {
+				P1v[j] = monero_utils.ge_scalarmult_base(xv[j]);
+			} else {
+				P1v[j] = monero_utils.ge_scalarmult_base(xv[j]); // calculate aG = xv[j].G
+				P1v[j] = monero_utils.ge_add(P1v[j], monero_utils.H2[j]); // calculate aG + H2
+			}
+
+			P2v[j] = monero_utils.ge_sub(P1v[j], monero_utils.H2[j]);
+		}
+		// #true one
+		let bb = monero_utils.genBorromean(xv, [P1v, P2v], indi, 2, N); /*?.*/
+		let valid = monero_utils.verifyBorromean(bb, P1v, P2v); /*?.*/
+		expect(valid).toBe(true);
+
+		//#false one
+		indi[3] = `${(+indi[3] + 1) % 2}`;
+		bb = monero_utils.genBorromean(xv, [P1v, P2v], indi, 2, N); /*?.*/
+		valid = monero_utils.verifyBorromean(bb, P1v, P2v); /*?.*/
+		expect(valid).toBe(false);
+
+		//#true one again
+		indi[3] = `${(+indi[3] + 1) % 2}`;
+		bb = monero_utils.genBorromean(xv, [P1v, P2v], indi, 2, N); /*?.*/
+		valid = monero_utils.verifyBorromean(bb, P1v, P2v); /*?.*/
+		expect(valid).toBe(true);
+
+		// #false one
+		bb = monero_utils.genBorromean(xv, [P2v, P1v], indi, 2, N); /*?.*/
+		valid = monero_utils.verifyBorromean(bb, P1v, P2v); /*?.*/
+		expect(valid).toBe(false);
+	});
 	it("ecdh_roundtrip", () => {
 		const test_amounts = [
 			new JSBigInt(1),
