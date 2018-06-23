@@ -87,7 +87,13 @@ var cnUtil = function(currencyConfig) {
 	var l = JSBigInt(
 		"7237005577332262213973186563042994240857116359379907606001950938285454250989",
 	); //curve order (not RCT specific)
+
 	var I = "0100000000000000000000000000000000000000000000000000000000000000"; //identity element
+	this.I = I;
+	this.identity = function() {
+		return I;
+	};
+
 	var Z = "0000000000000000000000000000000000000000000000000000000000000000"; //zero scalar
 	//H2 object to speed up some operations
 	var H2 = [
@@ -520,6 +526,8 @@ var cnUtil = function(currencyConfig) {
 		return this.sc_reduce32(this.rand_32());
 	};
 
+	// alias
+	this.skGen = random_scalar;
 	/* no longer used
 	this.keccak = function(hex, inlen, outlen) {
 		var input = hextobin(hex);
@@ -875,6 +883,7 @@ var cnUtil = function(currencyConfig) {
 		CNCrypto._free(res2_m);
 		return bintohex(res);
 	};
+	this.hashToPoint = hash_to_ec_2;
 
 	this.generate_key_image_2 = function(pub, sec) {
 		if (!pub || !sec || pub.length !== 64 || sec.length !== 64) {
@@ -1448,13 +1457,16 @@ var cnUtil = function(currencyConfig) {
 	// because we don't want to force same secret column for all inputs
 	this.MLSAG_Gen = function(message, pk, xx, kimg, index) {
 		var cols = pk.length; //ring size
+		// secret index
 		if (index >= cols) {
 			throw "index out of range";
 		}
 		var rows = pk[0].length; //number of signature rows (always 2)
+		// [pub, com] = 2
 		if (rows !== 2) {
 			throw "wrong row count";
 		}
+		// check all are len 2
 		for (var i = 0; i < cols; i++) {
 			if (pk[i].length !== rows) {
 				throw "pk is not rectangular";
@@ -1478,9 +1490,14 @@ var cnUtil = function(currencyConfig) {
 		toHash[0] = message;
 
 		//secret index (pubkey section)
+
 		alpha[0] = random_scalar(); //need to save alphas for later
 		toHash[1] = pk[index][0]; //secret index pubkey
-		toHash[2] = ge_scalarmult_base(alpha[0]); //dsRow L
+
+		// this is the keyimg anyway  const H1 = this.hashToPoint(pk[index][0]) // Hp(K_in)
+		//  rv.II[0] = this.ge_scalarmult(H1, xx[0]) // k_in.Hp(K_in)
+
+		toHash[2] = ge_scalarmult_base(alpha[0]); //dsRow L, a.G
 		toHash[3] = generate_key_image_2(pk[index][0], alpha[0]); //dsRow R (key image check)
 		//secret index (commitment section)
 		alpha[1] = random_scalar();
@@ -1527,6 +1544,51 @@ var cnUtil = function(currencyConfig) {
 			rv.ss[index][i] = sc_mulsub(c_old, xx[i], alpha[i]);
 		}
 		return rv;
+	};
+
+	this.MLSAG_ver = function(message, pk, rv, kimg) {
+		// we assume that col, row, rectangular checks are already done correctly
+		// in MLSAG_gen
+		const cols = pk.length;
+		let c_old = rv.cc;
+		console.log(`cols ${cols}`);
+		let i = 0;
+		let toHash = [];
+		toHash[0] = message;
+		while (i < cols) {
+			//!secret index (pubkey section)
+			toHash[1] = pk[i][0];
+			toHash[2] = ge_double_scalarmult_base_vartime(
+				c_old,
+				pk[i][0],
+				rv.ss[i][0],
+			);
+			toHash[3] = ge_double_scalarmult_postcomp_vartime(
+				rv.ss[i][0],
+				pk[i][0],
+				c_old,
+				kimg,
+			);
+
+			//!secret index (commitment section)
+			toHash[4] = pk[i][1];
+			toHash[5] = ge_double_scalarmult_base_vartime(
+				c_old,
+				pk[i][1],
+				rv.ss[i][1],
+			);
+
+			c_old = array_hash_to_scalar(toHash);
+
+			i = i + 1;
+		}
+
+		const c = this.sc_sub(c_old, rv.cc);
+		console.log(`
+		c_old: ${c_old} 
+		rc.cc: ${rv.cc}
+		c: ${c}`);
+		return c;
 	};
 
 	//prepares for MLSAG_Gen
