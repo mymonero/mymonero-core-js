@@ -8,6 +8,7 @@ module.exports = function(wallaby) {
 			"hostAPI/**/*.js",
 			"monero_utils/**/*.js",
 			"index.js",
+			"tests/borromean/test_parameters.js",
 		],
 
 		filesWithNoCoverageCalculated: [
