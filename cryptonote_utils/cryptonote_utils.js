@@ -1378,7 +1378,13 @@ var cnUtil = function(currencyConfig) {
 	//	 thus this proves that "amount" is in [0, s^n] (we assume s to be 4) (2 for now with v2 txes)
 	//	 mask is a such that C = aG + bH, and b = amount
 	//commitMaskObj = {C: commit, mask: mask}
-	this.proveRange = function(commitMaskObj, amount, nrings) {
+	this.proveRange = function(
+		commitMaskObj,
+		amount,
+		nrings,
+		enc_seed,
+		exponent,
+	) {
 		var size = 2;
 		var C = I; //identity
 		var mask = Z; //zero scalar
