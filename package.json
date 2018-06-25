@@ -38,9 +38,11 @@
     "jest": "^23.1.0"
   },
   "jest" : {
+    "testEnvironment":"node",
     "coveragePathIgnorePatterns": [
       "node_modules", 
       "cryptonote_utils/biginteger.js",
+      "cryptonote_utils/nacl-fast-cn.js",
       "cryptonote_utils/sha3.js",
       "cryptonote_utils/cryptonote_crypto_EMSCRIPTEN.js"]
   }
