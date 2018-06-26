@@ -95,6 +95,8 @@ var cnUtil = function(currencyConfig) {
 	};
 
 	var Z = "0000000000000000000000000000000000000000000000000000000000000000"; //zero scalar
+	this.Z = Z;
+
 	//H2 object to speed up some operations
 	var H2 = [
 		"8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94",
@@ -1364,7 +1366,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		const eeComputed = this.array_hash_to_scalar(Lv1);
 		const equalKeys = eeComputed === bb.ee;
-		console.log(`Keys equal? ${equalKeys}
+		console.log(`[verifyBorromean] Keys equal? ${equalKeys}
 		${eeComputed}
 		${bb.ee}`);
 
@@ -1442,6 +1444,41 @@ var cnUtil = function(currencyConfig) {
 		commitMaskObj.C = C;
 		commitMaskObj.mask = mask;
 		return sig;
+	};
+
+	//proveRange and verRange
+	//proveRange gives C, and mask such that \sumCi = C
+	//   c.f. http://eprint.iacr.org/2015/1098 section 5.1
+	//   and Ci is a commitment to either 0 or 2^i, i=0,...,63
+	//   thus this proves that "amount" is in [0, 2^64]
+	//   mask is a such that C = aG + bH, and b = amount
+	//verRange verifies that \sum Ci = C and that each Ci is a commitment to 0 or 2^i
+
+	this.verRange = function(C, as, nrings = 64) {
+		try {
+			let CiH = []; // len 64
+			let asCi = []; // len 64
+			let Ctmp;
+			for (let i = 0; i < nrings; i++) {
+				CiH[i] = this.ge_sub(as.Ci[i], this.H2[i]);
+				Ctmp = this.ge_add(Ctmp, as.Ci[i]);
+			}
+			const equalKeys = Ctmp === C;
+			console.log(`[verRange] Equal keys? ${equalKeys} 
+			C: ${c}
+			Ctmp: $${Ctmp}`);
+			if (!equalKeys) {
+				return false;
+			}
+
+			if (!this.verifyBorromean(as.asig, asCi, CiH)) {
+				return false;
+			}
+
+			return true;
+		} catch (e) {
+			return false;
+		}
 	};
 
 	function array_hash_to_scalar(array) {
@@ -1597,7 +1634,14 @@ var cnUtil = function(currencyConfig) {
 		return c;
 	};
 
-	//prepares for MLSAG_Gen
+	//Ring-ct MG sigs
+	//Prove:
+	//   c.f. http://eprint.iacr.org/2015/1098 section 4. definition 10.
+	//   This does the MG sig on the "dest" part of the given key matrix, and
+	//   the last row is the sum of input commitments from that column - sum output commitments
+	//   this shows that sum inputs = sum outputs
+	//Ver:
+	//   verifies the above sig is created corretly
 	this.proveRctMG = function(message, pubs, inSk, kimg, mask, Cout, index) {
 		var cols = pubs.length;
 		if (cols < 3) {
@@ -1614,6 +1658,64 @@ var cnUtil = function(currencyConfig) {
 		xx[0] = inSk.x;
 		xx[1] = sc_sub(inSk.a, mask);
 		return this.MLSAG_Gen(message, PK, xx, kimg, index);
+	};
+
+	//Ring-ct MG sigs
+	//Prove:
+	//   c.f. http://eprint.iacr.org/2015/1098 section 4. definition 10.
+	//   This does the MG sig on the "dest" part of the given key matrix, and
+	//   the last row is the sum of input commitments from that column - sum output commitments
+	//   this shows that sum inputs = sum outputs
+	//Ver:
+	//   verifies the above sig is created corretly
+	// simple version, assuming only post Rct
+	this.verRctMG = function(mg, pubs, outPk, txnFeeKey, message, kimg) {
+		const cols = pubs.length;
+		if (cols < 1) {
+			throw Error("Empty pubs");
+		}
+		const rows = pubs[0].length;
+		if (rows < 1) {
+			throw Error("Empty pubs");
+		}
+		for (let i = 0; i < cols.length; ++i) {
+			if (pubs[i].length !== rows) {
+				throw Error("Pubs is not rectangular");
+			}
+		}
+		// key vector of rows + 1 len
+		const tmp = [];
+		for (let i = 0; i < rows + 1; i++) {
+			tmp[i] = this.identity();
+		}
+
+		// key matrix of (cols, tmp)
+		let M = [];
+
+		//create the matrix to mg sig
+		for (let j = 0; j < rows; j++) {
+			for (let i = 0; i < cols; i++) {
+				// add dimension
+				M[i].push([]);
+				M[i][j] = pubs[i][j].dest;
+				M[i][rows] = this.ge_add(M[i][rows], outPk[j].C); //add Ci in last row
+			}
+		}
+
+		for (let i = 0; i < cols; i++) {
+			for (let j = 0; j < outPk.length; j++) {
+				M[i][rows] = this.ge_sub(M[i][rows], outPk[J].C); //subtract output Ci's in last row
+			}
+
+			//subtract txn fee output in last row
+			M[i][rows] = this.ge_sub(M[i][rows], txnFeeKey);
+		}
+
+		return this.MLSAG_ver(message, M, mg, kimg);
+	};
+
+	this.verBulletProof = function() {
+		throw Error("verBulletProof is not implemented");
 	};
 
 	this.get_pre_mlsag_hash = function(rv) {
@@ -1768,6 +1870,77 @@ var cnUtil = function(currencyConfig) {
 		return rv;
 	};
 
+	this.verRct = function(rv, semantics) {
+		if (rv.type === 0x03) {
+			throw Error("Bulletproof validation not implemented");
+		}
+
+		// where RCTTypeFull is 0x01 and  RCTTypeFullBulletproof is 0x03
+		if (rv.type !== 0x01 && rv.type !== 0x03) {
+			throw Error("verRct called on non-full rctSig");
+		}
+		if (semantics) {
+			//RCTTypeFullBulletproof checks not implemented
+			// RCTTypeFull checks
+			if (rv.outPk.length !== rv.p.rangeSigs.length) {
+				throw Error("Mismatched sizes of outPk and rv.p.rangeSigs");
+			}
+			if (rv.outPk.length !== rv.ecdhInfo.length) {
+				throw Error("Mismatched sizes of outPk and rv.ecdhInfo");
+			}
+			if (rv.p.MGs.length !== 1) {
+				throw Error("full rctSig has not one MG");
+			}
+		} else {
+			// semantics check is early, we don't have the MGs resolved yet
+		}
+		try {
+			if (semantics) {
+				const results = [];
+				for (let i = 0; i < rv.outPk.length; i++) {
+					// might want to parallelize this like its done in the c++ codebase
+					// via some abstraction library to support browser + node
+					if (rv.p.rangeSigs.length === 0) {
+						results[i] = verBulletproof(rv.p.bulletproofs[i]);
+					} else {
+						// mask -> C if public
+						results[i] = verRange(rv.outPk[i].C, rv.p.rangeSigs[i]);
+					}
+				}
+
+				for (let i = 0; i < rv.outPk.length; i++) {
+					if (!results[i]) {
+						console.error(
+							"Range proof verification failed for output",
+							i,
+						);
+						return false;
+					}
+				}
+			} else {
+				// compute txn fee
+				const txnFeeKey = this.ge_scalarmult(H, this.d2s(rv.txnFee));
+				const mgVerd = verRctMg(
+					rv.p.MGs[0],
+					rv.mixRing,
+					rv.outPk,
+					txnFeeKey,
+					this.get_pre_mlsag_hash(rv),
+				);
+				console.log("mg sig verified?", mgVerd);
+				if (!mgVerd) {
+					console.error("MG Signature verification failed");
+					return false;
+				}
+			}
+		} catch (e) {
+			console.error("Error in vetRCt: ", e);
+		}
+	};
+
+	this.verBulletProof = function() {
+		throw Error("verBulletProof is not implemented");
+	};
 	//end RCT functions
 
 	this.add_pub_key_to_extra = function(extra, pubkey) {
