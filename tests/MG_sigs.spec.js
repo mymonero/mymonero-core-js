@@ -53,7 +53,6 @@ it("MG_sigs", () => {
 	let N = 3; // cols
 	let R = 2; // rows
 
-	let xtmp = skvGen(R);
 	let xm = keyMInit(R, N); // = [[None]*N] #just used to generate test public keys
 	let sk = skvGen(R);
 
@@ -89,7 +88,7 @@ it("MG_sigs", () => {
 	let rv = monero_utils.MLSAG_Gen(message, P, sk, kimg, ind);
 	let c = monero_utils.MLSAG_ver(message, P, rv, kimg);
 
-	expect(Number(c)).toEqual(0);
+	expect(c).toEqual(true);
 
 	xtmp = skvGen(R);
 	xm = keyMInit(R, N); // = [[None]*N] #just used to generate test public keys
@@ -110,5 +109,5 @@ it("MG_sigs", () => {
 	rv = monero_utils.MLSAG_Gen(message, P, sk, kimg, ind);
 	c = monero_utils.MLSAG_ver(message, P, rv, kimg);
 
-	expect(Number(c)).toBeFalsy();
+	expect(c).toEqual(false);
 });
