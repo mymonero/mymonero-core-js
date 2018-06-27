@@ -84,6 +84,7 @@ var cnUtil = function(currencyConfig) {
 
 	//RCT vars
 	var H = "8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94"; //base H for amounts
+	this.H = H;
 	var l = JSBigInt(
 		"7237005577332262213973186563042994240857116359379907606001950938285454250989",
 	); //curve order (not RCT specific)
@@ -95,6 +96,8 @@ var cnUtil = function(currencyConfig) {
 	};
 
 	var Z = "0000000000000000000000000000000000000000000000000000000000000000"; //zero scalar
+	this.Z = Z;
+
 	//H2 object to speed up some operations
 	var H2 = [
 		"8b655970153799af2aeadc9ff1add0ea6c7251d54154cfa92c173a0dd39c1f94",
@@ -236,7 +239,7 @@ var cnUtil = function(currencyConfig) {
 			throw "integer should be entered as a string for precision";
 		}
 		var padding = "";
-		for (i = 0; i < 63; i++) {
+		for (var i = 0; i < 63; i++) {
 			padding += "0";
 		}
 		return (
@@ -265,7 +268,7 @@ var cnUtil = function(currencyConfig) {
 			throw "integer should be entered as a string for precision";
 		}
 		var padding = "";
-		for (i = 0; i < 63; i++) {
+		for (var i = 0; i < 63; i++) {
 			padding += "0";
 		}
 		var a = new JSBigInt(integer);
@@ -281,7 +284,7 @@ var cnUtil = function(currencyConfig) {
 			throw "integer should be entered as a string for precision";
 		}
 		var padding = "";
-		for (i = 0; i < 31; i++) {
+		for (var i = 0; i < 31; i++) {
 			padding += "0";
 		}
 		var a = new JSBigInt(integer);
@@ -311,7 +314,7 @@ var cnUtil = function(currencyConfig) {
 		var bin1 = hextobin(hex1);
 		var bin2 = hextobin(hex2);
 		var xor = new Uint8Array(bin1.length);
-		for (i = 0; i < xor.length; i++) {
+		for (var i = 0; i < xor.length; i++) {
 			xor[i] = bin1[i] ^ bin2[i];
 		}
 		return bintohex(xor);
@@ -1364,7 +1367,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		const eeComputed = this.array_hash_to_scalar(Lv1);
 		const equalKeys = eeComputed === bb.ee;
-		console.log(`Keys equal? ${equalKeys}
+		console.log(`[verifyBorromean] Keys equal? ${equalKeys}
 		${eeComputed}
 		${bb.ee}`);
 
@@ -1407,7 +1410,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		var j;
 		//start at index and fill PM left and right -- PM[0] holds Ci
-		for (i = 0; i < nrings; i++) {
+		for (var i = 0; i < nrings; i++) {
 			ai[i] = random_scalar();
 			j = indices[i];
 			PM[j][i] = ge_scalarmult_base(ai[i]);
@@ -1426,7 +1429,7 @@ var cnUtil = function(currencyConfig) {
 		* some more payload stuff here
 		*/
 		//copy commitments to sig and sum them to commitment
-		for (i = 0; i < nrings; i++) {
+		for (var i = 0; i < nrings; i++) {
 			//if (i < nrings - 1) //for later version
 			sig.Ci[i] = PM[0][i];
 			C = ge_add(C, PM[0][i]);
@@ -1442,6 +1445,43 @@ var cnUtil = function(currencyConfig) {
 		commitMaskObj.C = C;
 		commitMaskObj.mask = mask;
 		return sig;
+	};
+
+	//proveRange and verRange
+	//proveRange gives C, and mask such that \sumCi = C
+	//   c.f. http://eprint.iacr.org/2015/1098 section 5.1
+	//   and Ci is a commitment to either 0 or 2^i, i=0,...,63
+	//   thus this proves that "amount" is in [0, 2^64]
+	//   mask is a such that C = aG + bH, and b = amount
+	//verRange verifies that \sum Ci = C and that each Ci is a commitment to 0 or 2^i
+
+	this.verRange = function(C, as, nrings = 64) {
+		try {
+			let CiH = []; // len 64
+			let asCi = []; // len 64
+			let Ctmp = this.identity();
+			for (let i = 0; i < nrings; i++) {
+				CiH[i] = this.ge_sub(as.Ci[i], this.H2[i]);
+				asCi[i] = as.Ci[i];
+				Ctmp = this.ge_add(Ctmp, as.Ci[i]);
+			}
+			const equalKeys = Ctmp === C;
+			console.log(`[verRange] Equal keys? ${equalKeys} 
+			C: ${C}
+			Ctmp: ${Ctmp}`);
+			if (!equalKeys) {
+				return false;
+			}
+
+			if (!this.verifyBorromean(as.bsig, asCi, CiH)) {
+				return false;
+			}
+
+			return true;
+		} catch (e) {
+			console.error(`[verRange]`, e);
+			return false;
+		}
 	};
 
 	function array_hash_to_scalar(array) {
@@ -1463,6 +1503,8 @@ var cnUtil = function(currencyConfig) {
 	// because we don't want to force same secret column for all inputs
 	this.MLSAG_Gen = function(message, pk, xx, kimg, index) {
 		var cols = pk.length; //ring size
+		var i;
+
 		// secret index
 		if (index >= cols) {
 			throw "index out of range";
@@ -1473,7 +1515,7 @@ var cnUtil = function(currencyConfig) {
 			throw "wrong row count";
 		}
 		// check all are len 2
-		for (var i = 0; i < cols; i++) {
+		for (i = 0; i < cols; i++) {
 			if (pk[i].length !== rows) {
 				throw "pk is not rectangular";
 			}
@@ -1557,7 +1599,6 @@ var cnUtil = function(currencyConfig) {
 		// in MLSAG_gen
 		const cols = pk.length;
 		let c_old = rv.cc;
-		console.log(`cols ${cols}`);
 		let i = 0;
 		let toHash = [];
 		toHash[0] = message;
@@ -1590,14 +1631,22 @@ var cnUtil = function(currencyConfig) {
 		}
 
 		const c = this.sc_sub(c_old, rv.cc);
-		console.log(`
+		console.log(`[MLSAG_ver]
 		c_old: ${c_old} 
 		rc.cc: ${rv.cc}
 		c: ${c}`);
-		return c;
+
+		return Number(c) === 0;
 	};
 
-	//prepares for MLSAG_Gen
+	//Ring-ct MG sigs
+	//Prove:
+	//   c.f. http://eprint.iacr.org/2015/1098 section 4. definition 10.
+	//   This does the MG sig on the "dest" part of the given key matrix, and
+	//   the last row is the sum of input commitments from that column - sum output commitments
+	//   this shows that sum inputs = sum outputs
+	//Ver:
+	//   verifies the above sig is created corretly
 	this.proveRctMG = function(message, pubs, inSk, kimg, mask, Cout, index) {
 		var cols = pubs.length;
 		if (cols < 3) {
@@ -1614,6 +1663,57 @@ var cnUtil = function(currencyConfig) {
 		xx[0] = inSk.x;
 		xx[1] = sc_sub(inSk.a, mask);
 		return this.MLSAG_Gen(message, PK, xx, kimg, index);
+	};
+
+	//Ring-ct MG sigs
+	//Prove:
+	//   c.f. http://eprint.iacr.org/2015/1098 section 4. definition 10.
+	//   This does the MG sig on the "dest" part of the given key matrix, and
+	//   the last row is the sum of input commitments from that column - sum output commitments
+	//   this shows that sum inputs = sum outputs
+	//Ver:
+	//   verifies the above sig is created corretly
+	// simple version, assuming only post Rct
+
+	this.verRctMG = function(mg, pubs, outPk, txnFeeKey, message, kimg) {
+		const cols = pubs.length;
+		if (cols < 1) {
+			throw Error("Empty pubs");
+		}
+		const rows = pubs[0].length;
+		if (rows < 1) {
+			throw Error("Empty pubs");
+		}
+		for (let i = 0; i < cols.length; ++i) {
+			if (pubs[i].length !== rows) {
+				throw Error("Pubs is not rectangular");
+			}
+		}
+
+		// key matrix of (cols, tmp)
+
+		let M = [];
+		console.log(pubs);
+		//create the matrix to mg sig
+		for (let i = 0; i < rows; i++) {
+			M[i] = [];
+			M[i][0] = pubs[0][i].dest;
+			M[i][1] = this.ge_add(M[i][1] || this.identity(), pubs[0][i].mask); // add input commitments
+			for (let j = 0; j < outPk.length; j++) {
+				M[i][1] = this.ge_sub(M[i][1], outPk[j]); // subtract all output commitments
+			}
+			M[i][1] = this.ge_sub(M[i][1], txnFeeKey); // subtract txnfee
+		}
+
+		console.log(
+			`[MLSAG_ver input]`,
+			JSON.stringify({ message, M, mg, kimg }, null, 1),
+		);
+		return this.MLSAG_ver(message, M, mg, kimg);
+	};
+
+	this.verBulletProof = function() {
+		throw Error("verBulletProof is not implemented");
 	};
 
 	this.get_pre_mlsag_hash = function(rv) {
@@ -1699,6 +1799,7 @@ var cnUtil = function(currencyConfig) {
 			mask: null,
 		};
 		var nrings = 64; //for base 2/current
+		var i;
 		//compute range proofs, etc
 		for (i = 0; i < outAmounts.length; i++) {
 			var teststart = new Date().getTime();
@@ -1768,6 +1869,117 @@ var cnUtil = function(currencyConfig) {
 		return rv;
 	};
 
+	this.verRct = function(rv, semantics, mixRing, kimg) {
+		if (rv.type === 0x03) {
+			throw Error("Bulletproof validation not implemented");
+		}
+
+		// where RCTTypeFull is 0x01 and  RCTTypeFullBulletproof is 0x03
+		if (rv.type !== 0x01 && rv.type !== 0x03) {
+			throw Error("verRct called on non-full rctSig");
+		}
+		if (semantics) {
+			//RCTTypeFullBulletproof checks not implemented
+			// RCTTypeFull checks
+			if (rv.outPk.length !== rv.p.rangeSigs.length) {
+				throw Error("Mismatched sizes of outPk and rv.p.rangeSigs");
+			}
+			if (rv.outPk.length !== rv.ecdhInfo.length) {
+				throw Error("Mismatched sizes of outPk and rv.ecdhInfo");
+			}
+			if (rv.p.MGs.length !== 1) {
+				throw Error("full rctSig has not one MG");
+			}
+		} else {
+			// semantics check is early, we don't have the MGs resolved yet
+		}
+		try {
+			if (semantics) {
+				const results = [];
+				for (let i = 0; i < rv.outPk.length; i++) {
+					// might want to parallelize this like its done in the c++ codebase
+					// via some abstraction library to support browser + node
+					if (rv.p.rangeSigs.length === 0) {
+						results[i] = this.verBulletproof(rv.p.bulletproofs[i]);
+					} else {
+						// mask -> C if public
+						results[i] = this.verRange(
+							rv.outPk[i],
+							rv.p.rangeSigs[i],
+						);
+					}
+				}
+
+				for (let i = 0; i < rv.outPk.length; i++) {
+					if (!results[i]) {
+						console.error(
+							"Range proof verification failed for output",
+							i,
+						);
+						return false;
+					}
+				}
+			} else {
+				// compute txn fee
+				const txnFeeKey = this.ge_scalarmult(H, this.d2s(rv.txnFee));
+				const mgVerd = this.verRctMG(
+					rv.p.MGs[0],
+					mixRing,
+					rv.outPk,
+					txnFeeKey,
+					this.get_pre_mlsag_hash(rv),
+					kimg,
+				);
+				console.log("mg sig verified?", mgVerd);
+				if (!mgVerd) {
+					console.error("MG Signature verification failed");
+					return false;
+				}
+			}
+			return true;
+		} catch (e) {
+			console.error("Error in verRct: ", e);
+		}
+	};
+
+	//decodeRct: (c.f. http://eprint.iacr.org/2015/1098 section 5.1.1)
+	//   uses the attached ecdh info to find the amounts represented by each output commitment
+	//   must know the destination private key to find the correct amount, else will return a random number
+
+	this.decodeRct = function(rv, sk, i) {
+		// where RCTTypeFull is 0x01 and  RCTTypeFullBulletproof is 0x03
+		if (rv.type !== 0x01 && rv.type !== 0x03) {
+			throw Error("verRct called on non-full rctSig");
+		}
+		if (i >= rv.ecdhInfo.length) {
+			throw Error("Bad index");
+		}
+		if (rv.outPk.length !== rv.ecdhInfo.length) {
+			throw Error("Mismatched sizes of rv.outPk and rv.ecdhInfo");
+		}
+
+		// mask amount and mask
+		const ecdh_info = rv.ecdhInfo[i];
+		const { mask, amount } = this.decode_rct_ecdh(ecdh_info, sk);
+
+		const C = rv.outPk[i];
+		const Ctmp = this.ge_double_scalarmult_base_vartime(
+			amount,
+			this.H,
+			mask,
+		);
+
+		console.log(C, Ctmp);
+		if (C !== Ctmp) {
+			throw Error(
+				"warning, amount decoded incorrectly, will be unable to spend",
+			);
+		}
+		return { amount, mask };
+	};
+	this.verBulletProof = function() {
+		throw Error("verBulletProof is not implemented");
+	};
 	//end RCT functions
 
 	this.add_pub_key_to_extra = function(extra, pubkey) {
@@ -1927,6 +2139,7 @@ var cnUtil = function(currencyConfig) {
 		var buf = "";
 		buf += this.encode_varint(rv.type);
 		buf += this.encode_varint(rv.txnFee);
+		var i;
 		if (rv.type === 2) {
 			for (var i = 0; i < rv.pseudoOuts.length; i++) {
 				buf += rv.pseudoOuts[i];
