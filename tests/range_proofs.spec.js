@@ -146,15 +146,15 @@ it("range_proofs", () => {
 		monero_utils.d2s("0"),
 	);
 
-	//	expect(monero_utils.verRct(s, true, mixRing, kimg[0])).toEqual(true);
+	expect(monero_utils.verRct(s, true, mixRing, kimg[0])).toEqual(true);
 	expect(monero_utils.verRct(s, false, mixRing, kimg[0])).toEqual(true);
 
 	//decode received amount
-	//	monero_utils.decodeRct(s, amount_keys[1], 1);
+	monero_utils.decodeRct(s, amount_keys[1], 1);
 
 	// Ring CT with failing MG sig part should not verify!
 	// Since sum of inputs != outputs
-	/*
+
 	amounts[1] = new JSBigInt(12501);
 
 	s = monero_utils.genRct(
@@ -174,5 +174,4 @@ it("range_proofs", () => {
 
 	//decode received amount
 	monero_utils.decodeRct(s, amount_keys[1], 1);
-	*/
 });
