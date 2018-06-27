@@ -1693,37 +1693,17 @@ var cnUtil = function(currencyConfig) {
 		// key matrix of (cols, tmp)
 
 		let M = [];
-
-		for (let j = 0; j <= rows; j++) {
-			for (let i = 0; i < cols; i++) {
-				if (!M[i]) {
-					// add dimension
-					M[i] = [];
-				}
-				M[i][j] = this.identity();
-			}
-		}
-
-		console.log("cols", cols);
-		console.log("rows", rows);
-
+		console.log(pubs);
 		//create the matrix to mg sig
-		for (let j = 0; j < rows; j++) {
-			for (let i = 0; i < cols; i++) {
-				M[i][j] = pubs[i][j].dest;
-				M[i][rows] = this.ge_add(M[i][rows], outPk[j]); //add Ci in last row
-			}
-		}
-		console.log(M);
-		for (let i = 0; i < cols; i++) {
+		for (let i = 0; i < rows; i++) {
+			M[i] = [];
+			M[i][0] = pubs[0][i].dest;
+			M[i][1] = this.ge_add(M[i][1] || this.identity(), pubs[0][i].mask); // add input commitments
 			for (let j = 0; j < outPk.length; j++) {
-				M[i][rows] = this.ge_sub(M[i][rows], outPk[j]); //subtract output Ci's in last row
+				M[i][1] = this.ge_sub(M[i][1], outPk[j]); // subtract all output commitments
 			}
-
-			//subtract txn fee output in last row
-			M[i][rows] = this.ge_sub(M[i][rows], txnFeeKey);
+			M[i][1] = this.ge_sub(M[i][1], txnFeeKey); // subtract txnfee
 		}
-		console.log(M);
 
 		console.log(
 			`[MLSAG_ver input]`,
