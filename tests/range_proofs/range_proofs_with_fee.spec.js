@@ -25,70 +25,14 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-const monero_utils = require("../").monero_utils;
-const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
-const { randomBytes } = require("crypto");
+const {
+	ctskpkGen,
+	populateFromBlockchain,
+	JSBigInt,
+	monero_utils,
+} = require("./test_utils");
 
 it("range_proofs", () => {
-	//generates a <secret , public> / Pedersen commitment to the amount
-	function ctskpkGen(amount) {
-		let sk = {},
-			pk = {};
-		const key_pair1 = monero_utils.random_keypair();
-		const key_pair2 = monero_utils.random_keypair();
-
-		sk.x = key_pair1.sec;
-		pk.dest = key_pair1.pub;
-
-		sk.a = key_pair2.sec;
-		pk.mask = key_pair2.pub;
-		const am = monero_utils.d2s(amount.toString());
-		const bH = monero_utils.ge_scalarmult(monero_utils.H, am);
-
-		pk.mask = monero_utils.ge_add(pk.mask, bH);
-
-		return [sk, pk];
-	}
-
-	function randomNum(upperLimit) {
-		return parseInt(randomBytes(1).toString("hex"), 16) % upperLimit;
-	}
-
-	//These functions get keys from blockchain
-	//replace these when connecting blockchain
-	//getKeyFromBlockchain grabs a key from the blockchain at "reference_index" to mix with
-	function getKeyFromBlockchain(reference_index) {
-		let a = {};
-		a.dest = monero_utils.random_keypair().pub;
-		a.mask = monero_utils.random_keypair().pub;
-		return a;
-	}
-
-	//	populateFromBlockchain creates a keymatrix with "mixin" + 1 columns and one of the columns is inPk
-	//  the return values are the key matrix, and the index where inPk was put (random).
-	function populateFromBlockchain(inPk, mixin) {
-		const rows = inPk.length;
-		const inPkCpy = [...inPk];
-		// ctkeyMatrix
-		const mixRing = [];
-		const index = randomNum(mixin);
-
-		for (let i = 0; i < rows; i++) {
-			mixRing[i] = [];
-			for (let j = 0; j <= mixin; j++) {
-				if (j !== index) {
-					mixRing[i][j] = getKeyFromBlockchain(index); /*?*/
-				} else {
-					mixRing[i][j] = inPkCpy.pop();
-				}
-			}
-		}
-
-		// [[{dest, mask}, {dest, mask},<secretIndex> ,  {dest, mask}],
-		//   ]
-		return { mixRing, index };
-	}
-
 	//Ring CT Stuff
 	//ct range proofs
 	// ctkey vectors
@@ -96,43 +40,38 @@ it("range_proofs", () => {
 		inPk = [];
 
 	// ctkeys
+	// we test only a single input here since the current impl of
+	// MLSAG_gen of type full only supports single inputs
 	{
-		let [sctmp, pctmp] = ctskpkGen(6000);
+		let [sctmp, pctmp] = ctskpkGen(6001);
 		console.log(sctmp, pctmp);
 		inSk.push(sctmp);
 		inPk.push(pctmp);
 		console.log("inPk", inPk);
 	}
-	/*
-	{
-		let [sctmp, pctmp] = ctskpkGen(7000);
-		inSk.push(sctmp);
-		inPk.push(pctmp);
-	} 
-	*/
 
 	// xmr amount vector
 	let amounts = [];
 	// key vector
 	let amount_keys = [];
 
-	amounts.push(new JSBigInt(500));
+	amounts.push(new JSBigInt(1000));
 	amount_keys.push(monero_utils.hash_to_scalar(monero_utils.Z));
 
-	amounts.push(new JSBigInt(4500));
+	amounts.push(new JSBigInt(4000));
 	amount_keys.push(monero_utils.hash_to_scalar(monero_utils.Z));
 
-	amounts.push(new JSBigInt(500));
-	amount_keys.push(monero_utils.hash_to_scalar(monero_utils.Z));
-
-	amounts.push(new JSBigInt(500));
+	amounts.push(new JSBigInt(1000));
 	amount_keys.push(monero_utils.hash_to_scalar(monero_utils.Z));
 
 	//compute rct data with mixin 500
-	const { index, mixRing } = populateFromBlockchain(inPk, 3);
+	const { index, mixRing } = populateFromBlockchain(inPk, 2);
 
 	// generate kimg
 	const kimg = [monero_utils.generate_key_image_2(inPk[0].dest, inSk[0].x)];
+
+	// add fee of 1 NOTE: fee is passed in with its endian not swapped, hence no usage of d2s
+	const fee = "1";
 
 	let s = monero_utils.genRct(
 		monero_utils.Z,
@@ -143,7 +82,7 @@ it("range_proofs", () => {
 		mixRing,
 		amount_keys,
 		[index],
-		monero_utils.d2s("0"),
+		fee,
 	);
 
 	expect(monero_utils.verRct(s, true, mixRing, kimg[0])).toEqual(true);
@@ -155,7 +94,7 @@ it("range_proofs", () => {
 	// Ring CT with failing MG sig part should not verify!
 	// Since sum of inputs != outputs
 
-	amounts[1] = new JSBigInt(12501);
+	amounts[1] = new JSBigInt(4501);
 
 	s = monero_utils.genRct(
 		monero_utils.Z,
@@ -166,7 +105,7 @@ it("range_proofs", () => {
 		mixRing,
 		amount_keys,
 		[index],
-		"0",
+		fee,
 	);
 
 	expect(monero_utils.verRct(s, true, mixRing, kimg[0])).toEqual(true);
