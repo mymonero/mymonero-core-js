@@ -1698,7 +1698,7 @@ var cnUtil = function(currencyConfig) {
 		for (let i = 0; i < rows; i++) {
 			M[i] = [];
 			M[i][0] = pubs[0][i].dest;
-			M[i][1] = this.ge_add(M[i][1] || this.identity(), pubs[0][i].mask); // add input commitments
+			M[i][1] = this.ge_add(M[i][1] || this.identity(), pubs[0][i].mask); // start with input commitment
 			for (let j = 0; j < outPk.length; j++) {
 				M[i][1] = this.ge_sub(M[i][1], outPk[j]); // subtract all output commitments
 			}
@@ -1750,7 +1750,8 @@ var cnUtil = function(currencyConfig) {
 	//mixRing is matrix of pubkey, commit (dest, mask)
 	//amountKeys is vector of scalars
 	//indices is vector
-	//txnFee is string
+	//txnFee is string, with its endian not swapped (e.g d2s is not called before passing it in as an argument)
+	//to this function
 	this.genRct = function(
 		message,
 		inSk,
