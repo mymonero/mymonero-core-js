@@ -34,10 +34,10 @@
 const JSBigInt = require("./biginteger").BigInteger;
 const cnBase58 = require("./cryptonote_base58").cnBase58;
 const CNCrypto = require("./cryptonote_crypto_EMSCRIPTEN");
-const mnemonic = require("./mnemonic");
 const nacl = require("./nacl-fast-cn");
-const sha3 = require("./sha3");
+const SHA3 = require("keccakjs");
 const nettype_utils = require("./nettype");
+const { randomBytes } = require("crypto");
 
 var cnUtil = function(currencyConfig) {
 	var config = {}; // shallow copy of initConfig
@@ -340,17 +340,12 @@ var cnUtil = function(currencyConfig) {
 
 	// Generate a 256-bit / 64-char / 32-byte crypto random
 	this.rand_32 = function() {
-		return mnemonic.mn_random(256);
-	};
-
-	// Generate a 128-bit / 32-char / 16-byte crypto random
-	this.rand_16 = function() {
-		return mnemonic.mn_random(128);
+		return randomBytes(32).toString("hex");
 	};
 
 	// Generate a 64-bit / 16-char / 8-byte crypto random
 	this.rand_8 = function() {
-		return mnemonic.mn_random(64);
+		return randomBytes(8).toString("hex");
 	};
 
 	this.encode_varint = function(i) {
@@ -402,7 +397,9 @@ var cnUtil = function(currencyConfig) {
 		//update to use new keccak impl (approx 45x faster)
 		//var state = this.keccak(input, inlen, HASH_STATE_BYTES);
 		//return state.substr(0, HASH_SIZE * 2);
-		return sha3.keccak_256(hextobin(input));
+		const hasher = new SHA3(256);
+		hasher.update(hextobin(input));
+		return hasher.digest("hex");
 	};
 
 	//many functions below are commented out now, and duplicated with the faster nacl impl --luigi1111
@@ -524,8 +521,6 @@ var cnUtil = function(currencyConfig) {
 
 	// Random 32-byte ec scalar
 	this.random_scalar = function() {
-		//var rand = this.sc_reduce(mnemonic.mn_random(64 * 8));
-		//return rand.slice(0, STRUCT_SIZES.EC_SCALAR * 2);
 		return this.sc_reduce32(this.rand_32());
 	};
 

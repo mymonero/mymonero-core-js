@@ -26,16 +26,16 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-const mnemonic = require("../../cryptonote_utils/mnemonic");
 const monero_utils = require("../../").monero_utils;
+const { randomBytes } = require("crypto");
 
 function randomBit() {
-	// get random 32 bits in hex
-	const rand32bits = mnemonic.mn_random(32);
+	// get random 8 bits in hex
+	const rand8bits = randomBytes(1).toString("hex");
 	// take 4 bits "nibble" and convert to binary
 	// then take last index
 	return monero_utils.padLeft(
-		parseInt(rand32bits[0], 16).toString(2),
+		parseInt(rand8bits[0], 16).toString(2),
 		4,
 		0,
 	)[3];
