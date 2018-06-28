@@ -1673,7 +1673,6 @@ var cnUtil = function(currencyConfig) {
 	//   this shows that sum inputs = sum outputs
 	//Ver:
 	//   verifies the above sig is created corretly
-	// simple version, assuming only post Rct
 
 	this.verRctMG = function(mg, pubs, outPk, txnFeeKey, message, kimg) {
 		const cols = pubs.length;
@@ -1710,6 +1709,26 @@ var cnUtil = function(currencyConfig) {
 			JSON.stringify({ message, M, mg, kimg }, null, 1),
 		);
 		return this.MLSAG_ver(message, M, mg, kimg);
+	};
+
+	// simple version, assuming only post Rct
+
+	this.verRctMGSimple = function(message, mg, pubs, C, kimg) {
+		try {
+			const rows = 1;
+			const cols = pubs.len;
+			const M = [];
+
+			for (let i = 0; i < cols; i++) {
+				M[i][0] = pubs[i].dest;
+				M[i][1] = this.ge_sub(pubs[i].mask, C);
+			}
+
+			return MLSAG_ver(message, M, mg, kimg);
+		} catch (error) {
+			console.error("[verRctSimple]", error);
+			return false;
+		}
 	};
 
 	this.verBulletProof = function() {
@@ -1940,6 +1959,136 @@ var cnUtil = function(currencyConfig) {
 			return true;
 		} catch (e) {
 			console.error("Error in verRct: ", e);
+			return false;
+		}
+	};
+	//ver RingCT simple
+	//assumes only post-rct style inputs (at least for max anonymity)
+	this.verRctSimple = function(rv, semantics, mixRing, kimgs) {
+		try {
+			if (rv.type === 0x04) {
+				throw Error("Simple Bulletproof validation not implemented");
+			}
+
+			if (rv.type !== 0x02 && rv.type !== 0x04) {
+				throw Error("verRctSimple called on non simple rctSig");
+			}
+
+			if (semantics) {
+				if (rv.type == 0x04) {
+					throw Error(
+						"Simple Bulletproof validation not implemented",
+					);
+				} else {
+					if (rv.outPk.length !== rv.p.rangeSigs.length) {
+						throw Error(
+							"Mismatched sizes of outPk and rv.p.rangeSigs",
+						);
+					}
+					if (rv.pseudoOuts.length !== rv.p.MGs.length) {
+						throw Error(
+							"Mismatched sizes of rv.pseudoOuts and rv.p.MGs",
+						);
+					}
+					// originally the check is rv.p.pseudoOuts.length, but this'll throw
+					// until p.pseudoOuts is added as a property to the rv object
+					if (rv.p.pseudoOuts) {
+						throw Error("rv.p.pseudoOuts must be empty");
+					}
+				}
+			} else {
+				if (rv.type === 0x04) {
+					throw Error(
+						"Simple Bulletproof validation not implemented",
+					);
+				} else {
+					// semantics check is early, and mixRing/MGs aren't resolved yet
+					if (rv.pseudoOuts.length !== mixRing.length) {
+						throw Error(
+							"Mismatched sizes of rv.pseudoOuts and mixRing",
+						);
+					}
+				}
+			}
+
+			// if bulletproof, then use rv.p.pseudoOuts, otherwise use rv.pseudoOuts
+			const pseudoOuts =
+				rv.type === 0x04 ? rv.p.pseudoOuts : rv.pseudoOuts;
+
+			if (semantics) {
+				let sumOutpks = this.identity();
+				for (let i = 0; i < rv.outPk.length; i++) {
+					sumOutpks = this.ge_add(sumOutpks, rv.outPk[i]); // add all of the output commitments
+				}
+
+				const txnFeeKey = this.ge_scalarmult(
+					this.H,
+					this.d2s(rv.txnFee),
+				);
+				sumOutpks = this.ge_add(txnFeeKey, sumOutpks); // add txnfeekey
+
+				let sumPseudoOuts = this.identity();
+				for (let i = 0; i < pseudoOuts.length; i++) {
+					sumPseudoOuts = this.ge_add(sumPseudoOuts, pseudoOuts[i]); // sum up all of the pseudoOuts
+				}
+
+				if (sumOutpks !== sumPseudoOuts) {
+					console.error("Sum check failed");
+					return false;
+				}
+
+				const results = [];
+				for (let i = 0; i < rv.outPk.length; i++) {
+					// might want to parallelize this like its done in the c++ codebase
+					// via some abstraction library to support browser + node
+					if (rv.p.rangeSigs.length === 0) {
+						results[i] = this.verBulletproof(rv.p.bulletproofs[i]);
+					} else {
+						// mask -> C if public
+						results[i] = this.verRange(
+							rv.outPk[i],
+							rv.p.rangeSigs[i],
+						);
+					}
+				}
+
+				for (let i = 0; i < results.length; i++) {
+					if (!results[i]) {
+						console.error(
+							"Range proof verification failed for output",
+							i,
+						);
+						return false;
+					}
+				}
+			} else {
+				const message = this.get_pre_mlsag_hash(rv);
+				const results = [];
+				for (let i = 0; i < mixRing.length; i++) {
+					results[i] = this.verRctMGSimple(
+						message,
+						rv.p.MGs[i],
+						mixRing[i],
+						pseudoOuts[i],
+						kimgs[i],
+					);
+				}
+
+				for (let i = 0; i < results.length; i++) {
+					if (!results[i]) {
+						console.error(
+							"Range proof verification failed for output",
+							i,
+						);
+						return false;
+					}
+				}
+			}
+
+			return true;
+		} catch (error) {
+			console.log("[verRctSimple]", error);
+			return false;
 		}
 	};
 
@@ -1970,7 +2119,7 @@ var cnUtil = function(currencyConfig) {
 			mask,
 		);
 
-		console.log(C, Ctmp);
+		console.log("[decodeRct]", C, Ctmp);
 		if (C !== Ctmp) {
 			throw Error(
 				"warning, amount decoded incorrectly, will be unable to spend",
@@ -1978,6 +2127,38 @@ var cnUtil = function(currencyConfig) {
 		}
 		return { amount, mask };
 	};
+
+	this.decodeRctSimple = function(rv, sk, i) {
+		if (rv.type !== 0x02 && rv.type !== 0x04) {
+			throw Error("verRct called on full rctSig");
+		}
+		if (i >= rv.ecdhInfo.length) {
+			throw Error("Bad index");
+		}
+		if (rv.outPk.length !== rv.ecdhInfo.length) {
+			throw Error("Mismatched sizes of rv.outPk and rv.ecdhInfo");
+		}
+
+		// mask amount and mask
+		const ecdh_info = rv.ecdhInfo[i];
+		const { mask, amount } = this.decode_rct_ecdh(ecdh_info, sk);
+
+		const C = rv.outPk[i];
+		const Ctmp = this.ge_double_scalarmult_base_vartime(
+			amount,
+			this.H,
+			mask,
+		);
+
+		console.log("[decodeRctSimple]", C, Ctmp);
+		if (C !== Ctmp) {
+			throw Error(
+				"warning, amount decoded incorrectly, will be unable to spend",
+			);
+		}
+		return { amount, mask };
+	};
+
 	this.verBulletProof = function() {
 		throw Error("verBulletProof is not implemented");
 	};
