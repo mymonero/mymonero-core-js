@@ -36,7 +36,7 @@ const cnBase58 = require("./cryptonote_base58").cnBase58;
 const CNCrypto = require("./cryptonote_crypto_EMSCRIPTEN");
 const mnemonic = require("./mnemonic");
 const nacl = require("./nacl-fast-cn");
-const sha3 = require("./sha3");
+const SHA3 = require("keccakjs");
 const nettype_utils = require("./nettype");
 
 var cnUtil = function(currencyConfig) {
@@ -402,7 +402,9 @@ var cnUtil = function(currencyConfig) {
 		//update to use new keccak impl (approx 45x faster)
 		//var state = this.keccak(input, inlen, HASH_STATE_BYTES);
 		//return state.substr(0, HASH_SIZE * 2);
-		return sha3.keccak_256(hextobin(input));
+		const hasher = new SHA3(256);
+		hasher.update(hextobin(input));
+		return hasher.digest("hex");
 	};
 
 	//many functions below are commented out now, and duplicated with the faster nacl impl --luigi1111
