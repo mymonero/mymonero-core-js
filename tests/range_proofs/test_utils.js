@@ -86,9 +86,25 @@ function populateFromBlockchain(inPk, mixin) {
 	return { mixRing, index };
 }
 
+function populateFromBlockchainSimple(inPk, mixin) {
+	const index = randomNum(mixin);
+	const mixRing = [];
+
+	for (let i = 0; i <= mixin; i++) {
+		if (i !== index) {
+			mixRing[i] = getKeyFromBlockchain(index);
+		} else {
+			mixRing[i] = inPk;
+		}
+	}
+
+	return { mixRing, index };
+}
+
 module.exports = {
 	ctskpkGen,
 	populateFromBlockchain,
+	populateFromBlockchainSimple,
 	getKeyFromBlockchain,
 	monero_utils,
 	JSBigInt,
