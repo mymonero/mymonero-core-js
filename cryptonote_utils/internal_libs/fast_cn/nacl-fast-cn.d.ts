@@ -44,6 +44,11 @@ declare namespace nacl {
 		 *
 		 * @description name changed to reflect not using precomp r*Pb + c*I
 		 *
+		 *  sigr * Hp(pub) + sigc * k_image
+		 *
+		 *  argument names also copied from the signature implementation
+		 *
+		 *  note precomp AND hash_to_ec are done internally!!
 		 * @param {Uint8Array} r
 		 * @param {Uint8Array} Pb
 		 * @param {Uint8Array} c
