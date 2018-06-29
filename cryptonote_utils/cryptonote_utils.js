@@ -32,9 +32,9 @@
 //
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
 const JSBigInt = require("./biginteger").BigInteger;
-const cnBase58 = require("./cryptonote_base58").cnBase58;
-const CNCrypto = require("./cryptonote_crypto_EMSCRIPTEN");
-const nacl = require("./nacl-fast-cn");
+const cnBase58 = require("./internal_libs/bs58");
+const CNCrypto = require("./internal_libs/cn_crypto");
+const nacl = require("./internal_libs/fast_cn");
 const SHA3 = require("keccakjs");
 const nettype_utils = require("./nettype");
 const { randomBytes } = require("crypto");
@@ -426,7 +426,7 @@ var cnUtil = function(currencyConfig) {
 		if (sec.length !== 64) {
 			throw "Invalid sec length";
 		}
-		return bintohex(nacl.ll.ge_scalarmult_base(hextobin(sec)));
+		return bintohex(nacl.ge_scalarmult_base(hextobin(sec)));
 	};
 
 	//alias
@@ -465,7 +465,7 @@ var cnUtil = function(currencyConfig) {
 		if (pub.length !== 64 || sec.length !== 64) {
 			throw "Invalid input length";
 		}
-		return bintohex(nacl.ll.ge_scalarmult(hextobin(pub), hextobin(sec)));
+		return bintohex(nacl.ge_scalarmult(hextobin(pub), hextobin(sec)));
 	};
 
 	this.pubkeys_to_string = function(spend, view, nettype) {
@@ -783,7 +783,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		var s = this.derivation_to_scalar(derivation, out_index);
 		return bintohex(
-			nacl.ll.ge_add(hextobin(pub), hextobin(this.ge_scalarmult_base(s))),
+			nacl.ge_add(hextobin(pub), hextobin(this.ge_scalarmult_base(s))),
 		);
 	};
 
@@ -1052,7 +1052,7 @@ var cnUtil = function(currencyConfig) {
 		if (p1.length !== 64 || p2.length !== 64) {
 			throw "Invalid input length!";
 		}
-		return bintohex(nacl.ll.ge_add(hextobin(p1), hextobin(p2)));
+		return bintohex(nacl.ge_add(hextobin(p1), hextobin(p2)));
 	};
 
 	//order matters
@@ -1194,7 +1194,7 @@ var cnUtil = function(currencyConfig) {
 			throw "Invalid input length!";
 		}
 		return bintohex(
-			nacl.ll.ge_double_scalarmult_base_vartime(
+			nacl.ge_double_scalarmult_base_vartime(
 				hextobin(c),
 				hextobin(P),
 				hextobin(r),
@@ -1247,7 +1247,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		var Pb = this.hash_to_ec_2(P);
 		return bintohex(
-			nacl.ll.ge_double_scalarmult_postcomp_vartime(
+			nacl.ge_double_scalarmult_postcomp_vartime(
 				hextobin(r),
 				hextobin(Pb),
 				hextobin(c),
