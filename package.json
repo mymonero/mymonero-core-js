@@ -1,6 +1,6 @@
 {
   "name": "mymonero-core-js",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "The JS library containing the Monero crypto plus lightweight wallet functions behind the official MyMonero apps",
   "main": "index.js",
   "repository": {
