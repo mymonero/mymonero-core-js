@@ -26,67 +26,63 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"use strict";
+export enum NetType {
+	MAINNET = 0,
+	TESTNET = 1,
+	STAGENET = 2,
+}
 
-var network_type = {
-	MAINNET: 0,
-	TESTNET: 1,
-	STAGENET: 2,
-};
-exports.network_type = network_type;
-//
-var __MAINNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 18;
-var __MAINNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 19;
-var __MAINNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = 42;
-//
-var __TESTNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 53;
-var __TESTNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 54;
-var __TESTNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = 63;
-//
-var __STAGENET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 24;
-var __STAGENET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 25;
-var __STAGENET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = 36;
-//
-function cryptonoteBase58PrefixForStandardAddressOn(nettype) {
-	if (nettype == null || typeof nettype === "undefined") {
+const __MAINNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 18;
+const __MAINNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 19;
+const __MAINNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = 42;
+
+const __TESTNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 53;
+const __TESTNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 54;
+const __TESTNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = 63;
+
+const __STAGENET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 24;
+const __STAGENET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 25;
+const __STAGENET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = 36;
+
+export function cryptonoteBase58PrefixForStandardAddressOn(nettype: NetType) {
+	if (!nettype) {
 		console.warn("Unexpected nil nettype");
 	}
-	if (nettype == network_type.MAINNET) {
+
+	if (nettype == NetType.MAINNET) {
 		return __MAINNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == network_type.TESTNET) {
+	} else if (nettype == NetType.TESTNET) {
 		return __TESTNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == network_type.STAGENET) {
+	} else if (nettype == NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
 	}
 	throw "Illegal nettype";
 }
-function cryptonoteBase58PrefixForIntegratedAddressOn(nettype) {
-	if (nettype == null || typeof nettype === "undefined") {
+
+export function cryptonoteBase58PrefixForIntegratedAddressOn(nettype: NetType) {
+	if (!nettype) {
 		console.warn("Unexpected nil nettype");
 	}
-	if (nettype == network_type.MAINNET) {
+	if (nettype == NetType.MAINNET) {
 		return __MAINNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == network_type.TESTNET) {
+	} else if (nettype == NetType.TESTNET) {
 		return __TESTNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == network_type.STAGENET) {
+	} else if (nettype == NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX;
 	}
 	throw "Illegal nettype";
 }
-function cryptonoteBase58PrefixForSubAddressOn(nettype) {
-	if (nettype == null || typeof nettype === "undefined") {
+
+export function cryptonoteBase58PrefixForSubAddressOn(nettype: NetType) {
+	if (!nettype) {
 		console.warn("Unexpected nil nettype");
 	}
-	if (nettype == network_type.MAINNET) {
+	if (nettype == NetType.MAINNET) {
 		return __MAINNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX;
-	} else if (nettype == network_type.TESTNET) {
+	} else if (nettype == NetType.TESTNET) {
 		return __TESTNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX;
-	} else if (nettype == network_type.STAGENET) {
+	} else if (nettype == NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX;
 	}
 	throw "Illegal nettype";
 }
-//
-exports.cryptonoteBase58PrefixForStandardAddressOn = cryptonoteBase58PrefixForStandardAddressOn;
-exports.cryptonoteBase58PrefixForIntegratedAddressOn = cryptonoteBase58PrefixForIntegratedAddressOn;
-exports.cryptonoteBase58PrefixForSubAddressOn = cryptonoteBase58PrefixForSubAddressOn;

@@ -2752,6 +2752,10 @@ var cnUtil = function(currencyConfig) {
 		return this.formatMoney(units) + " " + config.coinSymbol;
 	};
 
+	/**
+	 *
+	 * @param {string} str
+	 */
 	this.parseMoney = function(str) {
 		if (!str) return JSBigInt.ZERO;
 		var negative = str[0] === "-";
