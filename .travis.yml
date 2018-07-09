@@ -1,0 +1,23 @@
+language: node_js
+
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
+install:
+  - yarn --silent
+
+jobs:
+  include:
+    - stage: test
+      script: yarn test:prod -- --maxWorkers=2 --silent && yarn report-coverage
+    - stage: test
+      script: yarn tsc
+    - stage: test
+      script: yarn lint
+
+notifications:
+  email:
+    on_success: never
+    on_failure: never
