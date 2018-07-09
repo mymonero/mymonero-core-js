@@ -1,12 +1,12 @@
 import { NetType } from "cryptonote_utils/nettype";
 import {
 	ParsedTarget,
-	JSBigInt,
 	Pid,
 	ViewSendKeys,
 	Output,
 	AmountOutput,
 } from "../types";
+import { JSBigInt } from "types";
 
 export type ConstructTxParams = {
 	senderPublicKeys: ViewSendKeys;

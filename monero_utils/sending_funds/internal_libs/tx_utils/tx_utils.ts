@@ -1,5 +1,5 @@
 import monero_utils from "monero_utils/monero_cryptonote_utils_instance";
-import monero_config from "monero_utils/monero_config";
+import { config } from "monero_utils/monero_config";
 import { getTargetPubViewKey } from "../key_utils";
 import {
 	TotalAmtAndEstFeeParams,
@@ -11,7 +11,8 @@ import { ERR } from "../errors";
 import { Log } from "../logger";
 import { popRandElement } from "../arr_utils";
 import { calculateFee, multiplyFeePriority } from "../fee_utils";
-import { JSBigInt, ParsedTarget } from "../types";
+import { ParsedTarget } from "../types";
+import { JSBigInt } from "types";
 
 // #region totalAmtAndEstFee
 
@@ -237,7 +238,7 @@ export function validateAndConstructFundTargets(
 			// pre-ringct
 			// do not give ourselves change < dust threshold
 			const [quotient, remainder] = changeAmount.divRem(
-				monero_config.dustThreshold,
+				config.dustThreshold,
 			);
 
 			Log.Amount.changeAmountDivRem([quotient, remainder]);
@@ -249,9 +250,7 @@ export function validateAndConstructFundTargets(
 
 			if (!quotient.isZero()) {
 				// send non-dusty change to our address
-				const usableChange = quotient.multiply(
-					monero_config.dustThreshold,
-				);
+				const usableChange = quotient.multiply(config.dustThreshold);
 
 				Log.Amount.toSelf(usableChange, senderAddress);
 

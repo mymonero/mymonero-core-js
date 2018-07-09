@@ -29,7 +29,7 @@
 
 import monero_utils from "monero_utils/monero_cryptonote_utils_instance";
 import { NetType } from "cryptonote_utils/nettype";
-import { RawTarget, JSBigInt, Pid, ViewSendKeys } from "./internal_libs/types";
+import { RawTarget, Pid, ViewSendKeys } from "./internal_libs/types";
 import {
 	calculateFee,
 	multiplyFeePriority,
@@ -46,6 +46,7 @@ import {
 	getRestOfTxData,
 	createTxAndAttemptToSend,
 } from "./internal_libs/construct_tx_and_send";
+import { JSBigInt } from "types";
 
 export function estimatedTransactionNetworkFee(
 	nonZeroMixin: number,

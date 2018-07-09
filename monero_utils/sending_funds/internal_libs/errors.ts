@@ -1,5 +1,5 @@
-import { JSBigInt } from "./types";
-import monero_config from "monero_utils/monero_config";
+import { JSBigInt } from "types";
+import { config } from "monero_utils/monero_config";
 import monero_utils from "monero_utils/monero_cryptonote_utils_instance";
 
 export namespace ERR {
@@ -30,7 +30,7 @@ export namespace ERR {
 
 	export namespace BAL {
 		export function insuff(amtAvail: JSBigInt, requiredAmt: JSBigInt) {
-			const { coinSymbol } = monero_config;
+			const { coinSymbol } = config;
 			const amtAvailStr = monero_utils.formatMoney(amtAvail);
 			const requiredAmtStr = monero_utils.formatMoney(requiredAmt);
 			const errStr = `Your spendable balance is too low. Have ${amtAvailStr} ${coinSymbol} spendable, need ${requiredAmtStr} ${coinSymbol}.`;

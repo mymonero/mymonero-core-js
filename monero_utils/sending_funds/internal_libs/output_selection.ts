@@ -1,7 +1,8 @@
-import { JSBigInt, Output } from "./types";
+import { Output } from "./types";
 import { popRandElement } from "./arr_utils";
 import { Log } from "./logger";
-import monero_config from "monero_utils/monero_config";
+import { config } from "monero_utils/monero_config";
+import { JSBigInt } from "types";
 
 export function selectOutputsAndAmountForMixin(
 	targetAmount: JSBigInt,
@@ -24,7 +25,7 @@ export function selectOutputsAndAmountForMixin(
 			continue; // skip rct outputs if not creating rct tx
 		}
 		const outAmount = new JSBigInt(out.amount);
-		if (outAmount.compare(monero_config.dustThreshold) < 0) {
+		if (outAmount.compare(config.dustThreshold) < 0) {
 			// amount is dusty..
 			if (!sweeping) {
 				Log.SelectOutsAndAmtForMix.Dusty.notSweeping();

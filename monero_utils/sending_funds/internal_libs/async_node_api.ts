@@ -1,6 +1,7 @@
-import { ViewSendKeys, JSBigInt, Output, AmountOutput } from "./types";
+import { ViewSendKeys, Output, AmountOutput } from "./types";
 import { Log } from "./logger";
 import { ERR } from "./errors";
+import { JSBigInt } from "types";
 
 export class WrappedNodeApi {
 	private api: any;

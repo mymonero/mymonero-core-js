@@ -1,5 +1,6 @@
 import monero_utils from "monero_utils/monero_cryptonote_utils_instance";
-import { JSBigInt, ParsedTarget, Output } from "./types";
+import { ParsedTarget, Output } from "./types";
+import { JSBigInt } from "types";
 
 export namespace Log {
 	export namespace Amount {

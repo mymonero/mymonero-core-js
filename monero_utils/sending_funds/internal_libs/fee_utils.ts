@@ -1,4 +1,4 @@
-import { JSBigInt } from "./types";
+import { JSBigInt } from "types";
 
 export const DEFAULT_FEE_PRIORITY = 1;
 

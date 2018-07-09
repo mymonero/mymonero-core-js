@@ -1,8 +1,9 @@
-import { ParsedTarget, RawTarget, JSBigInt } from "./types";
+import { ParsedTarget, RawTarget } from "./types";
 import { NetType } from "cryptonote_utils/nettype";
 import { ERR } from "./errors";
 import monero_utils from "monero_utils/monero_cryptonote_utils_instance";
 import { possibleOAAddress } from "./open_alias_lite";
+import { JSBigInt } from "types";
 
 /**
  * @description Map through the provided targets and normalize each address/amount pair

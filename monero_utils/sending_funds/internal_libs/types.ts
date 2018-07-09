@@ -1,7 +1,5 @@
-import BigInt = require("cryptonote_utils/biginteger");
-export const JSBigInt = BigInt.BigInteger;
+import { JSBigInt } from "types";
 
-export type JSBigInt = BigInt.BigInteger;
 export type ViewSendKeys = {
 	view: string;
 	spend: string;

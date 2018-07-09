@@ -1,4 +1,4 @@
-import { JSBigInt } from "./types";
+import { JSBigInt } from "types";
 
 /**
  * @description Gets a starting total amount.
