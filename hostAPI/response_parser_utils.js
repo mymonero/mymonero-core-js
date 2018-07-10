@@ -30,7 +30,7 @@
 //
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 const monero_utils = require("../monero_utils/monero_cryptonote_utils_instance");
-const monero_keyImage_cache_utils = require("../monero_utils/monero_keyImage_cache_utils");
+const key_image_utils = require("../monero_utils/key_image_utils");
 //
 function Parsed_AddressInfo__sync(
 	keyImage_cache,
@@ -53,7 +53,7 @@ function Parsed_AddressInfo__sync(
 	const spent_outputs = data.spent_outputs || [];
 	//
 	for (let spent_output of spent_outputs) {
-		var key_image = monero_keyImage_cache_utils.Lazy_KeyImage(
+		var key_image = key_image_utils.keyImage(
 			keyImage_cache,
 			spent_output.tx_pub_key,
 			spent_output.out_index,
@@ -98,9 +98,7 @@ function Parsed_AddressInfo__sync__keyImageManaged(
 	spend_key__private,
 ) {
 	// -> returnValuesByKey
-	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(
-		address,
-	);
+	const keyImageCache = key_image_utils.getKeyImageCache(address);
 	return Parsed_AddressInfo__sync(
 		keyImageCache,
 		data,
@@ -139,7 +137,7 @@ function Parsed_AddressInfo__keyImageManaged(
 ) {
 	// -> returnValuesByKey
 	Parsed_AddressInfo(
-		monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address),
+		key_image_utils.getKeyImageCache(address),
 		data,
 		address,
 		view_key__private,
@@ -192,7 +190,7 @@ function Parsed_AddressTransactions__sync(
 	for (let i = 0; i < transactions.length; ++i) {
 		if ((transactions[i].spent_outputs || []).length > 0) {
 			for (var j = 0; j < transactions[i].spent_outputs.length; ++j) {
-				var key_image = monero_keyImage_cache_utils.Lazy_KeyImage(
+				var key_image = key_image_utils.keyImage(
 					keyImage_cache,
 					transactions[i].spent_outputs[j].tx_pub_key,
 					transactions[i].spent_outputs[j].out_index,
@@ -281,9 +279,7 @@ function Parsed_AddressTransactions__sync__keyImageManaged(
 	spend_key__public,
 	spend_key__private,
 ) {
-	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(
-		address,
-	);
+	const keyImageCache = key_image_utils.getKeyImageCache(address);
 	return Parsed_AddressTransactions__sync(
 		keyImageCache,
 		data,
@@ -302,7 +298,7 @@ function Parsed_AddressTransactions__keyImageManaged(
 	fn,
 ) {
 	Parsed_AddressTransactions(
-		monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address),
+		key_image_utils.getKeyImageCache(address),
 		data,
 		address,
 		view_key__private,
@@ -389,7 +385,7 @@ function Parsed_UnspentOuts__sync(
 				);
 				continue;
 			}
-			var key_image = monero_keyImage_cache_utils.Lazy_KeyImage(
+			var key_image = key_image_utils.keyImage(
 				keyImage_cache,
 				beforeSplice__tx_pub_key,
 				beforeSplice__index,
@@ -440,9 +436,7 @@ function Parsed_UnspentOuts__sync__keyImageManaged(
 	spend_key__public,
 	spend_key__private,
 ) {
-	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(
-		address,
-	);
+	const keyImageCache = key_image_utils.getKeyImageCache(address);
 	return Parsed_UnspentOuts__sync(
 		keyImageCache,
 		data,
@@ -461,7 +455,7 @@ function Parsed_UnspentOuts__keyImageManaged(
 	fn,
 ) {
 	Parsed_UnspentOuts(
-		monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(address),
+		key_image_utils.getKeyImageCache(address),
 		data,
 		address,
 		view_key__private,
