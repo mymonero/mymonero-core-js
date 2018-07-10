@@ -32,13 +32,11 @@
 // It's of course possible to construct your own stripped-down index.[custom name].js file for, e.g., special webpack bundling usages.
 const mymonero_core_js = {};
 mymonero_core_js.monero_utils = require("./monero_utils/monero_cryptonote_utils_instance");
-mymonero_core_js.monero_wallet_utils = require("./monero_utils/monero_wallet_utils");
 mymonero_core_js.monero_config = require("./monero_utils/monero_config");
 mymonero_core_js.monero_txParsing_utils = require("./monero_utils/monero_txParsing_utils");
 mymonero_core_js.monero_sendingFunds_utils = require("./monero_utils/monero_sendingFunds_utils");
-mymonero_core_js.monero_requestURI_utils = require("./monero_utils/monero_requestURI_utils");
-mymonero_core_js.monero_keyImage_cache_utils = require("./monero_utils/monero_keyImage_cache_utils");
-mymonero_core_js.monero_wallet_locale = require("./monero_utils/monero_wallet_locale");
+mymonero_core_js.request_funds_uri_utils = require("./monero_utils/request_funds_uri_utils");
+mymonero_core_js.key_image_utils = require("./monero_utils/key_image_utils");
 mymonero_core_js.monero_paymentID_utils = require("./monero_utils/monero_paymentID_utils");
 mymonero_core_js.api_response_parser_utils = require("./hostAPI/response_parser_utils");
 //

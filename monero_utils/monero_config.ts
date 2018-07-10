@@ -1,3 +1,5 @@
+import { JSBigInt } from "types";
+
 // Copyright (c) 2014-2018, MyMonero.com
 //
 // All rights reserved.
@@ -25,12 +27,23 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-"use strict";
-//
-const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
-//
-module.exports = {
+
+export interface XMRConfig {
+	readonly coinUnitPlaces: 12;
+	readonly txMinConfirms: 10;
+	readonly coinSymbol: "XMR";
+	readonly openAliasPrefix: "xmr";
+	readonly coinName: "Monero";
+	readonly coinUriPrefix: "monero:";
+	readonly addressPrefix: 18;
+	readonly integratedAddressPrefix: 19;
+	readonly subaddressPrefix: 42;
+	readonly dustThreshold: JSBigInt;
+	readonly maxBlockNumber: 500000000;
+	readonly avgBlockTime: 60;
+}
+
+export const config: XMRConfig = {
 	// Number of atomic units in one unit of currency. e.g. 12 => 10^12 = 1000000000000
 	coinUnitPlaces: 12,
 

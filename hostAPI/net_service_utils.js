@@ -28,9 +28,6 @@
 //
 "use strict";
 //
-const response_parser_utils = require("./response_parser_utils");
-const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger; // important: grab defined export
-//
 function New_ParametersForWalletRequest(address, view_key__private) {
 	return {
 		address: address,

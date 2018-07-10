@@ -165,7 +165,7 @@ async@^1.4.0:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
 
-async@^2.1.4, async@^2.6.0:
+async@^2.1.4:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/async/-/async-2.6.1.tgz#b245a23ca71930044ec53fa46aa00a3e87c6a610"
   dependencies:
@@ -393,6 +393,12 @@ browser-resolve@^1.11.2:
   resolved "https://registry.yarnpkg.com/browser-resolve/-/browser-resolve-1.11.3.tgz#9b7cbb3d0f510e4cb86bdbd796124d28b5890af6"
   dependencies:
     resolve "1.1.7"
+
+browserify-sha3@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/browserify-sha3/-/browserify-sha3-0.0.1.tgz#3ff34a3006ef15c0fb3567e541b91a2340123d11"
+  dependencies:
+    js-sha3 "^0.3.1"
 
 bser@^2.0.0:
   version "2.0.0"
@@ -1729,6 +1735,10 @@ jest@^23.1.0:
     import-local "^1.0.0"
     jest-cli "^23.1.0"
 
+js-sha3@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/js-sha3/-/js-sha3-0.3.1.tgz#86122802142f0828502a0d1dee1d95e253bb0243"
+
 js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
@@ -1803,6 +1813,13 @@ jsprim@^1.2.2:
     extsprintf "1.3.0"
     json-schema "0.2.3"
     verror "1.10.0"
+
+keccakjs@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/keccakjs/-/keccakjs-0.2.1.tgz#1d633af907ef305bbf9f2fa616d56c44561dfa4d"
+  dependencies:
+    browserify-sha3 "^0.0.1"
+    sha3 "^1.1.0"
 
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"
@@ -2025,7 +2042,7 @@ ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
 
-nan@^2.9.2:
+nan@2.10.0, nan@^2.9.2:
   version "2.10.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.10.0.tgz#96d0cd610ebd58d4b4de9cc0c6828cda99c7548f"
 
@@ -2611,6 +2628,12 @@ set-value@^2.0.0:
     is-extendable "^0.1.1"
     is-plain-object "^2.0.3"
     split-string "^3.0.1"
+
+sha3@^1.1.0:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/sha3/-/sha3-1.2.2.tgz#a66c5098de4c25bc88336ec8b4817d005bca7ba9"
+  dependencies:
+    nan "2.10.0"
 
 shebang-command@^1.2.0:
   version "1.2.0"
