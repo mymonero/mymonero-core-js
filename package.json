@@ -35,7 +35,9 @@
     "keccakjs": "^0.2.1"
   },
   "devDependencies": {
-    "jest": "^23.1.0"
+    "jest": "^23.1.0",
+    "ts-node": "^7.0.0",
+    "tsconfig-paths": "^3.4.2"
   },
   "jest": {
     "testEnvironment": "node",
