@@ -67,7 +67,7 @@ if(ENVIRONMENT_IS_NODE){
 	Module["load"]=function load(f){
 		globalEval(read(f))
 	};
-	Module["thisProgram"]=process["argv"][1].replace(/\\/g,"/");
+	Module["thisProgram"]=typeof(process["argv"][1]) !== "undefined" ? process["argv"][1].replace(/\\/g,"/") : "";
 	Module["arguments"]=process["argv"].slice(2);
 } else if(ENVIRONMENT_IS_SHELL){
 	if(!Module["print"])
