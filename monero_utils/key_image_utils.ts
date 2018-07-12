@@ -30,8 +30,8 @@ const monero_utils = require("./monero_cryptonote_utils_instance");
 
 // Managed caches - Can be used by apps which can't send a mutable_keyImagesByCacheKey
 
-type KeyImageCache = { [cacheIndex: string]: string };
-type KeyImageCacheMap = { [address: string]: KeyImageCache };
+export type KeyImageCache = { [cacheIndex: string]: string };
+export type KeyImageCacheMap = { [address: string]: KeyImageCache };
 
 const keyImagesByWalletId: KeyImageCacheMap = {};
 
@@ -46,7 +46,7 @@ const keyImagesByWalletId: KeyImageCacheMap = {};
  * @param {string} privSpendKey
  * @returns
  */
-export function keyImage(
+export function genKeyImage(
 	keyImageCache: KeyImageCache,
 	txPubKey: string,
 	outIndex: number,

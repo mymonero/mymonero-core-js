@@ -30,6 +30,7 @@ import { config } from "./monero_config";
 import monero_utils from "./monero_cryptonote_utils_instance";
 import { NetType } from "cryptonote_utils/nettype";
 import { possibleOAAddress } from "./sending_funds/internal_libs/open_alias_lite";
+import { Omit } from "types";
 
 export enum URITypes {
 	addressAsFirstPathComponent = 1,
@@ -104,10 +105,7 @@ export function encodeFundRequest(args: FundRequestPayload) {
 	return mutable_uri;
 }
 
-type DecodeFundRequestPayload = Pick<
-	FundRequestPayload,
-	Exclude<keyof FundRequestPayload, "uriType">
->;
+type DecodeFundRequestPayload = Omit<FundRequestPayload, "uriType">;
 
 export function decodeFundRequest(
 	str: string,
