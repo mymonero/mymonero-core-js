@@ -47,7 +47,12 @@ import {
 	validUnspentOutput,
 	validTxPubKey,
 } from "./utils";
-import { AddressTransactions, AddressInfo, UnspentOuts } from "./types";
+import {
+	AddressTransactions,
+	AddressInfo,
+	UnspentOuts,
+	NormalizedTransaction,
+} from "./types";
 
 export function parseAddressInfo(
 	address: string,
@@ -90,9 +95,9 @@ export function parseAddressInfo(
 	}
 
 	return {
-		total_received,
-		locked_balance,
-		total_sent,
+		total_received: new JSBigInt(total_received),
+		locked_balance: new JSBigInt(locked_balance),
+		total_sent: new JSBigInt(total_sent),
 
 		spent_outputs,
 		account_scanned_tx_height,
@@ -123,6 +128,8 @@ export function parseAddressTransactions(
 		transactions,
 	} = normalizeAddressTransactions(data);
 
+	const normalizedTransactions: NormalizedTransaction[] = [];
+
 	for (let i = 0; i < transactions.length; i++) {
 		const transaction = normalizeTransaction(transactions[i]);
 
@@ -138,14 +145,15 @@ export function parseAddressTransactions(
 			);
 
 			if (!isKeyImageEqual(transaction.spent_outputs[j], keyImage)) {
-				transaction.total_sent = new JSBigInt(transaction.total_sent)
-					.subtract(transaction.spent_outputs[j].amount)
-					.toString();
+				transaction.total_sent = new JSBigInt(
+					transaction.total_sent,
+				).subtract(transaction.spent_outputs[j].amount);
 
 				transaction.spent_outputs.splice(j, 1);
 				j--;
 			}
 		}
+
 		if (zeroTransactionAmount(transaction)) {
 			transactions.splice(i, 1);
 			i--;
@@ -159,9 +167,11 @@ export function parseAddressTransactions(
 		);
 
 		removeEncryptedPaymentIDs(transaction);
+
+		normalizedTransactions.push(transaction);
 	}
 
-	sortTransactions(transactions);
+	sortTransactions(normalizedTransactions);
 
 	// on the other side, we convert transactions timestamp to Date obj
 
@@ -171,7 +181,7 @@ export function parseAddressTransactions(
 		account_scan_start_height,
 		transaction_height,
 		blockchain_height,
-		serialized_transactions: transactions,
+		transactions: normalizedTransactions,
 	};
 }
 
@@ -194,6 +204,10 @@ export function parseUnspentOuts(
 	privSpendKey: string,
 ) {
 	const { outputs, per_kb_fee } = data;
+
+	if (!per_kb_fee) {
+		throw Error("Unexpected / missing per_kb_fee");
+	}
 
 	const unspentOuts = outputs || [];
 
@@ -253,6 +267,6 @@ export function parseUnspentOuts(
 	return {
 		unspentOuts,
 		unusedOuts: [...unspentOuts],
-		per_kb_fee,
+		per_kb_fee: new JSBigInt(per_kb_fee),
 	};
 }

@@ -7,7 +7,7 @@ import {
 	AddressInfo,
 	UnspentOutput,
 } from "./types";
-import { JSBigInt } from "types";
+import { JSBigInt, Omit } from "types";
 
 export function isKeyImageEqual({ key_image }: SpentOutput, keyImage: string) {
 	return key_image === keyImage;
@@ -55,8 +55,8 @@ export function normalizeAddressTransactions(
 export function normalizeTransaction(
 	tx: AddressTransactionsTx,
 ): NormalizedTransaction {
-	const defaultObj: NormalizedTransaction = {
-		amount: "0",
+	const defaultObj: Omit<NormalizedTransaction, "timestamp"> = {
+		amount: new JSBigInt(0),
 		approx_float_amount: 0,
 		hash: "",
 		height: 0,
@@ -65,14 +65,20 @@ export function normalizeTransaction(
 		coinbase: false,
 		mixin: 0,
 		spent_outputs: [] as SpentOutput[],
-		timestamp: "",
 		total_received: "0",
-		total_sent: "0",
+		total_sent: new JSBigInt(0),
 		unlock_time: 0,
 		payment_id: "",
 	};
 
-	const mergedObj = { ...defaultObj, ...tx };
+	const mergedObj = {
+		...defaultObj,
+		...tx,
+		total_sent: tx.total_sent
+			? new JSBigInt(tx.total_sent)
+			: defaultObj.total_sent,
+		timestamp: new Date(tx.timestamp),
+	};
 
 	return mergedObj;
 }
@@ -93,7 +99,7 @@ export function calculateTransactionAmount({
 	total_received,
 	total_sent,
 }: NormalizedTransaction) {
-	return new JSBigInt(total_received).subtract(total_sent).toString();
+	return new JSBigInt(total_received).subtract(total_sent);
 }
 
 export function estimateTransactionAmount({ amount }: NormalizedTransaction) {
@@ -131,7 +137,7 @@ export function removeEncryptedPaymentIDs(tx: NormalizedTransaction) {
  * @param {AddressTransactionsTx[]} transactions
  * @returns
  */
-export function sortTransactions(transactions: AddressTransactionsTx[]) {
+export function sortTransactions(transactions: NormalizedTransaction[]) {
 	return transactions.sort((a, b) => {
 		if (a.mempool && !b.mempool) {
 			return -1; // a first

@@ -1,3 +1,5 @@
+import { JSBigInt, Omit } from "types";
+
 export interface SpentOutput {
 	amount: string;
 	key_image: string;
@@ -9,7 +11,7 @@ export interface SpentOutput {
 export interface AddressTransactionsTx {
 	id: number;
 	hash?: string;
-	timestamp?: string;
+	timestamp: string;
 	total_received?: string;
 	total_sent?: string;
 	unlock_time?: number;
@@ -31,9 +33,12 @@ export interface AddressTransactions {
 	transactions?: AddressTransactionsTx[];
 }
 
-export interface NormalizedTransaction extends Required<AddressTransactionsTx> {
-	amount: string;
+export interface NormalizedTransaction
+	extends Required<Omit<AddressTransactionsTx, "total_sent" | "timestamp">> {
+	total_sent: JSBigInt;
+	amount: JSBigInt;
 	approx_float_amount: number;
+	timestamp: Date;
 }
 
 export interface Rates {
