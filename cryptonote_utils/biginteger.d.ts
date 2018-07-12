@@ -291,7 +291,7 @@ declare namespace BigInteger {
 		 * @returns {BigInteger}
 		 * @memberof BigInteger
 		 */
-		parse(s: string, base?: number): BigInteger;
+		static parse(s: string, base?: number): BigInteger;
 
 		/**
 		 * @description Add two <BigIntegers>.
