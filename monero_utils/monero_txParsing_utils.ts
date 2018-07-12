@@ -1,3 +1,5 @@
+import { NormalizedTransaction } from "hostAPI/response_parser_utils/types";
+
 // Copyright (c) 2014-2018, MyMonero.com
 //
 // All rights reserved.
@@ -25,26 +27,27 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-"use strict";
-//
-const monero_config = require("./monero_config");
-const monero_utils = require("./monero_cryptonote_utils_instance");
-//
-function IsTransactionConfirmed(tx, blockchain_height) {
-	return blockchain_height - tx.height > monero_config.txMinConfirms;
+
+import { config } from "./monero_config";
+import monero_utils from "./monero_cryptonote_utils_instance";
+
+export function IsTransactionConfirmed(
+	tx: NormalizedTransaction,
+	blockchainHeight: number,
+) {
+	return blockchainHeight - tx.height > config.txMinConfirms;
 }
-exports.IsTransactionConfirmed = IsTransactionConfirmed;
-//
-function IsTransactionUnlocked(tx, blockchain_height) {
-	return monero_utils.is_tx_unlocked(tx.unlock_time || 0, blockchain_height);
+
+export function IsTransactionUnlocked(
+	tx: NormalizedTransaction,
+	blockchainHeight: number,
+) {
+	return monero_utils.is_tx_unlocked(tx.unlock_time, blockchainHeight);
 }
-exports.IsTransactionUnlocked = IsTransactionUnlocked;
-//
-function TransactionLockedReason(tx, blockchain_height) {
-	return monero_utils.tx_locked_reason(
-		tx.unlock_time || 0,
-		blockchain_height,
-	);
+
+export function TransactionLockedReason(
+	tx: NormalizedTransaction,
+	blockchainHeight: number,
+) {
+	return monero_utils.tx_locked_reason(tx.unlock_time, blockchainHeight);
 }
-exports.TransactionLockedReason = TransactionLockedReason;
