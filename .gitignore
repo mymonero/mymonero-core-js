@@ -2,3 +2,6 @@
 node_modules/
 coverage
 .vscode
+build
+tests/emjs/MyMoneroCoreCpp.wasm
+tests/emjs/MyMoneroCoreCpp.js
