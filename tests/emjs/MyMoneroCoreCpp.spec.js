@@ -40,6 +40,7 @@ if (!process.env.LISTENING_TO_UNHANDLEDS) {
 }
 //
 const dummy_test_utils = require("./dummy-test-utils.js");
+const dummy_cnUtils_instance = require("./dummy-cnutils").cnUtil()
 
 var public_key =
 	"904e49462268d771cc1649084c35aa1296bfb214880fe2e7f373620a3e2ba597";
@@ -66,7 +67,29 @@ it("has a foo which works", () => {
 		}
 	)
 })
-
+it("can sc_reduce32", () => {
+	dummy_test_utils.OnceModuleReady(
+		function(Module)
+		{
+			var input = dummy_cnUtils_instance.hextobin(public_key);
+			expect(input).toBeTruthy()
+			expect(input.length).toEqual(32)
+			expect(input[0]).toEqual(144)
+			//
+			const mem = Module._malloc(32);
+			expect(mem).toBeTruthy()
+			Module.HEAPU8.set(input, mem);
+			// TODO: assert contents of mem by input
+			//
+			Module.ccall("sc_reduce32", "void", ["number"], [mem]);
+			var output = Module.HEAPU8.subarray(mem, mem + 32);
+			Module._free(mem);
+			//
+			const outputHexString = dummy_cnUtils_instance.bintohex(output)
+			expect(outputHexString).toEqual("3bdba40135ec31594393944d786cd35695bfb214880fe2e7f373620a3e2ba507")
+		}
+	)
+})
 
 
 

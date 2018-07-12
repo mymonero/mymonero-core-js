@@ -60,7 +60,7 @@ set(
 ) 
 set(
 	EMCC_LINKER_FLAGS 
-	"--bind -Wall -s MODULARIZE=1 -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"'"#"-s SAFE_HEAP=1 --bind -s WASM=1 -O3 -o ./cryptonote_crypto.emcpp.js -s LEGACY_GL_EMULATION=0  -s GL_UNSAFE_OPTS=0 --pre-js pre-module.js --post-js post-module.js -s ASSERTIONS=1 -s GL_ASSERTIONS=1 -s INVOKE_RUN=0  -std=c++11 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s OFFSCREENCANVAS_SUPPORT=1 --preload-file shaders --preload-file extern --use-preload-plugins"
+	"--bind -Wall -s MODULARIZE=1 -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' -s EXPORTED_FUNCTIONS='[\"_sc_reduce32\"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"#"-s SAFE_HEAP=1 --bind -s WASM=1 -O3 -o ./cryptonote_crypto.emcpp.js -s LEGACY_GL_EMULATION=0  -s GL_UNSAFE_OPTS=0 --pre-js pre-module.js --post-js post-module.js -s ASSERTIONS=1 -s GL_ASSERTIONS=1 -s INVOKE_RUN=0  -std=c++11 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s OFFSCREENCANVAS_SUPPORT=1 --preload-file shaders --preload-file extern --use-preload-plugins"
 )
 
 # extract the filename without an extension (NAME_WE)
