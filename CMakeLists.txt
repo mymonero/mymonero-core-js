@@ -45,8 +45,8 @@ project(MyMoneroCoreCpp)
 
 # include_directories(${Boost_INCLUDE_DIRS})
 include_directories("src")
-include_directories("src/mymonero-core-cpp/src")
-# include_directories("test")
+include_directories("src/submodules/monero-core-custom/crypto")
+include_directories("src/submodules/monero-core-custom/epee/include")
 
 # keeping test files in a separate source directory 
 # file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/test_*.cpp)
@@ -55,6 +55,7 @@ set(
     SRC_FILES
     #
     src/index.cpp
+    src/submodules/monero-core-custom/crypto/crypto-ops.c
     #
     # TODO: hopefully pick up source from src/mymonero-core-cpp/src
 ) 
