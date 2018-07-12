@@ -295,7 +295,7 @@ function hex_xor(hex1: string, hex2: string) {
 	const bin1 = hextobin(hex1);
 	const bin2 = hextobin(hex2);
 	const xor = new Uint8Array(bin1.length);
-	for (const i = 0; i < xor.length; i++) {
+	for (let i = 0; i < xor.length; i++) {
 		xor[i] = bin1[i] ^ bin2[i];
 	}
 	return bintohex(xor);
@@ -1018,7 +1018,7 @@ function genBorromean(xv, pm, iv, size, nrings) {
 	if (pm.length !== size) {
 		throw "wrong pm size " + pm.length;
 	}
-	for (const i = 0; i < pm.length; i++) {
+	for (let i = 0; i < pm.length; i++) {
 		if (pm[i].length !== nrings) {
 			throw "wrong pm[" + i + "] length " + pm[i].length;
 		}
@@ -1026,7 +1026,7 @@ function genBorromean(xv, pm, iv, size, nrings) {
 	if (iv.length !== nrings) {
 		throw "wrong iv length " + iv.length;
 	}
-	for (const i = 0; i < iv.length; i++) {
+	for (let i = 0; i < iv.length; i++) {
 		if (iv[i] >= size) {
 			throw "bad indices value at: " + i + ": " + iv[i];
 		}
@@ -1041,18 +1041,18 @@ function genBorromean(xv, pm, iv, size, nrings) {
 	//signature pubkey matrix
 	const L = [];
 	//add needed sub vectors (1 per ring size)
-	for (const i = 0; i < size; i++) {
+	for (let i = 0; i < size; i++) {
 		bb.s[i] = [];
 		L[i] = [];
 	}
 	//compute starting at the secret index to the last row
-	const index;
+	let index;
 	const alpha = [];
-	for (const i = 0; i < nrings; i++) {
+	for (let i = 0; i < nrings; i++) {
 		index = parseInt(iv[i]);
 		alpha[i] = random_scalar();
 		L[index][i] = ge_scalarmult_base(alpha[i]);
-		for (const j = index + 1; j < size; j++) {
+		for (let j = index + 1; j < size; j++) {
 			bb.s[j][i] = random_scalar();
 			const c = hash_to_scalar(L[j - 1][i]);
 			L[j][i] = ge_double_scalarmult_base_vartime(
@@ -1063,15 +1063,15 @@ function genBorromean(xv, pm, iv, size, nrings) {
 		}
 	}
 	//hash last row to create ee
-	const ltemp = "";
-	for (const i = 0; i < nrings; i++) {
+	let ltemp = "";
+	for (let i = 0; i < nrings; i++) {
 		ltemp += L[size - 1][i];
 	}
 	bb.ee = hash_to_scalar(ltemp);
 	//compute the rest from 0 to secret index
-	for (const i = 0; i < nrings; i++) {
+	for (let i = 0; i < nrings; i++) {
 		const cc = bb.ee;
-		for (const j = 0; j < iv[i]; j++) {
+		for (let j = 0; j < iv[i]; j++) {
 			bb.s[j][i] = random_scalar();
 			const LL = ge_double_scalarmult_base_vartime(
 				cc,
@@ -1117,8 +1117,8 @@ function verifyBorromean(bb, P1, P2) {
 //commitMaskObj = {C: commit, mask: mask}
 function proveRange(commitMaskObj, amount: string, nrings: number) {
 	const size = 2;
-	const C = I; //identity
-	const mask = Z; //zero scalar
+	let C = I; //identity
+	let mask = Z; //zero scalar
 	const indices = d2b(amount); //base 2 for now
 	const sig = {
 		Ci: [],
@@ -1127,12 +1127,12 @@ function proveRange(commitMaskObj, amount: string, nrings: number) {
 
 	const ai = [];
 	const PM = [];
-	for (const i = 0; i < size; i++) {
+	for (let i = 0; i < size; i++) {
 		PM[i] = [];
 	}
-	const j;
+	let j;
 	//start at index and fill PM left and right -- PM[0] holds Ci
-	for (const i = 0; i < nrings; i++) {
+	for (let i = 0; i < nrings; i++) {
 		ai[i] = random_scalar();
 		j = indices[i];
 		PM[j][i] = ge_scalarmult_base(ai[i]);
@@ -1201,8 +1201,8 @@ function verRange(C, as, nrings = 64) {
 }
 
 function array_hash_to_scalar(array) {
-	const buf = "";
-	for (const i = 0; i < array.length; i++) {
+	let buf = "";
+	for (let i = 0; i < array.length; i++) {
 		if (typeof array[i] !== "string") {
 			throw "unexpected array element";
 		}
@@ -1218,7 +1218,7 @@ function array_hash_to_scalar(array) {
 // because we don't want to force same secret column for all inputs
 function MLSAG_Gen(message, pk, xx, kimg, index) {
 	const cols = pk.length; //ring size
-	const i;
+	let i;
 
 	// secret index
 	if (index >= cols) {
@@ -1239,7 +1239,7 @@ function MLSAG_Gen(message, pk, xx, kimg, index) {
 		throw "bad xx size";
 	}
 
-	const c_old = "";
+	let c_old = "";
 	const alpha = [];
 
 	const rv = {
@@ -1451,7 +1451,7 @@ function verBulletProof() {
 }
 
 function get_pre_mlsag_hash(rv) {
-	const hashes = "";
+	let hashes = "";
 	hashes += rv.message;
 	hashes += cn_fast_hash(serialize_rct_base(rv));
 	const buf = serialize_range_proofs(rv);
@@ -1460,15 +1460,16 @@ function get_pre_mlsag_hash(rv) {
 }
 
 function serialize_range_proofs(rv) {
-	const buf = "";
-	for (const i = 0; i < rv.p.rangeSigs.length; i++) {
-		for (const j = 0; j < rv.p.rangeSigs[i].bsig.s.length; j++) {
-			for (const l = 0; l < rv.p.rangeSigs[i].bsig.s[j].length; l++) {
+	let buf = "";
+
+	for (let i = 0; i < rv.p.rangeSigs.length; i++) {
+		for (let j = 0; j < rv.p.rangeSigs[i].bsig.s.length; j++) {
+			for (let l = 0; l < rv.p.rangeSigs[i].bsig.s[j].length; l++) {
 				buf += rv.p.rangeSigs[i].bsig.s[j][l];
 			}
 		}
 		buf += rv.p.rangeSigs[i].bsig.ee;
-		for (j = 0; j < rv.p.rangeSigs[i].Ci.length; j++) {
+		for (let j = 0; j < rv.p.rangeSigs[i].Ci.length; j++) {
 			buf += rv.p.rangeSigs[i].Ci[j];
 		}
 	}
@@ -1500,7 +1501,7 @@ function genRct(
 	if (outAmounts.length !== amountKeys.length) {
 		throw "different number of amounts/amount_keys";
 	}
-	for (const i = 0; i < mixRing.length; i++) {
+	for (let i = 0; i < mixRing.length; i++) {
 		if (mixRing[i].length <= indices[i]) {
 			throw "bad mixRing/index size";
 		}
@@ -1528,13 +1529,13 @@ function genRct(
 		pseudoOuts: [],
 	};
 
-	const sumout = Z;
+	let sumout = Z;
 	const cmObj = {
 		C: null,
 		mask: null,
 	};
 	const nrings = 64; //for base 2/current
-	const i;
+	let i;
 	//compute range proofs, etc
 	for (i = 0; i < outAmounts.length; i++) {
 		const teststart = new Date().getTime();
@@ -1552,7 +1553,7 @@ function genRct(
 	//simple
 	if (rv.type === 2) {
 		const ai = [];
-		const sumpouts = Z;
+		let sumpouts = Z;
 		//create pseudoOuts
 		for (i = 0; i < inAmounts.length - 1; i++) {
 			ai[i] = random_scalar();
@@ -1576,7 +1577,7 @@ function genRct(
 			);
 		}
 	} else {
-		const sumC = I;
+		let sumC = I;
 		//get sum of output commitments to use in MLSAG
 		for (i = 0; i < rv.outPk.length; i++) {
 			sumC = ge_add(sumC, rv.outPk[i]);
@@ -1629,7 +1630,7 @@ function verRct(rv, semantics, mixRing, kimg) {
 				// might want to parallelize this like its done in the c++ codebase
 				// via some abstraction library to support browser + node
 				if (rv.p.rangeSigs.length === 0) {
-					results[i] = verBulletproof(rv.p.bulletproofs[i]);
+					results[i] = verBulletProof(rv.p.bulletproofs[i]);
 				} else {
 					// mask -> C if public
 					results[i] = verRange(rv.outPk[i], rv.p.rangeSigs[i]);
@@ -1739,7 +1740,7 @@ function verRctSimple(rv, semantics, mixRing, kimgs) {
 				// might want to parallelize this like its done in the c++ codebase
 				// via some abstraction library to support browser + node
 				if (rv.p.rangeSigs.length === 0) {
-					results[i] = verBulletproof(rv.p.bulletproofs[i]);
+					results[i] = verBulletProof(rv.p.bulletproofs[i]);
 				} else {
 					// mask -> C if public
 					results[i] = verRange(rv.outPk[i], rv.p.rangeSigs[i]);
@@ -1845,9 +1846,6 @@ function decodeRctSimple(rv, sk, i) {
 	return { amount, mask };
 }
 
-function verBulletProof() {
-	throw Error("verBulletProof is not implemented");
-}
 //end RCT functions
 
 function add_pub_key_to_extra(extra: string, pubkey: string) {
@@ -1880,7 +1878,7 @@ function get_payment_id_nonce(payment_id: string, pid_encrypt: boolean) {
 	if (payment_id.length !== 64 && payment_id.length !== 16) {
 		throw "Invalid payment id";
 	}
-	const res = "";
+	let res = "";
 	if (pid_encrypt) {
 		res += TX_EXTRA_NONCE_TAGS.ENCRYPTED_PAYMENT_ID;
 	} else {
@@ -1892,7 +1890,7 @@ function get_payment_id_nonce(payment_id: string, pid_encrypt: boolean) {
 
 function abs_to_rel_offsets(offsets) {
 	if (offsets.length === 0) return offsets;
-	for (const i = offsets.length - 1; i >= 1; --i) {
+	for (let i = offsets.length - 1; i >= 1; --i) {
 		offsets[i] = new JSBigInt(offsets[i])
 			.subtract(offsets[i - 1])
 			.toString();
@@ -1987,8 +1985,8 @@ function serialize_rct_tx_with_hash(tx) {
 	buf += buf2;
 	let buf3 = serialize_range_proofs(tx.rct_signatures);
 	//add MGs
-	for (const i = 0; i < tx.rct_signatures.p.MGs.length; i++) {
-		for (const j = 0; j < tx.rct_signatures.p.MGs[i].ss.length; j++) {
+	for (let i = 0; i < tx.rct_signatures.p.MGs.length; i++) {
+		for (let j = 0; j < tx.rct_signatures.p.MGs[i].ss.length; j++) {
 			buf3 += tx.rct_signatures.p.MGs[i].ss[j][0];
 			buf3 += tx.rct_signatures.p.MGs[i].ss[j][1];
 		}
@@ -2007,20 +2005,19 @@ function serialize_rct_base(rv) {
 	let buf = "";
 	buf += encode_varint(rv.type);
 	buf += encode_varint(rv.txnFee);
-	let i;
 	if (rv.type === 2) {
-		for (const i = 0; i < rv.pseudoOuts.length; i++) {
+		for (let i = 0; i < rv.pseudoOuts.length; i++) {
 			buf += rv.pseudoOuts[i];
 		}
 	}
 	if (rv.ecdhInfo.length !== rv.outPk.length) {
 		throw "mismatched outPk/ecdhInfo!";
 	}
-	for (i = 0; i < rv.ecdhInfo.length; i++) {
+	for (let i = 0; i < rv.ecdhInfo.length; i++) {
 		buf += rv.ecdhInfo[i].mask;
 		buf += rv.ecdhInfo[i].amount;
 	}
-	for (i = 0; i < rv.outPk.length; i++) {
+	for (let i = 0; i < rv.outPk.length; i++) {
 		buf += rv.outPk[i];
 	}
 	return buf;
@@ -2113,7 +2110,7 @@ function generate_ring_signature(prefix_hash, k_image, keys, sec, real_index) {
 	}
 	const image_m = CNCrypto._malloc(STRUCT_SIZES.KEY_IMAGE);
 	CNCrypto.HEAPU8.set(hextobin(k_image), image_m);
-	const i;
+	let i;
 	const image_unp_m = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
 	const image_pre_m = CNCrypto._malloc(STRUCT_SIZES.GE_DSMP);
 	const sum_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
@@ -2183,7 +2180,7 @@ function generate_ring_signature(prefix_hash, k_image, keys, sec, real_index) {
 		CNCrypto.HEAPU8.subarray(sig_m, sig_m + sig_size),
 	);
 	const sigs = [];
-	for (const k = 0; k < keys.length; k++) {
+	for (let k = 0; k < keys.length; k++) {
 		sigs.push(
 			sig_data.slice(
 				STRUCT_SIZES.SIGNATURE * 2 * k,
@@ -2221,7 +2218,7 @@ function construct_tx(
 	//we move payment ID stuff here, because we need txkey to encrypt
 	const txkey = random_keypair();
 	console.log(txkey);
-	const extra = "";
+	let extra = "";
 	if (payment_id) {
 		if (pid_encrypt && payment_id.length !== INTEGRATED_ID_SIZE * 2) {
 			throw "payment ID must be " +
@@ -2256,7 +2253,7 @@ function construct_tx(
 	}
 
 	const in_contexts = [];
-	const inputs_money = JSBigInt.ZERO;
+	let inputs_money = JSBigInt.ZERO;
 	let i, j;
 	console.log("Sources: ");
 	//run the for loop twice to sort ins by key image
@@ -2303,8 +2300,8 @@ function construct_tx(
 		input_to_key.key_offsets = abs_to_rel_offsets(input_to_key.key_offsets);
 		tx.vin.push(input_to_key);
 	}
-	const outputs_money = JSBigInt.ZERO;
-	const out_index = 0;
+	let outputs_money = JSBigInt.ZERO;
+	let out_index = 0;
 	const amountKeys = []; //rct only
 	for (i = 0; i < dsts.length; ++i) {
 		if (new JSBigInt(dsts[i].amount).compare(0) < 0) {
@@ -2321,7 +2318,7 @@ function construct_tx(
 			txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
 		}
 
-		const out_derivation;
+		let out_derivation;
 
 		// send change to ourselves
 		if (dsts[i].keys.view == keys.view.pub) {
@@ -2491,7 +2488,7 @@ function create_transaction(
 			throw "Output overflow!";
 		}
 	}
-	const found_money = JSBigInt.ZERO;
+	let found_money = JSBigInt.ZERO;
 	const sources = [];
 	console.log("Selected transfers: ", outputs);
 	for (i = 0; i < outputs.length; ++i) {
@@ -2580,9 +2577,9 @@ function create_transaction(
 		}
 	} else if (cmp > 0) {
 		throw "Need more money than found! (have: " +
-			cnUtil.formatMoney(found_money) +
+			formatMoney(found_money) +
 			" need: " +
-			cnUtil.formatMoney(needed_money) +
+			formatMoney(needed_money) +
 			")";
 	}
 	return construct_tx(
