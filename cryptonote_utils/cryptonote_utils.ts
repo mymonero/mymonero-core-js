@@ -236,9 +236,6 @@ function swapEndianC(str: string) {
 //mainly to convert integer "scalars" to usable hexadecimal strings
 //uint long long to 32 byte key
 function d2h(integer: string) {
-	if (typeof integer !== "string" && integer.toString().length > 15) {
-		throw "integer should be entered as a string for precision";
-	}
 	let padding = "";
 	for (let i = 0; i < 63; i++) {
 		padding += "0";
@@ -260,9 +257,6 @@ function s2d(scalar: string) {
 
 //convert integer string to 64bit "binary" little-endian string
 function d2b(integer: string) {
-	if (typeof integer !== "string" && integer.toString().length > 15) {
-		throw "integer should be entered as a string for precision";
-	}
 	let padding = "";
 	for (let i = 0; i < 63; i++) {
 		padding += "0";
@@ -651,7 +645,7 @@ function hash_to_ec(key: string) {
 	const point_m = CNCrypto._malloc(STRUCT_SIZES.GE_P2);
 	const point2_m = CNCrypto._malloc(STRUCT_SIZES.GE_P1P1);
 	const res_m = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
-	const hash = hextobin(cn_fast_hash(key, KEY_SIZE));
+	const hash = hextobin(cn_fast_hash(key));
 	CNCrypto.HEAPU8.set(hash, h_m);
 	CNCrypto.ccall(
 		"ge_fromfe_frombytes_vartime",
@@ -688,7 +682,7 @@ function hash_to_ec_2(key: string) {
 	const point_m = CNCrypto._malloc(STRUCT_SIZES.GE_P2);
 	const point2_m = CNCrypto._malloc(STRUCT_SIZES.GE_P1P1);
 	const res_m = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
-	const hash = hextobin(cn_fast_hash(key, KEY_SIZE));
+	const hash = hextobin(cn_fast_hash(key));
 	const res2_m = CNCrypto._malloc(KEY_SIZE);
 	CNCrypto.HEAPU8.set(hash, h_m);
 	CNCrypto.ccall(
@@ -862,7 +856,7 @@ function ge_add(p1: string, p2: string) {
 
 //order matters
 function ge_sub(point1: string, point2: string) {
-	point2n = ge_neg(point2);
+	const point2n = ge_neg(point2);
 	return ge_add(point1, point2n);
 }
 
@@ -957,7 +951,7 @@ function sc_mulsub(sigc: string, sec: string, k: string) {
 		["number", "number", "number", "number"],
 		[res_m, sigc_m, sec_m, k_m],
 	);
-	res = CNCrypto.HEAPU8.subarray(res_m, res_m + KEY_SIZE);
+	const res = CNCrypto.HEAPU8.subarray(res_m, res_m + KEY_SIZE);
 	CNCrypto._free(k_m);
 	CNCrypto._free(sec_m);
 	CNCrypto._free(sigc_m);
@@ -1069,9 +1063,10 @@ function genBorromean(xv, pm, iv, size, nrings) {
 	}
 	bb.ee = hash_to_scalar(ltemp);
 	//compute the rest from 0 to secret index
+	let j: number;
 	for (let i = 0; i < nrings; i++) {
-		const cc = bb.ee;
-		for (let j = 0; j < iv[i]; j++) {
+		let cc = bb.ee;
+		for (j = 0; j < iv[i]; j++) {
 			bb.s[j][i] = random_scalar();
 			const LL = ge_double_scalarmult_base_vartime(
 				cc,
@@ -1200,12 +1195,9 @@ function verRange(C, as, nrings = 64) {
 	}
 }
 
-function array_hash_to_scalar(array) {
+function array_hash_to_scalar(array: string[]) {
 	let buf = "";
 	for (let i = 0; i < array.length; i++) {
-		if (typeof array[i] !== "string") {
-			throw "unexpected array element";
-		}
 		buf += array[i];
 	}
 	return hash_to_scalar(buf);
@@ -1516,7 +1508,7 @@ function genRct(
 		throw "mismatched indices/inSk";
 	}
 
-	rv = {
+	const rv = {
 		type: inSk.length === 1 ? RCTTypeFull : RCTTypeSimple,
 		message: message,
 		outPk: [],
@@ -1911,7 +1903,7 @@ function get_tx_hash(tx) {
 	}
 }
 
-function serialize_tx(tx, headeronly) {
+function serialize_tx(tx, headeronly?: boolean) {
 	//tx: {
 	//	version: uint64,
 	//	unlock_time: uint64,
@@ -1920,9 +1912,7 @@ function serialize_tx(tx, headeronly) {
 	//	vout: [{amount: uint64, target: {key: hex}},...],
 	//	signatures: [[s,s,...],...]
 	//}
-	if (headeronly === undefined) {
-		headeronly = false;
-	}
+
 	let buf = "";
 	buf += encode_varint(tx.version);
 	buf += encode_varint(tx.unlock_time);
@@ -2096,16 +2086,16 @@ function generate_ring_signature(prefix_hash, k_image, keys, sec, real_index) {
 	const sig_m = CNCrypto._malloc(sig_size);
 
 	// Struct pointer helper functions
-	function buf_a(i) {
+	function buf_a(i: number) {
 		return buf_m + STRUCT_SIZES.EC_POINT * (2 * i);
 	}
-	function buf_b(i) {
+	function buf_b(i: number) {
 		return buf_m + STRUCT_SIZES.EC_POINT * (2 * i + 1);
 	}
-	function sig_c(i) {
+	function sig_c(i: number) {
 		return sig_m + STRUCT_SIZES.EC_SCALAR * (2 * i);
 	}
-	function sig_r(i) {
+	function sig_r(i: number) {
 		return sig_m + STRUCT_SIZES.EC_SCALAR * (2 * i + 1);
 	}
 	const image_m = CNCrypto._malloc(STRUCT_SIZES.KEY_IMAGE);

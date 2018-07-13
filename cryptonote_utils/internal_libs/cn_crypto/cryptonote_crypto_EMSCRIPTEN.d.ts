@@ -1,7 +1,6 @@
 declare namespace CNCrypto {
-	type Memory = string & { _tag_: "memory" };
-	function _malloc(bytes: number): Memory;
-	function _free(mem: Memory): mem is never;
+	function _malloc(bytes: number): number;
+	function _free(mem: number): mem is never;
 
 	var HEAPU8: Uint8Array;
 
