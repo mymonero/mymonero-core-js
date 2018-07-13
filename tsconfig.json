@@ -3,7 +3,8 @@
 		"target": "es2017",
 		"sourceMap": false,
 		"module": "commonjs",
-		"baseUrl": "./",
+		"baseUrl": "src",
+		"outDir": "dist",
 		"lib": ["es2017", "dom"],
 		"allowSyntheticDefaultImports": true,
 
@@ -20,5 +21,5 @@
 		"pretty": true,
 		"resolveJsonModule": true
 	},
-	"include": ["./src/", "./__test__/", "examples", "./"]
+	"include": ["./src/", "./__test__/", "examples"]
 }
