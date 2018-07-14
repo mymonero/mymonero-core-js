@@ -1102,7 +1102,11 @@ export function genBorromean(
 	return bb;
 }
 
-export function verifyBorromean(bb, P1, P2) {
+export function verifyBorromean(
+	bb: BorromeanSignature,
+	P1: string[],
+	P2: string[],
+) {
 	let Lv1 = [];
 	let chash;
 	let LL;
@@ -1491,14 +1495,13 @@ function verRctMG(
 // simple version, assuming only post Rct
 
 function verRctMGSimple(
-	message: number[],
+	message: string,
 	mg: MGSig,
 	pubs: MixCommitment[],
 	C: string,
 	kimg: string,
 ) {
 	try {
-		const rows = 1;
 		const cols = pubs.length;
 		const M: string[][] = [];
 
@@ -2368,7 +2371,7 @@ function construct_tx(
 		sources[i].in_ephemeral = res.in_ephemeral;
 	}
 	//sort ins
-	sources.sort(function(a, b) {
+	sources.sort((a, b) => {
 		return (
 			BigInt.parse(a.key_image, 16).compare(
 				BigInt.parse(b.key_image, 16),

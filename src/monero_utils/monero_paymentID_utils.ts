@@ -32,7 +32,7 @@ export function makePaymentID() {
 	return rand_8();
 }
 
-export function isValidOrNoPaymentID(pid?: string) {
+export function isValidOrNoPaymentID(pid?: string | null) {
 	if (!pid) {
 		return true;
 	}

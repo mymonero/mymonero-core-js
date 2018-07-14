@@ -62,8 +62,8 @@ export function randomNum(upperLimit: number) {
 
 // These functions get keys from blockchain
 // replace these when connecting blockchain
-// getKeyFromBlockchain grabs a key from the blockchain at "reference_index" to mix with
-export function getKeyFromBlockchain(reference_index) {
+// getKeyFromBlockchain grabs a key from the blockchain at "reference_index" (unused param) to mix with
+export function getKeyFromBlockchain() {
 	let a = { dest: "", mask: "" };
 	a.dest = random_keypair().pub;
 	a.mask = random_keypair().pub;
@@ -83,7 +83,7 @@ export function populateFromBlockchain(inPk: MixCommitment[], mixin: number) {
 		mixRing[i] = [];
 		for (let j = 0; j <= mixin; j++) {
 			if (j !== index) {
-				mixRing[i][j] = getKeyFromBlockchain(index); /*?*/
+				mixRing[i][j] = getKeyFromBlockchain(); /*?*/
 			} else {
 				mixRing[i][j] = inPkCpy.pop() as MixCommitment;
 			}
@@ -102,7 +102,7 @@ export function populateFromBlockchainSimple(
 
 	for (let i = 0; i <= mixin; i++) {
 		if (i !== index) {
-			mixRing[i] = getKeyFromBlockchain(index);
+			mixRing[i] = getKeyFromBlockchain();
 		} else {
 			mixRing[i] = inPk;
 		}
