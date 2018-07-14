@@ -41,6 +41,14 @@ import { randomBytes } from "crypto";
 import { BigInt } from "biginteger";
 import { NetType } from "./nettype";
 import { formatMoney, formatMoneyFull } from "./formatters";
+import { SecretCommitment, MixCommitment } from "types";
+import {
+	ViewSendKeys,
+	ParsedTarget,
+	Output,
+	AmountOutput,
+	Pid,
+} from "monero_utils/sending_funds/internal_libs/types";
 
 const HASH_SIZE = 32;
 const ADDRESS_CHECKSUM_SIZE = 4;
@@ -186,7 +194,12 @@ function zeroCommit(amount: string) {
 	return C;
 }
 
-export function decode_rct_ecdh(ecdh, key: string) {
+interface Commit {
+	mask: string;
+	amount: string;
+}
+
+export function decode_rct_ecdh(ecdh: Commit, key: string): Commit {
 	const first = hash_to_scalar(key);
 	const second = hash_to_scalar(first);
 	return {
@@ -195,7 +208,7 @@ export function decode_rct_ecdh(ecdh, key: string) {
 	};
 }
 
-export function encode_rct_ecdh(ecdh, key: string) {
+export function encode_rct_ecdh(ecdh: Commit, key: string): Commit {
 	const first = hash_to_scalar(key);
 	const second = hash_to_scalar(first);
 	return {
@@ -228,7 +241,7 @@ function swapEndianC(str: string) {
 //for most uses you'll also want to swapEndian after conversion
 //mainly to convert integer "scalars" to usable hexadecimal strings
 //uint long long to 32 byte key
-function d2h(integer: string) {
+function d2h(integer: string | BigInt) {
 	let padding = "";
 	for (let i = 0; i < 63; i++) {
 		padding += "0";
@@ -239,7 +252,7 @@ function d2h(integer: string) {
 }
 
 //integer (string) to scalar
-export function d2s(integer: string) {
+export function d2s(integer: string | BigInt) {
 	return swapEndian(d2h(integer));
 }
 
@@ -249,7 +262,7 @@ function s2d(scalar: string) {
 }
 
 //convert integer string to 64bit "binary" little-endian string
-function d2b(integer: string) {
+function d2b(integer: string | BigInt) {
 	let padding = "";
 	for (let i = 0; i < 63; i++) {
 		padding += "0";
@@ -1002,7 +1015,18 @@ function ge_double_scalarmult_postcomp_vartime(
 //size: ring size, default 2
 //nrings: number of rings, default 64
 //extensible borromean signatures
-export function genBorromean(xv, pm, iv, size, nrings) {
+interface BorromeanSignature {
+	s: string[][];
+	ee: string;
+}
+
+export function genBorromean(
+	xv: string[],
+	pm: string[][],
+	iv: string,
+	size: number,
+	nrings: number,
+) {
 	if (xv.length !== nrings) {
 		throw "wrong xv length " + xv.length;
 	}
@@ -1025,12 +1049,13 @@ export function genBorromean(xv, pm, iv, size, nrings) {
 	//signature struct
 	// in the case of size 2 and nrings 64
 	// bb.s = [[64], [64]]
-	const bb = {
+
+	const bb: BorromeanSignature = {
 		s: [],
 		ee: "",
 	};
 	//signature pubkey matrix
-	const L = [];
+	const L: string[][] = [];
 	//add needed sub vectors (1 per ring size)
 	for (let i = 0; i < size; i++) {
 		bb.s[i] = [];
@@ -1107,18 +1132,30 @@ export function verifyBorromean(bb, P1, P2) {
 //	 thus this proves that "amount" is in [0, s^n] (we assume s to be 4) (2 for now with v2 txes)
 //	 mask is a such that C = aG + bH, and b = amount
 //commitMaskObj = {C: commit, mask: mask}
-function proveRange(commitMaskObj, amount: string, nrings: number) {
+
+interface CommitMask {
+	C: string;
+	mask: string;
+}
+
+interface RangeSignature {
+	Ci: string[];
+	bsig: BorromeanSignature;
+}
+
+function proveRange(
+	commitMaskObj: CommitMask,
+	amount: string | BigInt,
+	nrings: number,
+) {
 	const size = 2;
 	let C = I; //identity
 	let mask = Z; //zero scalar
 	const indices = d2b(amount); //base 2 for now
-	const sig = {
-		Ci: [],
-		//exp: exponent //doesn't exist for now
-	};
+	const Ci: string[] = [];
 
-	const ai = [];
-	const PM = [];
+	const ai: string[] = [];
+	const PM: string[][] = [];
 	for (let i = 0; i < size; i++) {
 		PM[i] = [];
 	}
@@ -1145,11 +1182,16 @@ function proveRange(commitMaskObj, amount: string, nrings: number) {
 	//copy commitments to sig and sum them to commitment
 	for (let i = 0; i < nrings; i++) {
 		//if (i < nrings - 1) //for later version
-		sig.Ci[i] = PM[0][i];
+		Ci[i] = PM[0][i];
 		C = ge_add(C, PM[0][i]);
 	}
 
-	sig.bsig = genBorromean(ai, PM, indices, size, nrings);
+	const sig: RangeSignature = {
+		Ci,
+		bsig: genBorromean(ai, PM, indices, size, nrings),
+	};
+	//exp: exponent //doesn't exist for now
+
 	commitMaskObj.C = C;
 	commitMaskObj.mask = mask;
 	return sig;
@@ -1163,7 +1205,7 @@ function proveRange(commitMaskObj, amount: string, nrings: number) {
 //   mask is a such that C = aG + bH, and b = amount
 //verRange verifies that \sum Ci = C and that each Ci is a commitment to 0 or 2^i
 
-function verRange(C, as, nrings = 64) {
+function verRange(C: string, as: RangeSignature, nrings = 64) {
 	try {
 		let CiH = []; // len 64
 		let asCi = []; // len 64
@@ -1205,7 +1247,18 @@ function array_hash_to_scalar(array: string[]) {
 // we presently only support matrices of 2 rows (pubkey, commitment)
 // this is a simplied MLSAG_Gen function to reflect that
 // because we don't want to force same secret column for all inputs
-export function MLSAG_Gen(message, pk, xx, kimg, index) {
+
+interface MGSig {
+	ss: string[][];
+	cc: string;
+}
+export function MLSAG_Gen(
+	message: string,
+	pk: string[][],
+	xx: string[],
+	kimg: string,
+	index: number,
+) {
 	const cols = pk.length; //ring size
 	let i;
 
@@ -1231,9 +1284,9 @@ export function MLSAG_Gen(message, pk, xx, kimg, index) {
 	let c_old = "";
 	const alpha = [];
 
-	const rv = {
+	const rv: MGSig = {
 		ss: [],
-		cc: null,
+		cc: "",
 	};
 	for (i = 0; i < cols; i++) {
 		rv.ss[i] = [];
@@ -1298,7 +1351,12 @@ export function MLSAG_Gen(message, pk, xx, kimg, index) {
 	return rv;
 }
 
-export function MLSAG_ver(message, pk, rv, kimg) {
+export function MLSAG_ver(
+	message: string,
+	pk: string[][],
+	rv: MGSig,
+	kimg: string,
+) {
 	// we assume that col, row, rectangular checks are already done correctly
 	// in MLSAG_gen
 	const cols = pk.length;
@@ -1351,21 +1409,29 @@ export function MLSAG_ver(message, pk, rv, kimg) {
 //   this shows that sum inputs = sum outputs
 //Ver:
 //   verifies the above sig is created corretly
-function proveRctMG(message, pubs, inSk, kimg, mask, Cout, index) {
+function proveRctMG(
+	message: string,
+	pubs: MixCommitment[],
+	inSk: SecretCommitment,
+	kimg: string,
+	mask: string,
+	Cout: string,
+	index: number,
+) {
 	const cols = pubs.length;
 	if (cols < 3) {
 		throw "cols must be > 2 (mixin)";
 	}
-	const xx = [];
-	const PK = [];
+
+	const PK: string[][] = [];
 	//fill pubkey matrix (copy destination, subtract commitments)
 	for (let i = 0; i < cols; i++) {
 		PK[i] = [];
 		PK[i][0] = pubs[i].dest;
 		PK[i][1] = ge_sub(pubs[i].mask, Cout);
 	}
-	xx[0] = inSk.x;
-	xx[1] = sc_sub(inSk.a, mask);
+
+	const xx = [inSk.x, sc_sub(inSk.a, mask)];
 	return MLSAG_Gen(message, PK, xx, kimg, index);
 }
 
@@ -1378,7 +1444,14 @@ function proveRctMG(message, pubs, inSk, kimg, mask, Cout, index) {
 //Ver:
 //   verifies the above sig is created corretly
 
-function verRctMG(mg, pubs, outPk, txnFeeKey, message, kimg) {
+function verRctMG(
+	mg: MGSig,
+	pubs: MixCommitment[][],
+	outPk: string[],
+	txnFeeKey: string,
+	message: string,
+	kimg: string,
+) {
 	const cols = pubs.length;
 	if (cols < 1) {
 		throw Error("Empty pubs");
@@ -1395,7 +1468,7 @@ function verRctMG(mg, pubs, outPk, txnFeeKey, message, kimg) {
 
 	// key matrix of (cols, tmp)
 
-	let M = [];
+	let M: string[][] = [];
 	console.log(pubs);
 	//create the matrix to mg sig
 	for (let i = 0; i < rows; i++) {
@@ -1417,11 +1490,17 @@ function verRctMG(mg, pubs, outPk, txnFeeKey, message, kimg) {
 
 // simple version, assuming only post Rct
 
-function verRctMGSimple(message, mg, pubs, C, kimg) {
+function verRctMGSimple(
+	message: number[],
+	mg: MGSig,
+	pubs: MixCommitment[],
+	C: string,
+	kimg: string,
+) {
 	try {
 		const rows = 1;
-		const cols = pubs.len;
-		const M = [];
+		const cols = pubs.length;
+		const M: string[][] = [];
 
 		for (let i = 0; i < cols; i++) {
 			M[i][0] = pubs[i].dest;
@@ -1439,7 +1518,7 @@ function verBulletProof() {
 	throw Error("verBulletProof is not implemented");
 }
 
-function get_pre_mlsag_hash(rv) {
+function get_pre_mlsag_hash(rv: RCTSignatures) {
 	let hashes = "";
 	hashes += rv.message;
 	hashes += cn_fast_hash(serialize_rct_base(rv));
@@ -1448,7 +1527,7 @@ function get_pre_mlsag_hash(rv) {
 	return cn_fast_hash(hashes);
 }
 
-function serialize_range_proofs(rv) {
+function serialize_range_proofs(rv: RCTSignatures) {
 	let buf = "";
 
 	for (let i = 0; i < rv.p.rangeSigs.length; i++) {
@@ -1476,16 +1555,29 @@ function serialize_range_proofs(rv) {
 //indices is vector
 //txnFee is string, with its endian not swapped (e.g d2s is not called before passing it in as an argument)
 //to this function
+
+interface RCTSignatures {
+	type: number;
+	message: string;
+	outPk: string[];
+	p: {
+		rangeSigs: RangeSignature[];
+		MGs: MGSig[];
+	};
+	ecdhInfo: Commit[];
+	txnFee: string;
+	pseudoOuts: string[];
+}
 export function genRct(
-	message,
-	inSk,
-	kimg,
-	inAmounts,
-	outAmounts,
-	mixRing,
-	amountKeys,
-	indices,
-	txnFee,
+	message: string,
+	inSk: SecretCommitment[],
+	kimg: string[],
+	inAmounts: BigInt[],
+	outAmounts: BigInt[],
+	mixRing: MixCommitment[][],
+	amountKeys: string[],
+	indices: number[],
+	txnFee: string,
 ) {
 	if (outAmounts.length !== amountKeys.length) {
 		throw "different number of amounts/amount_keys";
@@ -1498,16 +1590,14 @@ export function genRct(
 	if (mixRing.length !== inSk.length) {
 		throw "mismatched mixRing/inSk";
 	}
-	if (inAmounts.length !== inSk.length) {
-		throw "mismatched inAmounts/inSk";
-	}
+
 	if (indices.length !== inSk.length) {
 		throw "mismatched indices/inSk";
 	}
 
-	const rv = {
+	const rv: RCTSignatures = {
 		type: inSk.length === 1 ? RCTTypeFull : RCTTypeSimple,
-		message: message,
+		message,
 		outPk: [],
 		p: {
 			rangeSigs: [],
@@ -1520,15 +1610,16 @@ export function genRct(
 
 	let sumout = Z;
 	const cmObj = {
-		C: null,
-		mask: null,
+		C: "",
+		mask: "",
 	};
+
 	const nrings = 64; //for base 2/current
 	let i;
 	//compute range proofs, etc
 	for (i = 0; i < outAmounts.length; i++) {
 		const teststart = new Date().getTime();
-		rv.p.rangeSigs[i] = proveRange(cmObj, outAmounts[i], nrings, 0, 0);
+		rv.p.rangeSigs[i] = proveRange(cmObj, outAmounts[i], nrings);
 		const testfinish = new Date().getTime() - teststart;
 		console.log("Time take for range proof " + i + ": " + testfinish);
 		rv.outPk[i] = cmObj.C;
@@ -1541,6 +1632,10 @@ export function genRct(
 
 	//simple
 	if (rv.type === 2) {
+		if (inAmounts.length !== inSk.length) {
+			throw "mismatched inAmounts/inSk";
+		}
+
 		const ai = [];
 		let sumpouts = Z;
 		//create pseudoOuts
@@ -1588,7 +1683,12 @@ export function genRct(
 	return rv;
 }
 
-export function verRct(rv, semantics, mixRing, kimg) {
+export function verRct(
+	rv: RCTSignatures,
+	semantics: boolean,
+	mixRing: MixCommitment[][],
+	kimg: string,
+) {
 	if (rv.type === 0x03) {
 		throw Error("Bulletproof validation not implemented");
 	}
@@ -1661,7 +1761,12 @@ export function verRct(rv, semantics, mixRing, kimg) {
 
 //ver RingCT simple
 //assumes only post-rct style inputs (at least for max anonymity)
-export function verRctSimple(rv, semantics, mixRing, kimgs) {
+export function verRctSimple(
+	rv: RCTSignatures,
+	semantics: boolean,
+	mixRing: MixCommitment[][],
+	kimgs: string[],
+) {
 	try {
 		if (rv.type === 0x04) {
 			throw Error("Simple Bulletproof validation not implemented");
@@ -1780,7 +1885,7 @@ export function verRctSimple(rv, semantics, mixRing, kimgs) {
 //   uses the attached ecdh info to find the amounts represented by each output commitment
 //   must know the destination private key to find the correct amount, else will return a random number
 
-export function decodeRct(rv, sk, i) {
+export function decodeRct(rv: RCTSignatures, sk: string, i: number) {
 	// where RCTTypeFull is 0x01 and  RCTTypeFullBulletproof is 0x03
 	if (rv.type !== 0x01 && rv.type !== 0x03) {
 		throw Error("verRct called on non-full rctSig");
@@ -1808,7 +1913,7 @@ export function decodeRct(rv, sk, i) {
 	return { amount, mask };
 }
 
-export function decodeRctSimple(rv, sk, i) {
+export function decodeRctSimple(rv: RCTSignatures, sk: string, i: number) {
 	if (rv.type !== 0x02 && rv.type !== 0x04) {
 		throw Error("verRct called on full rctSig");
 	}
@@ -2369,7 +2474,7 @@ function construct_tx(
 		const keyimages = [];
 		const inSk = [];
 		const inAmounts = [];
-		const mixRing = [];
+		const mixRing: MixCommitment[][] = [];
 		const indices = [];
 		for (i = 0; i < tx.vin.length; i++) {
 			keyimages.push(tx.vin[i].k_image);
@@ -2414,19 +2519,19 @@ function construct_tx(
 }
 
 export function create_transaction(
-	pub_keys,
-	sec_keys,
-	dsts,
-	outputs,
-	mix_outs,
-	fake_outputs_count,
-	fee_amount,
-	payment_id,
-	pid_encrypt,
-	realDestViewKey,
-	unlock_time,
-	rct,
-	nettype,
+	pub_keys: ViewSendKeys,
+	sec_keys: ViewSendKeys,
+	dsts: ParsedTarget[],
+	outputs: Output[],
+	mix_outs: AmountOutput[] | undefined,
+	fake_outputs_count: number,
+	fee_amount: BigInt,
+	payment_id: Pid,
+	pid_encrypt: boolean,
+	realDestViewKey: string | undefined,
+	unlock_time: number,
+	rct: boolean,
+	nettype: NetType,
 ) {
 	unlock_time = unlock_time || 0;
 	mix_outs = mix_outs || [];

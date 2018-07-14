@@ -33,11 +33,13 @@ import {
 	ge_add,
 	H,
 } from "cryptonote_utils";
+import { SecretCommitment, MixCommitment } from "types";
 
 //generates a <secret , public> / Pedersen commitment to the amount
-export function ctskpkGen(amount) {
-	let sk = {},
-		pk = {};
+
+export function ctskpkGen(amount: number): [SecretCommitment, MixCommitment] {
+	let sk = { x: "", a: "" },
+		pk = { dest: "", mask: "" };
 	const key_pair1 = random_keypair();
 	const key_pair2 = random_keypair();
 
@@ -54,15 +56,15 @@ export function ctskpkGen(amount) {
 	return [sk, pk];
 }
 
-export function randomNum(upperLimit) {
+export function randomNum(upperLimit: number) {
 	return parseInt(randomBytes(1).toString("hex"), 16) % upperLimit;
 }
 
-//These functions get keys from blockchain
-//replace these when connecting blockchain
-//getKeyFromBlockchain grabs a key from the blockchain at "reference_index" to mix with
+// These functions get keys from blockchain
+// replace these when connecting blockchain
+// getKeyFromBlockchain grabs a key from the blockchain at "reference_index" to mix with
 export function getKeyFromBlockchain(reference_index) {
-	let a = {};
+	let a = { dest: "", mask: "" };
 	a.dest = random_keypair().pub;
 	a.mask = random_keypair().pub;
 	return a;
@@ -70,11 +72,11 @@ export function getKeyFromBlockchain(reference_index) {
 
 //	populateFromBlockchain creates a keymatrix with "mixin" + 1 columns and one of the columns is inPk
 //  the return values are the key matrix, and the index where inPk was put (random).
-export function populateFromBlockchain(inPk, mixin) {
+export function populateFromBlockchain(inPk: MixCommitment[], mixin: number) {
 	const rows = inPk.length;
 	const inPkCpy = [...inPk];
 	// ctkeyMatrix
-	const mixRing = [];
+	const mixRing: MixCommitment[][] = [];
 	const index = randomNum(mixin);
 
 	for (let i = 0; i < rows; i++) {
@@ -83,7 +85,7 @@ export function populateFromBlockchain(inPk, mixin) {
 			if (j !== index) {
 				mixRing[i][j] = getKeyFromBlockchain(index); /*?*/
 			} else {
-				mixRing[i][j] = inPkCpy.pop();
+				mixRing[i][j] = inPkCpy.pop() as MixCommitment;
 			}
 		}
 	}
@@ -91,7 +93,10 @@ export function populateFromBlockchain(inPk, mixin) {
 	return { mixRing, index };
 }
 
-export function populateFromBlockchainSimple(inPk, mixin) {
+export function populateFromBlockchainSimple(
+	inPk: MixCommitment,
+	mixin: number,
+) {
 	const index = randomNum(mixin);
 	const mixRing = [];
 

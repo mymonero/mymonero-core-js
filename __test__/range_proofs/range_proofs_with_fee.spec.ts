@@ -8,6 +8,7 @@ import {
 	decodeRct,
 } from "cryptonote_utils";
 import { ctskpkGen, populateFromBlockchain } from "./test_utils";
+import { SecretCommitment, MixCommitment } from "types";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //
@@ -41,8 +42,8 @@ it("range_proofs", () => {
 	//Ring CT Stuff
 	//ct range proofs
 	// ctkey vectors
-	let inSk = [],
-		inPk = [];
+	let inSk: SecretCommitment[] = [],
+		inPk: MixCommitment[] = [];
 
 	// ctkeys
 	// we test only a single input here since the current impl of
@@ -82,7 +83,7 @@ it("range_proofs", () => {
 		Z,
 		inSk,
 		kimg,
-		[[]],
+		[],
 		amounts,
 		mixRing,
 		amount_keys,
@@ -101,17 +102,7 @@ it("range_proofs", () => {
 
 	amounts[1] = new BigInt(4501);
 
-	s = genRct(
-		Z,
-		inSk,
-		kimg,
-		[[]],
-		amounts,
-		mixRing,
-		amount_keys,
-		[index],
-		fee,
-	);
+	s = genRct(Z, inSk, kimg, [], amounts, mixRing, amount_keys, [index], fee);
 
 	expect(verRct(s, true, mixRing, kimg[0])).toEqual(true);
 	expect(verRct(s, false, mixRing, kimg[0])).toEqual(false);

@@ -37,8 +37,8 @@ import {
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 it("MG_sigs", () => {
-	function skvGen(len) {
-		let skVec = [];
+	function skvGen(len: number) {
+		const skVec: string[] = [];
 		for (let i = 0; i < len; i++) {
 			skVec.push(skGen());
 		}
@@ -47,8 +47,8 @@ it("MG_sigs", () => {
 	//initializes a key matrix;
 	//first parameter is rows,
 	//second is columns
-	function keyMInit(rows, cols) {
-		let rv = [];
+	function keyMInit(cols: number) {
+		let rv: string[][] = [];
 		for (let i = 0; i < cols; i++) {
 			rv.push([]);
 		}
@@ -61,7 +61,7 @@ it("MG_sigs", () => {
 	let N = 3; // cols
 	let R = 2; // rows
 
-	let xm = keyMInit(R, N); // = [[None]*N] #just used to generate test public keys
+	let xm = keyMInit(N); // = [[None]*N] #just used to generate test public keys
 	let sk = skvGen(R);
 
 	// [
@@ -71,7 +71,7 @@ it("MG_sigs", () => {
 	// [pubkeyn, commitmentn]]
 	// // Gen creates a signature which proves that for some column in the keymatrix "pk"
 	//  the signer knows a secret key for each row in that column
-	let P = keyMInit(R, N); // = keyM[[None]*N] #stores the public keys;
+	let P = keyMInit(N); // = keyM[[None]*N] #stores the public keys;
 
 	let ind = 2;
 	let i = 0;
@@ -95,8 +95,7 @@ it("MG_sigs", () => {
 
 	expect(c).toEqual(true);
 
-	xtmp = skvGen(R);
-	xm = keyMInit(R, N); // = [[None]*N] #just used to generate test public keys
+	xm = keyMInit(N); // = [[None]*N] #just used to generate test public keys
 	sk = skvGen(R);
 
 	for (j = 0; j < R; j++) {

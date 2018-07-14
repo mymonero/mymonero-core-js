@@ -36,6 +36,7 @@ import {
 	verRctSimple,
 	decodeRctSimple,
 } from "cryptonote_utils";
+import { BigInt } from "index";
 
 it("should test ringct simple transactions", () => {
 	//Ring CT Stuff
@@ -54,7 +55,7 @@ it("should test ringct simple transactions", () => {
 		let [sctmp, pctmp] = ctskpkGen(3000);
 		inSk.push(sctmp);
 		inPk.push(pctmp);
-		inamounts.push(3000);
+		inamounts.push(new BigInt(3000));
 	}
 
 	//add fake input 3000
@@ -64,13 +65,13 @@ it("should test ringct simple transactions", () => {
 		let [sctmp, pctmp] = ctskpkGen(3000);
 		inSk.push(sctmp);
 		inPk.push(pctmp);
-		inamounts.push(3000);
+		inamounts.push(new BigInt(3000));
 	}
 
-	outamounts.push(5000);
+	outamounts.push(new BigInt(5000));
 	amount_keys.push(hash_to_scalar(Z));
 
-	outamounts.push(999);
+	outamounts.push(new BigInt(999));
 	amount_keys.push(hash_to_scalar(Z));
 
 	const message = random_scalar();

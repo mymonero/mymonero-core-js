@@ -1,34 +1,34 @@
 import { config } from "monero_utils/monero_config";
 import { BigInt } from "biginteger";
 
-export function formatMoneyFull(units) {
-	units = units.toString();
-	const symbol = units[0] === "-" ? "-" : "";
+export function formatMoneyFull(units: BigInt) {
+	let strUnits = units.toString();
+	const symbol = strUnits[0] === "-" ? "-" : "";
 	if (symbol === "-") {
-		units = units.slice(1);
+		strUnits = strUnits.slice(1);
 	}
 	let decimal;
-	if (units.length >= config.coinUnitPlaces) {
-		decimal = units.substr(
-			units.length - config.coinUnitPlaces,
+	if (strUnits.length >= config.coinUnitPlaces) {
+		decimal = strUnits.substr(
+			strUnits.length - config.coinUnitPlaces,
 			config.coinUnitPlaces,
 		);
 	} else {
-		decimal = padLeft(units, config.coinUnitPlaces, "0");
+		decimal = padLeft(strUnits, config.coinUnitPlaces, "0");
 	}
 	return (
 		symbol +
-		(units.substr(0, units.length - config.coinUnitPlaces) || "0") +
+		(strUnits.substr(0, strUnits.length - config.coinUnitPlaces) || "0") +
 		"." +
 		decimal
 	);
 }
 
-export function formatMoneyFullSymbol(units) {
+export function formatMoneyFullSymbol(units: BigInt) {
 	return formatMoneyFull(units) + " " + config.coinSymbol;
 }
 
-export function formatMoney(units) {
+export function formatMoney(units: BigInt) {
 	const f = trimRight(formatMoneyFull(units), "0");
 	if (f[f.length - 1] === ".") {
 		return f.slice(0, f.length - 1);
@@ -36,7 +36,7 @@ export function formatMoney(units) {
 	return f;
 }
 
-export function formatMoneySymbol(units) {
+export function formatMoneySymbol(units: BigInt) {
 	return formatMoney(units) + " " + config.coinSymbol;
 }
 
@@ -44,7 +44,7 @@ export function formatMoneySymbol(units) {
  *
  * @param {string} str
  */
-export function parseMoney(str) {
+export function parseMoney(str: string) {
 	if (!str) return BigInt.ZERO;
 	const negative = str[0] === "-";
 	if (negative) {
@@ -84,7 +84,7 @@ export function printDsts(dsts) {
 	}
 }
 
-export function decompose_tx_destinations(dsts, rct) {
+export function decompose_tx_destinations(dsts, rct: boolean) {
 	const out = [];
 	if (rct) {
 		for (let i = 0; i < dsts.length; i++) {
