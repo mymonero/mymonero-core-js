@@ -1,4 +1,5 @@
 import { NormalizedTransaction } from "hostAPI/response_parser_utils/types";
+import moment from "moment";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //
