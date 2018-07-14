@@ -27,7 +27,13 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { randomBytes } from "crypto";
-import { skGen, ge_scalarmult_base, ge_add, ge_sub } from "cryptonote_utils";
+import {
+	skGen,
+	ge_scalarmult_base,
+	ge_add,
+	ge_sub,
+	H2,
+} from "cryptonote_utils";
 import { padLeft } from "cryptonote_utils/formatters";
 
 function randomBit() {
@@ -41,10 +47,10 @@ function randomBit() {
 //Tests for Borromean signatures
 //#boro true one, false one, C != sum Ci, and one out of the range..
 const N = 64;
-let xv = [], // vector of secret keys, 1 per ring (nrings)
-	P1v = [], //key64, arr of commitments Ci
-	P2v = [], //key64
-	indi = []; // vector of secret indexes, 1 per ring (nrings), can be a string
+let xv: string[] = [], // vector of secret keys, 1 per ring (nrings)
+	P1v: string[] = [], //key64, arr of commitments Ci
+	P2v: string[] = [], //key64
+	indi: string[] = []; // vector of secret indexes, 1 per ring (nrings), can be a string
 
 let generated = false;
 
