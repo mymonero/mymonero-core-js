@@ -4,9 +4,9 @@
 
 1. Legal
 2. What's in This Repo?
-3. Building MyMoneroCoreCpp
-4. Library Roadmap
-5. Library API Documentation
+3. Library Roadmap
+4. Library API Documentation
+5. Building MyMoneroCoreCpp
 
 ### Contributing
 
@@ -37,7 +37,17 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 * This readme is located at `README.md`, and the license is located at `LICENSE.txt`.
 
+## Library Roadmap
+
+* Investigate replacing entire implementation with bindings to lightwallet API in official Monero core wallet C++
+
+## Library API Documentation
+
+*Coming soon*
+
 ## Building MyMoneroCoreCpp
+
+There's no need to build cryptonote_utils/MyMoneroCoreCpp as a build is provided, but if you were, for example, interested in adding a C++ function, you could use the information in this section to transpile them to JS.
 
 ### Install Emscripten SDK
 
@@ -60,13 +70,10 @@ Download a copy of the contents of the Boost source into `./contrib/boost-sdk/`.
 
 * Execute `npm run-script build-emcpp`
 
-## Library Roadmap
+Or if you want to copy the build products to their distribution locations, 
 
-* Investigate replacing entire implementation with bindings to lightwallet API in official Monero core wallet C++
+* Execute `npm run-script archive-emcpp`
 
-## Library API Documentation
-
-*Coming soon*
 
 # Contributing
 
