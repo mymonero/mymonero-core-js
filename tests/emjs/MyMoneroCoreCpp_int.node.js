@@ -27,37 +27,15 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 "use strict";
-const MyMoneroCoreCpp = require("../../cryptonote_utils/MyMoneroCoreCpp.js");
+//
+const dummy_test_utils = require("./dummy-test-utils.js");
+const dummy_cnUtils_instance = require("./dummy-cnutils").cnUtil()
 
-var public_key =
-	"904e49462268d771cc1649084c35aa1296bfb214880fe2e7f373620a3e2ba597";
-var private_key =
-	"52aa4c69b93b780885c9d7f51e6fd5795904962c61a2e07437e130784846f70d";
+console.log("dummy_test_utils.Module", dummy_test_utils.Module)
 
-// var nettype = mymonero.nettype_utils.network_type.MAINNET;
-
-var Module = null
-var moduleReadyFns = [] // initial (gets set to undefined once Module ready)
-exports.OnceModuleReady = function(fn)
-{
-	if (Module == null) {
-		if (typeof moduleReadyFns == 'undefined' || !moduleReadyFns) {
-			throw "Expected moduleReadyFns"
-		}
-		moduleReadyFns.push(fn)
-	} else {
-		fn(Module)
-	}
-}
-
-MyMoneroCoreCpp().then(function(thisModule)
-{
-	Module = thisModule
-	exports.Module = Module
+dummy_test_utils.OnceModuleReady(
+	function(Module)
 	{
-		for (let fn of moduleReadyFns) {
-			fn(Module)
-		}
+		console.log("Module", Module)
 	}
-	moduleReadyFns = [] // flash / free (good idea?)
-});
+)

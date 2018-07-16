@@ -9,22 +9,17 @@ SRC_PATH="$(pwd)/$SRC_DIR"
 INSTALL_PATH="$(pwd)/$INSTALL_DIR"
 JAM_CONFIG_PATH="$(pwd)/configs/$PLATFORM.jam"
 
-export AR="$EMSCRIPTEN_PATH/emar"
-  # <ranlib>${EMSCRIPTEN_PATH}/emranlib
-  # <linker>${EMSCRIPTEN_PATH}/emlink
-
-
 if [ ! -d "$SRC_PATH" ]; then
   echo "SOURCE NOT FOUND!"
   exit 1
 fi
 
-if [ -z "$EMSCRIPTEN_PATH" ]; then
-  echo "EMSCRIPTEN_PATH MUST BE DEFINED!"
+if [ -z "$EMSCRIPTEN" ]; then
+  echo "EMSCRIPTEN MUST BE DEFINED!"
   exit -1  
 fi
 
-cd $EMSCRIPTEN_PATH; ./embuilder.py build zlib
+cd $EMSCRIPTEN; ./embuilder.py build zlib
 
 # ---
 
@@ -40,7 +35,7 @@ export NO_BZIP2=1 #bc it's supplied by emscripten but b2 will fail to find it
 
 
 ./bootstrap.sh \
-  --with-libraries=atomic,chrono,container,context,date_time,iostreams,locale,signals,timer,filesystem,regex,serialization,system,thread,math,random,exception \
+  --with-libraries=atomic,signals,timer,system,filesystem,thread,date_time,chrono,regex,serialization,program_options,locale \
 2>&1
 
 if [ $? != 0 ]; then

@@ -19,8 +19,7 @@ set(
     #
     src/index.cpp
     src/submodules/monero-core-custom/crypto/crypto-ops.c
-    #
-    # TODO: hopefully pick up source from src/mymonero-core-cpp/src
+    src/submodules/monero-core-custom/crypto/crypto-ops-data.c
 )
 
 set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
@@ -37,18 +36,6 @@ set_target_properties(
     ${boost_DIR}/lib/libboost_chrono.a
 )
 #
-add_library(boost_context STATIC IMPORTED)
-set_target_properties(
-    boost_context PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_context.a
-)
-#
-add_library(boost_exception STATIC IMPORTED)
-set_target_properties(
-    boost_exception PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_exception.a
-)
-#
 add_library(boost_date_time STATIC IMPORTED)
 set_target_properties(
     boost_date_time PROPERTIES IMPORTED_LOCATION
@@ -61,76 +48,16 @@ set_target_properties(
     ${boost_DIR}/lib/libboost_filesystem.a
 )
 #
-add_library(boost_math_c99 STATIC IMPORTED)
-set_target_properties(
-    boost_math_c99 PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_math_c99.a
-)
-#
-add_library(boost_math_c99f STATIC IMPORTED)
-set_target_properties(
-    boost_math_c99f PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_math_c99f.a
-)
-#
-add_library(boost_math_c99l STATIC IMPORTED)
-set_target_properties(
-    boost_math_c99l PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_math_c99l.a
-)
-#
-add_library(boost_math_tr1 STATIC IMPORTED)
-set_target_properties(
-    boost_math_tr1 PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_math_tr1.a
-)
-#
-add_library(boost_math_tr1l STATIC IMPORTED)
-set_target_properties(
-    boost_math_tr1l PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_math_tr1l.a
-)
-#
-add_library(boost_math_tr1f STATIC IMPORTED)
-set_target_properties(
-    boost_math_tr1f PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_math_tr1l.a
-)
-#
-add_library(boost_random STATIC IMPORTED)
-set_target_properties(
-    boost_random PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_random.a
-)
-#
 add_library(boost_locale STATIC IMPORTED)
 set_target_properties(
     boost_locale PROPERTIES IMPORTED_LOCATION
     ${boost_DIR}/lib/libboost_locale.a
 )
 #
-add_library(boost_iostreams STATIC IMPORTED)
+add_library(boost_program_options STATIC IMPORTED)
 set_target_properties(
-    boost_iostreams PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_iostreams.a
-)
-#
-add_library(boost_signals STATIC IMPORTED)
-set_target_properties(
-    boost_signals PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_signals.a
-)
-#
-add_library(boost_timer STATIC IMPORTED)
-set_target_properties(
-    boost_timer PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_timer.a
-)
-#
-add_library(boost_container STATIC IMPORTED)
-set_target_properties(
-    boost_container PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_container.a
+    boost_program_options PROPERTIES IMPORTED_LOCATION
+    ${boost_DIR}/lib/libboost_program_options.a
 )
 #
 add_library(boost_regex STATIC IMPORTED)
@@ -145,6 +72,12 @@ set_target_properties(
     ${boost_DIR}/lib/libboost_serialization.a
 )
 #
+add_library(boost_signals STATIC IMPORTED)
+set_target_properties(
+    boost_signals PROPERTIES IMPORTED_LOCATION
+    ${boost_DIR}/lib/libboost_signals.a
+)
+#
 add_library(boost_system STATIC IMPORTED)
 set_target_properties(
     boost_system PROPERTIES IMPORTED_LOCATION
@@ -155,6 +88,12 @@ add_library(boost_thread STATIC IMPORTED)
 set_target_properties(
     boost_thread PROPERTIES IMPORTED_LOCATION
     ${boost_DIR}/lib/libboost_thread.a
+)
+#
+add_library(boost_timer STATIC IMPORTED)
+set_target_properties(
+    boost_timer PROPERTIES IMPORTED_LOCATION
+    ${boost_DIR}/lib/libboost_timer.a
 )
 #
 add_library(boost_wserialization STATIC IMPORTED)
@@ -171,7 +110,7 @@ set(
 	"-Wall -std=c++11 -s MODULARIZE=1 -s WASM=1 -s ASSERTIONS=1 \
     --bind \
     -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
-    -s EXPORTED_FUNCTIONS='[\"_sc_reduce32\"]' \
+    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
     -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"#"-s SAFE_HEAP=1 --bind -O3 -s LEGACY_GL_EMULATION=0  -s GL_UNSAFE_OPTS=0 --pre-js pre-module.js --post-js post-module.js -s GL_ASSERTIONS=1 -s INVOKE_RUN=0  -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s OFFSCREENCANVAS_SUPPORT=1 --preload-file shaders --preload-file extern --use-preload-plugins"
 )
 
@@ -182,44 +121,24 @@ add_executable(
 )
 set_target_properties(MyMoneroCoreCpp PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS}")
 # set_target_properties(MyMoneroCoreCpp PROPERTIES SUFFIX ".bc")
-# target_link_libraries(
-#     MyMoneroCoreCpp
-#     #
-#     OpenSSL::SSL
-#     ${Boost_LIBRARIES} 
-# )
 
 target_link_libraries(
     MyMoneroCoreCpp
     #
+    # OpenSSL::SSL
+    #
     boost_atomic
     boost_chrono
-    boost_context
     boost_date_time
-    boost_exception
     boost_filesystem
-    boost_container
-    # boost_graph
-    boost_iostreams
     boost_locale
-    boost_math_c99
-    boost_math_c99f
-    boost_math_c99l
-    boost_math_tr1
-    boost_math_tr1f
-    boost_math_tr1l
-    # boost_prg_exec_monitor
-    # boost_program_options
-    boost_random
+    boost_program_options
     boost_regex
     boost_serialization
     boost_signals
     boost_system
-    # boost_test_exec_monitor
     boost_thread
     boost_timer
-    # boost_unit_test_framework
-    # boost_wave
     boost_wserialization
     ${log-lib}
 )

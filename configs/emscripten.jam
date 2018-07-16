@@ -6,16 +6,16 @@
 #
 
 import os ;
-local EMSCRIPTEN_PATH = [ os.environ EMSCRIPTEN_PATH ] ;
+local EMSCRIPTEN = [ os.environ EMSCRIPTEN ] ;
 
 using clang : emscripten
 :
 	emcc -v -s USE_ZLIB=1
 :
-	<root>$(EMSCRIPTEN_PATH)
-	<archiver>$(EMSCRIPTEN_PATH)/emar
-	<ranlib>$(EMSCRIPTEN_PATH)/emranlib
-	<linker>$(EMSCRIPTEN_PATH)/emlink
+	<root>$(EMSCRIPTEN)
+	<archiver>$(EMSCRIPTEN)/emar
+	<ranlib>$(EMSCRIPTEN)/emranlib
+	<linker>$(EMSCRIPTEN)/emlink
 	<cxxflags>-std=c++11
 ;
 

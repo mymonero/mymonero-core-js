@@ -1,0 +1,1 @@
+const mymonero = require("../../");

@@ -4,8 +4,9 @@
 
 1. Legal
 2. What's in This Repo?
-3. Library Roadmap
-4. Library API Documentation
+3. Building MyMoneroCoreCpp
+4. Library Roadmap
+5. Library API Documentation
 
 ### Contributing
 
@@ -21,18 +22,43 @@ See `LICENSE.txt` for license.
 
 All source code copyright © 2014-2018 by MyMonero. All rights reserved.
 
-
 ## What's in This Repo?
 
 This repository holds the Javascript source code for the Monero/CryptoNote cryptography and protocols, plus lightwallet functions which power the official [MyMonero](https://www.mymonero.com) apps.
+
+There is also a chain of build scripts which is capable of building a JS module by transpiling a subset of Monero source code via emscripten, which relies upon static boost libs, for which there is also a script for building from source. 
 
 ### Contents 
 
 * `monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations.
 
-* `cryptonote_utils` contains the MyMonero JS implementations for the underlying cryptography behind Monero.
+* `cryptonote_utils` contains the MyMonero JS implementations for the underlying cryptography behind Monero. 
+	* `cryptonote_utils/MyMoneroCoreCpp.(js,wasm)` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `cryptonote_utils/cryptonote_utils.js`.
 
 * This readme is located at `README.md`, and the license is located at `LICENSE.txt`.
+
+## Building MyMoneroCoreCpp
+
+### Install Emscripten SDK
+
+Ensure you've [properly installed Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) and exposed the Emscripten executables in your PATH, e.g.:
+
+	source ./emsdk_env.sh
+
+
+### Boost for Emscripten
+
+*Depends upon:* Emscripten SDK
+
+Download a copy of the contents of the Boost source into `./contrib/boost-sdk/`.
+
+* Execute `bin/build-boost-emscripten.sh`
+
+### Emscripten Module
+
+*Depends upon:* Emscripten SDK, Boost for Emscripten
+
+* Execute `npm run-script build-emcpp`
 
 ## Library Roadmap
 

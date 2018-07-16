@@ -33,7 +33,18 @@
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
 const JSBigInt = require("./biginteger").BigInteger;
 const cnBase58 = require("./cryptonote_base58").cnBase58;
-const CNCrypto = require("./cryptonote_crypto_EMSCRIPTEN");
+var _CNCrypto = undefined; // undefined -> cause 'early' calls to CNCrypto to throw exception
+require("./MyMoneroCoreCpp")().then(function(Module) 
+{
+	_CNCrypto = Module;
+});
+function loaded_CNCrypto()
+{ // CAUTION: calling this method blocks until _CNCrypto is loaded
+	while (typeof _CNCrypto === 'undefined' || !_CNCrypto) {
+		// console.log("Blocking until MyMoneroCoreCpp is loaded.")
+	}
+	return _CNCrypto;
+}
 const mnemonic = require("./mnemonic");
 const nacl = require("./nacl-fast-cn");
 const sha3 = require("./sha3");
@@ -371,6 +382,7 @@ var cnUtil = function(currencyConfig) {
 		if (input.length !== 64) {
 			throw "Invalid input length";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var mem = CNCrypto._malloc(64);
 		CNCrypto.HEAPU8.set(input, mem);
 		CNCrypto.ccall("sc_reduce", "void", ["number"], [mem]);
@@ -384,6 +396,7 @@ var cnUtil = function(currencyConfig) {
 		if (input.length !== 32) {
 			throw "Invalid input length";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var mem = CNCrypto._malloc(32);
 		CNCrypto.HEAPU8.set(input, mem);
 		CNCrypto.ccall("sc_reduce32", "void", ["number"], [mem]);
@@ -412,6 +425,7 @@ var cnUtil = function(currencyConfig) {
 		if (input.length !== 32) {
 			throw "Invalid input length";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var input_mem = CNCrypto._malloc(KEY_SIZE);
 		CNCrypto.HEAPU8.set(input, input_mem);
 		var ge_p3 = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
@@ -444,6 +458,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		var pub_b = hextobin(pub);
 		var sec_b = hextobin(sec);
+		const CNCrypto = loaded_CNCrypto();
 		var pub_m = CNCrypto._malloc(KEY_SIZE);
 		CNCrypto.HEAPU8.set(pub_b, pub_m);
 		var sec_m = CNCrypto._malloc(KEY_SIZE);
@@ -540,6 +555,7 @@ var cnUtil = function(currencyConfig) {
 		if (outlen <= 0) {
 			throw "Invalid output length";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var input_mem = CNCrypto._malloc(inlen);
 		CNCrypto.HEAPU8.set(input, input_mem);
 		var out_mem = CNCrypto._malloc(outlen);
@@ -667,6 +683,7 @@ var cnUtil = function(currencyConfig) {
 		}
 		var pub_b = hextobin(pub);
 		var sec_b = hextobin(sec);
+		const CNCrypto = loaded_CNCrypto();
 		var pub_m = CNCrypto._malloc(KEY_SIZE);
 		CNCrypto.HEAPU8.set(pub_b, pub_m);
 		var sec_m = CNCrypto._malloc(KEY_SIZE);
@@ -718,6 +735,7 @@ var cnUtil = function(currencyConfig) {
 		if (derivation.length !== 64 || sec.length !== 64) {
 			throw "Invalid input length!";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var scalar_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 		var scalar_b = hextobin(
 			this.derivation_to_scalar(derivation, out_index),
@@ -746,6 +764,7 @@ var cnUtil = function(currencyConfig) {
 		if (derivation.length !== 64 || pub.length !== 64) {
 			throw "Invalid input length!";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var derivation_m = CNCrypto._malloc(KEY_SIZE);
 		var derivation_b = hextobin(derivation);
 		CNCrypto.HEAPU8.set(derivation_b, derivation_m);
@@ -810,6 +829,7 @@ var cnUtil = function(currencyConfig) {
 		if (key.length !== KEY_SIZE * 2) {
 			throw "Invalid input length";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var h_m = CNCrypto._malloc(HASH_SIZE);
 		var point_m = CNCrypto._malloc(STRUCT_SIZES.GE_P2);
 		var point2_m = CNCrypto._malloc(STRUCT_SIZES.GE_P1P1);
@@ -847,6 +867,7 @@ var cnUtil = function(currencyConfig) {
 		if (key.length !== KEY_SIZE * 2) {
 			throw "Invalid input length";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var h_m = CNCrypto._malloc(HASH_SIZE);
 		var point_m = CNCrypto._malloc(STRUCT_SIZES.GE_P2);
 		var point2_m = CNCrypto._malloc(STRUCT_SIZES.GE_P1P1);
@@ -892,6 +913,7 @@ var cnUtil = function(currencyConfig) {
 		if (!pub || !sec || pub.length !== 64 || sec.length !== 64) {
 			throw "Invalid input length";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var pub_m = CNCrypto._malloc(KEY_SIZE);
 		var sec_m = CNCrypto._malloc(KEY_SIZE);
 		CNCrypto.HEAPU8.set(hextobin(pub), pub_m);
@@ -1021,6 +1043,7 @@ var cnUtil = function(currencyConfig) {
 
 	//adds two points together, order does not matter
 	/*this.ge_add2 = function(point1, point2) {
+		const CNCrypto = loaded_CNCrypto();
 		var point1_m = CNCrypto._malloc(KEY_SIZE);
 		var point2_m = CNCrypto._malloc(KEY_SIZE);
 		var point1_m2 = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
@@ -1071,6 +1094,7 @@ var cnUtil = function(currencyConfig) {
 		if (scalar1.length !== 64 || scalar2.length !== 64) {
 			throw "Invalid input length!";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var scalar1_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 		var scalar2_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 		CNCrypto.HEAPU8.set(hextobin(scalar1), scalar1_m);
@@ -1097,6 +1121,7 @@ var cnUtil = function(currencyConfig) {
 		if (scalar1.length !== 64 || scalar2.length !== 64) {
 			throw "Invalid input length!";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var scalar1_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 		var scalar2_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 		CNCrypto.HEAPU8.set(hextobin(scalar1), scalar1_m);
@@ -1143,6 +1168,7 @@ var cnUtil = function(currencyConfig) {
 		) {
 			throw "bad scalar";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var sec_m = CNCrypto._malloc(KEY_SIZE);
 		CNCrypto.HEAPU8.set(hextobin(sec), sec_m);
 		var sigc_m = CNCrypto._malloc(KEY_SIZE);
@@ -1167,6 +1193,7 @@ var cnUtil = function(currencyConfig) {
 
 	//res = aB + cG; argument names copied from the signature implementation
 	/*this.ge_double_scalarmult_base_vartime = function(sigc, pub, sigr) {
+		const CNCrypto = loaded_CNCrypto();
 		var pub_m = CNCrypto._malloc(KEY_SIZE);
 		var pub2_m = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
 		CNCrypto.HEAPU8.set(hextobin(pub), pub_m);
@@ -1210,6 +1237,7 @@ var cnUtil = function(currencyConfig) {
 	//res = a * Hp(B) + c*D
 	//res = sigr * Hp(pub) + sigc * k_image; argument names also copied from the signature implementation; note precomp AND hash_to_ec are done internally!!
 	/*this.ge_double_scalarmult_postcomp_vartime = function(sigr, pub, sigc, k_image) {
+		const CNCrypto = loaded_CNCrypto();
 		var image_m = CNCrypto._malloc(STRUCT_SIZES.KEY_IMAGE);
 		CNCrypto.HEAPU8.set(hextobin(k_image), image_m);
 		var image_unp_m = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
@@ -2362,6 +2390,7 @@ var cnUtil = function(currencyConfig) {
 		if (real_index >= keys.length || real_index < 0) {
 			throw "real_index is invalid";
 		}
+		const CNCrypto = loaded_CNCrypto();
 		var _ge_tobytes = CNCrypto.cwrap("ge_tobytes", "void", [
 			"number",
 			"number",
