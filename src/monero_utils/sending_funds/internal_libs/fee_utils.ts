@@ -29,7 +29,9 @@ export function multiplyFeePriority(prio: number) {
 	const priority = prio || DEFAULT_FEE_PRIORITY;
 
 	if (priority <= 0 || priority > fee_multiplier.length) {
-		throw "fee_multiplier_for_priority: simple_priority out of bounds";
+		throw Error(
+			"fee_multiplier_for_priority: simple_priority out of bounds",
+		);
 	}
 	const priority_idx = priority - 1;
 	return fee_multiplier[priority_idx];

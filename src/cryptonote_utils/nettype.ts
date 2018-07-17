@@ -56,7 +56,7 @@ export function cryptonoteBase58PrefixForStandardAddressOn(nettype: NetType) {
 	} else if (nettype == NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
 	}
-	throw "Illegal nettype";
+	throw Error("Illegal nettype");
 }
 
 export function cryptonoteBase58PrefixForIntegratedAddressOn(nettype: NetType) {
@@ -70,7 +70,7 @@ export function cryptonoteBase58PrefixForIntegratedAddressOn(nettype: NetType) {
 	} else if (nettype == NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX;
 	}
-	throw "Illegal nettype";
+	throw Error("Illegal nettype");
 }
 
 export function cryptonoteBase58PrefixForSubAddressOn(nettype: NetType) {
@@ -84,5 +84,5 @@ export function cryptonoteBase58PrefixForSubAddressOn(nettype: NetType) {
 	} else if (nettype == NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX;
 	}
-	throw "Illegal nettype";
+	throw Error("Illegal nettype");
 }

@@ -180,7 +180,7 @@ function commit(amount: string, mask: string) {
 		!valid_hex(amount) ||
 		amount.length !== 64
 	) {
-		throw "invalid amount or mask!";
+		throw Error("invalid amount or mask!");
 	}
 	const C = ge_double_scalarmult_base_vartime(amount, H, mask);
 	return C;
@@ -188,7 +188,7 @@ function commit(amount: string, mask: string) {
 
 function zeroCommit(amount: string) {
 	if (!valid_hex(amount) || amount.length !== 64) {
-		throw "invalid amount!";
+		throw Error("invalid amount!");
 	}
 	const C = ge_double_scalarmult_base_vartime(amount, H, I);
 	return C;
@@ -264,7 +264,7 @@ function d2b(integer: string | BigInt) {
 	}
 	const a = new BigInt(integer);
 	if (a.toString(2).length > 64) {
-		throw "amount overflows uint64!";
+		throw Error("amount overflows uint64!");
 	}
 	return swapEndianC((padding + a.toString(2)).slice(-64));
 }
@@ -285,7 +285,7 @@ function hex_xor(hex1: string, hex2: string) {
 		hex1.length % 2 !== 0 ||
 		hex2.length % 2 !== 0
 	) {
-		throw "Hex string(s) is/are invalid!";
+		throw Error("Hex string(s) is/are invalid!");
 	}
 	const bin1 = hextobin(hex1);
 	const bin2 = hextobin(hex2);
@@ -297,7 +297,7 @@ function hex_xor(hex1: string, hex2: string) {
 }
 
 function hextobin(hex: string) {
-	if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
+	if (hex.length % 2 !== 0) throw Error("Hex string has invalid length!");
 	const res = new Uint8Array(hex.length / 2);
 	for (let i = 0; i < hex.length / 2; ++i) {
 		res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
@@ -339,7 +339,7 @@ function encode_varint(input: number | string) {
 function sc_reduce32(hex: string) {
 	const input = hextobin(hex);
 	if (input.length !== 32) {
-		throw "Invalid input length";
+		throw Error("Invalid input length");
 	}
 	const mem = CNCrypto._malloc(32);
 	CNCrypto.HEAPU8.set(input, mem);
@@ -351,7 +351,7 @@ function sc_reduce32(hex: string) {
 
 export function cn_fast_hash(input: string) {
 	if (input.length % 2 !== 0 || !valid_hex(input)) {
-		throw "Input invalid";
+		throw Error("Input invalid");
 	}
 
 	const hasher = new SHA3(256);
@@ -361,7 +361,7 @@ export function cn_fast_hash(input: string) {
 
 function sec_key_to_pub(sec: string) {
 	if (sec.length !== 64) {
-		throw "Invalid sec length";
+		throw Error("Invalid sec length");
 	}
 	return bintohex(nacl.ge_scalarmult_base(hextobin(sec)));
 }
@@ -398,7 +398,7 @@ export function makeIntegratedAddressFromAddressAndShortPid(
 		nettype,
 	); // throws
 	if (!short_pid || short_pid.length != 16) {
-		throw "expected valid short_pid";
+		throw Error("expected valid short_pid");
 	}
 	const prefix = encode_varint(
 		nettype_utils.cryptonoteBase58PrefixForIntegratedAddressOn(nettype),
@@ -413,7 +413,7 @@ export function makeIntegratedAddressFromAddressAndShortPid(
 
 // Generate keypair from seed
 function generate_keys(seed: string): Key {
-	if (seed.length !== 64) throw "Invalid input length!";
+	if (seed.length !== 64) throw Error("Invalid input length!");
 	const sec = sc_reduce32(seed);
 	const pub = sec_key_to_pub(sec);
 	return {
@@ -476,7 +476,7 @@ export function decode_address(address: string, nettype: NetType) {
 		prefix !== expectedPrefixInt &&
 		prefix !== expectedPrefixSub
 	) {
-		throw "Invalid address prefix";
+		throw Error("Invalid address prefix");
 	}
 	dec = dec.slice(expectedPrefix.length);
 	const spend = dec.slice(0, 64);
@@ -502,7 +502,7 @@ export function decode_address(address: string, nettype: NetType) {
 		);
 	}
 	if (checksum !== expectedChecksum) {
-		throw "Invalid checksum";
+		throw Error("Invalid checksum");
 	}
 	if (intPaymentId) {
 		return {
@@ -546,7 +546,7 @@ export function hash_to_scalar(buf: string) {
 
 export function generate_key_derivation(pub: string, sec: string) {
 	if (pub.length !== 64 || sec.length !== 64) {
-		throw "Invalid input length";
+		throw Error("Invalid input length");
 	}
 	const P = ge_scalarmult(pub, sec);
 	return ge_scalarmult(P, d2s("8")); //mul8 to ensure group
@@ -555,12 +555,12 @@ export function generate_key_derivation(pub: string, sec: string) {
 export function derivation_to_scalar(derivation: string, output_index: number) {
 	let buf = "";
 	if (derivation.length !== STRUCT_SIZES.EC_POINT * 2) {
-		throw "Invalid derivation length!";
+		throw Error("Invalid derivation length!");
 	}
 	buf += derivation;
 	const enc = encode_varint(output_index);
 	if (enc.length > 10 * 2) {
-		throw "output_index didn't fit in 64-bit varint";
+		throw Error("output_index didn't fit in 64-bit varint");
 	}
 	buf += enc;
 	return hash_to_scalar(buf);
@@ -568,7 +568,7 @@ export function derivation_to_scalar(derivation: string, output_index: number) {
 
 function derive_secret_key(derivation: string, out_index: number, sec: string) {
 	if (derivation.length !== 64 || sec.length !== 64) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	const scalar_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 	const scalar_b = hextobin(derivation_to_scalar(derivation, out_index));
@@ -598,7 +598,7 @@ export function derive_public_key(
 	pub: string,
 ) {
 	if (derivation.length !== 64 || pub.length !== 64) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	const s = derivation_to_scalar(derivation, out_index);
 	return bintohex(
@@ -613,7 +613,7 @@ export function derive_subaddress_public_key(
 	out_index: number,
 ) {
 	if (output_key.length !== 64 || derivation.length !== 64) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	const scalar = derivation_to_scalar(derivation, out_index);
 	const point = ge_scalarmult_base(scalar);
@@ -622,7 +622,7 @@ export function derive_subaddress_public_key(
 
 function hash_to_ec(key: string) {
 	if (key.length !== KEY_SIZE * 2) {
-		throw "Invalid input length";
+		throw Error("Invalid input length");
 	}
 	const h_m = CNCrypto._malloc(HASH_SIZE);
 	const point_m = CNCrypto._malloc(STRUCT_SIZES.GE_P2);
@@ -659,7 +659,7 @@ function hash_to_ec(key: string) {
 //returns a 32 byte point via "ge_p3_tobytes" rather than a 160 byte "p3", otherwise same as above;
 function hash_to_ec_2(key: string) {
 	if (key.length !== KEY_SIZE * 2) {
-		throw "Invalid input length";
+		throw Error("Invalid input length");
 	}
 	const h_m = CNCrypto._malloc(HASH_SIZE);
 	const point_m = CNCrypto._malloc(STRUCT_SIZES.GE_P2);
@@ -704,14 +704,14 @@ export const hashToPoint = hash_to_ec_2;
 
 export function generate_key_image_2(pub: string, sec: string) {
 	if (!pub || !sec || pub.length !== 64 || sec.length !== 64) {
-		throw "Invalid input length";
+		throw Error("Invalid input length");
 	}
 	const pub_m = CNCrypto._malloc(KEY_SIZE);
 	const sec_m = CNCrypto._malloc(KEY_SIZE);
 	CNCrypto.HEAPU8.set(hextobin(pub), pub_m);
 	CNCrypto.HEAPU8.set(hextobin(sec), sec_m);
 	if (CNCrypto.ccall("sc_check", "number", ["number"], [sec_m]) !== 0) {
-		throw "sc_check(sec) != 0";
+		throw Error("sc_check(sec) != 0");
 	}
 	const point_m = CNCrypto._malloc(STRUCT_SIZES.GE_P3);
 	const point2_m = CNCrypto._malloc(STRUCT_SIZES.GE_P2);
@@ -750,16 +750,16 @@ export function generate_key_image(
 	output_index: number,
 ) {
 	if (tx_pub.length !== 64) {
-		throw "Invalid tx_pub length";
+		throw Error("Invalid tx_pub length");
 	}
 	if (view_sec.length !== 64) {
-		throw "Invalid view_sec length";
+		throw Error("Invalid view_sec length");
 	}
 	if (spend_pub.length !== 64) {
-		throw "Invalid spend_pub length";
+		throw Error("Invalid spend_pub length");
 	}
 	if (spend_sec.length !== 64) {
-		throw "Invalid spend_sec length";
+		throw Error("Invalid spend_sec length");
 	}
 	const recv_derivation = generate_key_derivation(tx_pub, view_sec);
 	const ephemeral_pub = derive_public_key(
@@ -786,7 +786,7 @@ function generate_key_image_helper_rct(
 	enc_mask?: string | null,
 ) {
 	const recv_derivation = generate_key_derivation(tx_pub_key, keys.view.sec);
-	if (!recv_derivation) throw "Failed to generate key image";
+	if (!recv_derivation) throw Error("Failed to generate key image");
 	const mask = enc_mask
 		? sc_sub(
 				enc_mask,
@@ -800,7 +800,7 @@ function generate_key_image_helper_rct(
 		out_index,
 		keys.spend.pub,
 	);
-	if (!ephemeral_pub) throw "Failed to generate key image";
+	if (!ephemeral_pub) throw Error("Failed to generate key image");
 	const ephemeral_sec = derive_secret_key(
 		recv_derivation,
 		out_index,
@@ -821,7 +821,7 @@ function generate_key_image_helper_rct(
 //inverts X coordinate -- this seems correct ^_^ -luigi1111
 function ge_neg(point: string) {
 	if (point.length !== 64) {
-		throw "expected 64 char hex string";
+		throw Error("expected 64 char hex string");
 	}
 	return (
 		point.slice(0, 62) +
@@ -832,7 +832,7 @@ function ge_neg(point: string) {
 
 export function ge_add(p1: string, p2: string) {
 	if (p1.length !== 64 || p2.length !== 64) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	return bintohex(nacl.ge_add(hextobin(p1), hextobin(p2)));
 }
@@ -846,7 +846,7 @@ export function ge_sub(point1: string, point2: string) {
 //adds two scalars together
 function sc_add(scalar1: string, scalar2: string) {
 	if (scalar1.length !== 64 || scalar2.length !== 64) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	const scalar1_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 	const scalar2_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
@@ -872,7 +872,7 @@ function sc_add(scalar1: string, scalar2: string) {
 //subtracts one scalar from another
 function sc_sub(scalar1: string, scalar2: string) {
 	if (scalar1.length !== 64 || scalar2.length !== 64) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	const scalar1_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
 	const scalar2_m = CNCrypto._malloc(STRUCT_SIZES.EC_SCALAR);
@@ -905,7 +905,7 @@ function sc_mulsub(sigc: string, sec: string, k: string) {
 		!valid_hex(sigc) ||
 		!valid_hex(sec)
 	) {
-		throw "bad scalar";
+		throw Error("bad scalar");
 	}
 	const sec_m = CNCrypto._malloc(KEY_SIZE);
 	CNCrypto.HEAPU8.set(hextobin(sec), sec_m);
@@ -931,7 +931,7 @@ function sc_mulsub(sigc: string, sec: string, k: string) {
 
 function ge_double_scalarmult_base_vartime(c: string, P: string, r: string) {
 	if (c.length !== 64 || P.length !== 64 || r.length !== 64) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	return bintohex(
 		nacl.ge_double_scalarmult_base_vartime(
@@ -954,7 +954,7 @@ function ge_double_scalarmult_postcomp_vartime(
 		r.length !== 64 ||
 		I.length !== 64
 	) {
-		throw "Invalid input length!";
+		throw Error("Invalid input length!");
 	}
 	const Pb = hash_to_ec_2(P);
 	return bintohex(
@@ -1230,21 +1230,21 @@ export function MLSAG_Gen(
 
 	// secret index
 	if (index >= cols) {
-		throw "index out of range";
+		throw Error("index out of range");
 	}
 	const rows = pk[0].length; //number of signature rows (always 2)
 	// [pub, com] = 2
 	if (rows !== 2) {
-		throw "wrong row count";
+		throw Error("wrong row count");
 	}
 	// check all are len 2
 	for (i = 0; i < cols; i++) {
 		if (pk[i].length !== rows) {
-			throw "pk is not rectangular";
+			throw Error("pk is not rectangular");
 		}
 	}
 	if (xx.length !== rows) {
-		throw "bad xx size";
+		throw Error("bad xx size");
 	}
 
 	let c_old = "";
@@ -1386,7 +1386,7 @@ function proveRctMG(
 ) {
 	const cols = pubs.length;
 	if (cols < 3) {
-		throw "cols must be > 2 (mixin)";
+		throw Error("cols must be > 2 (mixin)");
 	}
 
 	const PK: string[][] = [];
@@ -1547,19 +1547,19 @@ export function genRct(
 	txnFee: string,
 ) {
 	if (outAmounts.length !== amountKeys.length) {
-		throw "different number of amounts/amount_keys";
+		throw Error("different number of amounts/amount_keys");
 	}
 	for (let i = 0; i < mixRing.length; i++) {
 		if (mixRing[i].length <= indices[i]) {
-			throw "bad mixRing/index size";
+			throw Error("bad mixRing/index size");
 		}
 	}
 	if (mixRing.length !== inSk.length) {
-		throw "mismatched mixRing/inSk";
+		throw Error("mismatched mixRing/inSk");
 	}
 
 	if (indices.length !== inSk.length) {
-		throw "mismatched indices/inSk";
+		throw Error("mismatched indices/inSk");
 	}
 
 	const rv: RCTSignatures = {
@@ -1910,7 +1910,7 @@ export function decodeRctSimple(rv: RCTSignatures, sk: string, i: number) {
 //end RCT functions
 
 function add_pub_key_to_extra(extra: string, pubkey: string) {
-	if (pubkey.length !== 64) throw "Invalid pubkey length";
+	if (pubkey.length !== 64) throw Error("Invalid pubkey length");
 	// Append pubkey tag and pubkey
 	extra += TX_EXTRA_TAGS.PUBKEY + pubkey;
 	return extra;
@@ -1919,12 +1919,14 @@ function add_pub_key_to_extra(extra: string, pubkey: string) {
 function add_nonce_to_extra(extra: string, nonce: string) {
 	// Append extra nonce
 	if (nonce.length % 2 !== 0) {
-		throw "Invalid extra nonce";
+		throw Error("Invalid extra nonce");
 	}
 	if (nonce.length / 2 > TX_EXTRA_NONCE_MAX_COUNT) {
-		throw "Extra nonce must be at most " +
-			TX_EXTRA_NONCE_MAX_COUNT +
-			" bytes";
+		throw Error(
+			"Extra nonce must be at most " +
+				TX_EXTRA_NONCE_MAX_COUNT +
+				" bytes",
+		);
 	}
 	// Add nonce tag
 	extra += TX_EXTRA_TAGS.NONCE;
@@ -1937,7 +1939,7 @@ function add_nonce_to_extra(extra: string, nonce: string) {
 
 function get_payment_id_nonce(payment_id: string, pid_encrypt: boolean) {
 	if (payment_id.length !== 64 && payment_id.length !== 16) {
-		throw "Invalid payment id";
+		throw Error("Invalid payment id");
 	}
 	let res = "";
 	if (pid_encrypt) {
@@ -1994,7 +1996,7 @@ export function serialize_tx(tx: SignedTransaction, headeronly?: boolean) {
 				buf += vin.k_image;
 				break;
 			default:
-				throw "Unhandled vin type: " + vin.type;
+				throw Error("Unhandled vin type: " + vin.type);
 		}
 	}
 	buf += encode_varint(tx.vout.length);
@@ -2007,17 +2009,17 @@ export function serialize_tx(tx: SignedTransaction, headeronly?: boolean) {
 				buf += vout.target.key;
 				break;
 			default:
-				throw "Unhandled txout target type: " + vout.target.type;
+				throw Error("Unhandled txout target type: " + vout.target.type);
 		}
 	}
 	if (!valid_hex(tx.extra)) {
-		throw "Tx extra has invalid hex";
+		throw Error("Tx extra has invalid hex");
 	}
 	buf += encode_varint(tx.extra.length / 2);
 	buf += tx.extra;
 	if (!headeronly) {
 		if (tx.vin.length !== tx.signatures.length) {
-			throw "Signatures length != vin length";
+			throw Error("Signatures length != vin length");
 		}
 		for (i = 0; i < tx.vin.length; i++) {
 			for (j = 0; j < tx.signatures[i].length; j++) {
@@ -2069,7 +2071,7 @@ function serialize_rct_base(rv: RCTSignatures) {
 		}
 	}
 	if (rv.ecdhInfo.length !== rv.outPk.length) {
-		throw "mismatched outPk/ecdhInfo!";
+		throw Error("mismatched outPk/ecdhInfo!");
 	}
 	for (let i = 0; i < rv.ecdhInfo.length; i++) {
 		buf += rv.ecdhInfo[i].mask;
@@ -2089,16 +2091,16 @@ function generate_ring_signature(
 	real_index: number,
 ) {
 	if (k_image.length !== STRUCT_SIZES.KEY_IMAGE * 2) {
-		throw "invalid key image length";
+		throw Error("invalid key image length");
 	}
 	if (sec.length !== KEY_SIZE * 2) {
-		throw "Invalid secret key length";
+		throw Error("Invalid secret key length");
 	}
 	if (prefix_hash.length !== HASH_SIZE * 2 || !valid_hex(prefix_hash)) {
-		throw "Invalid prefix hash";
+		throw Error("Invalid prefix hash");
 	}
 	if (real_index >= keys.length || real_index < 0) {
-		throw "real_index is invalid";
+		throw Error("real_index is invalid");
 	}
 	const _ge_tobytes = CNCrypto.cwrap("ge_tobytes", "void", [
 		"number",
@@ -2186,7 +2188,7 @@ function generate_ring_signature(
 	const sec_m = CNCrypto._malloc(KEY_SIZE);
 	CNCrypto.HEAPU8.set(hextobin(sec), sec_m);
 	if (_ge_frombytes_vartime(image_unp_m, image_m) != 0) {
-		throw "failed to call ge_frombytes_vartime";
+		throw Error("failed to call ge_frombytes_vartime");
 	}
 	_ge_dsm_precomp(image_pre_m, image_unp_m);
 	_sc_0(sum_m);
@@ -2213,7 +2215,7 @@ function generate_ring_signature(
 					[tmp3_m, pub_m],
 				) !== 0
 			) {
-				throw "Failed to call ge_frombytes_vartime";
+				throw Error("Failed to call ge_frombytes_vartime");
 			}
 			_ge_double_scalarmult_base_vartime(
 				tmp2_m,
@@ -2310,9 +2312,11 @@ function construct_tx(
 	let extra = "";
 	if (payment_id) {
 		if (pid_encrypt && payment_id.length !== INTEGRATED_ID_SIZE * 2) {
-			throw "payment ID must be " +
-				INTEGRATED_ID_SIZE +
-				" bytes to be encrypted!";
+			throw Error(
+				"payment ID must be " +
+					INTEGRATED_ID_SIZE +
+					" bytes to be encrypted!",
+			);
 		}
 		console.log("Adding payment id: " + payment_id);
 		if (pid_encrypt) {
@@ -2583,18 +2587,20 @@ export function create_transaction(
 	mix_outs = mix_outs || [];
 	let i, j;
 	if (dsts.length === 0) {
-		throw "Destinations empty";
+		throw Error("Destinations empty");
 	}
 	if (mix_outs.length !== outputs.length && fake_outputs_count !== 0) {
-		throw "Wrong number of mix outs provided (" +
-			outputs.length +
-			" outputs, " +
-			mix_outs.length +
-			" mix outs)";
+		throw Error(
+			"Wrong number of mix outs provided (" +
+				outputs.length +
+				" outputs, " +
+				mix_outs.length +
+				" mix outs)",
+		);
 	}
 	for (i = 0; i < mix_outs.length; i++) {
 		if ((mix_outs[i].outputs || []).length < fake_outputs_count) {
-			throw "Not enough outputs to mix with";
+			throw Error("Not enough outputs to mix with");
 		}
 	}
 	const keys: Keys = {
@@ -2615,13 +2621,13 @@ export function create_transaction(
 			keys.spend.sec,
 		)
 	) {
-		throw "Invalid secret keys!";
+		throw Error("Invalid secret keys!");
 	}
 	let needed_money = BigInt.ZERO;
 	for (i = 0; i < dsts.length; ++i) {
 		needed_money = needed_money.add(dsts[i].amount);
 		if (needed_money.compare(UINT64_MAX) !== -1) {
-			throw "Output overflow!";
+			throw Error("Output overflow!");
 		}
 	}
 	let found_money = BigInt.ZERO;
@@ -2630,7 +2636,7 @@ export function create_transaction(
 	for (i = 0; i < outputs.length; ++i) {
 		found_money = found_money.add(outputs[i].amount);
 		if (found_money.compare(UINT64_MAX) !== -1) {
-			throw "Input overflow!";
+			throw Error("Input overflow!");
 		}
 
 		const src: Source = {
@@ -2668,7 +2674,7 @@ export function create_transaction(
 						oe.commit = out.rct.slice(0, 64); //add commitment from rct mix outs
 					} else {
 						if (outputs[i].rct) {
-							throw "mix rct outs missing commit";
+							throw Error("mix rct outs missing commit");
 						}
 						oe.commit = zeroCommit(d2s(src.amount)); //create identity-masked commitment for non-rct mix input
 					}
@@ -2717,10 +2723,10 @@ export function create_transaction(
 	if (cmp < 0) {
 		change.amount = found_money.subtract(needed_money);
 		if (change.amount.compare(fee_amount) !== 0) {
-			throw "early fee calculation != later";
+			throw Error("early fee calculation != later");
 		}
 	} else if (cmp > 0) {
-		throw "Need more money than found! (have: " +
+		throw Error("Need more money than found! (have: ") +
 			formatMoney(found_money) +
 			" need: " +
 			formatMoney(needed_money) +

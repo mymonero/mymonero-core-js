@@ -110,7 +110,7 @@ export function clearKeyImageCache(address: string) {
 	const cache = keyImagesByWalletId[cacheId];
 
 	if (cache) {
-		throw "Key image cache still exists after deletion";
+		throw Error("Key image cache still exists after deletion");
 	}
 }
 
@@ -122,7 +122,7 @@ function parseAddress(address: string) {
 	// NOTE: making the assumption that public_address is unique enough to identify a wallet for caching....
 	// FIXME: with subaddresses, is that still the case? would we need to split them up by subaddr anyway?
 	if (!address) {
-		throw "Address does not exist";
+		throw Error("Address does not exist");
 	}
 
 	return address.toString();

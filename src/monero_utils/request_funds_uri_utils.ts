@@ -53,7 +53,7 @@ type FundRequestPayload = {
 export function encodeFundRequest(args: FundRequestPayload) {
 	const address = args.address;
 	if (!address) {
-		throw "missing address";
+		throw Error("missing address");
 	}
 
 	let mutable_uri = config.coinUriPrefix;
@@ -64,7 +64,7 @@ export function encodeFundRequest(args: FundRequestPayload) {
 	} else if (uriType === URITypes.addressAsFirstPathComponent) {
 		// nothing to do
 	} else {
-		throw "Illegal args.uriType";
+		throw Error("Illegal args.uriType");
 	}
 
 	mutable_uri += address;
@@ -116,7 +116,7 @@ export function decodeFundRequest(
 	if (!str.startsWith(config.coinUriPrefix)) {
 		if (str.includes("?")) {
 			// fairly sure this is correct.. (just an extra failsafe/filter)
-			throw "Unrecognized URI format";
+			throw Error("Unrecognized URI format");
 		}
 
 		if (possibleOAAddress(str)) {
@@ -128,7 +128,7 @@ export function decodeFundRequest(
 		try {
 			decode_address(str, nettype);
 		} catch (e) {
-			throw "No Monero request info";
+			throw Error("No Monero request info");
 		}
 
 		// then it looks like a monero address
@@ -141,7 +141,7 @@ export function decodeFundRequest(
 
 	const protocol = url.protocol;
 	if (protocol !== config.coinUriPrefix) {
-		throw "Request URI has non-Monero protocol";
+		throw Error("Request URI has non-Monero protocol");
 	}
 
 	// it seems that if the URL has // in it, pathname will be empty, but host will contain the address instead
