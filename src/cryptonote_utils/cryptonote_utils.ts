@@ -328,7 +328,7 @@ export function rand_8() {
 	return randomBytes(8).toString("hex");
 }
 
-function encode_varint(input: number) {
+function encode_varint(input: number | string) {
 	let i = new BigInt(input);
 	let out = "";
 	// While i >= b10000000
@@ -1033,22 +1033,22 @@ export function genBorromean(
 	nrings: number,
 ) {
 	if (xv.length !== nrings) {
-		throw "wrong xv length " + xv.length;
+		throw Error("wrong xv length " + xv.length);
 	}
 	if (pm.length !== size) {
-		throw "wrong pm size " + pm.length;
+		throw Error("wrong pm size " + pm.length);
 	}
 	for (let i = 0; i < pm.length; i++) {
 		if (pm[i].length !== nrings) {
-			throw "wrong pm[" + i + "] length " + pm[i].length;
+			throw Error("wrong pm[" + i + "] length " + pm[i].length);
 		}
 	}
 	if (iv.length !== nrings) {
-		throw "wrong iv length " + iv.length;
+		throw Error("wrong iv length " + iv.length);
 	}
 	for (let i = 0; i < iv.length; i++) {
-		if (iv[i] >= size) {
-			throw "bad indices value at: " + i + ": " + iv[i];
+		if (+iv[i] >= size) {
+			throw Error("bad indices value at: " + i + ": " + iv[i]);
 		}
 	}
 	//signature struct
@@ -1093,7 +1093,7 @@ export function genBorromean(
 	let j: number;
 	for (let i = 0; i < nrings; i++) {
 		let cc = bb.ee;
-		for (j = 0; j < iv[i]; j++) {
+		for (j = 0; j < +iv[i]; j++) {
 			bb.s[j][i] = random_scalar();
 			const LL = ge_double_scalarmult_base_vartime(
 				cc,
@@ -1172,13 +1172,15 @@ function proveRange(
 	//start at index and fill PM left and right -- PM[0] holds Ci
 	for (let i = 0; i < nrings; i++) {
 		ai[i] = random_scalar();
-		j = indices[i];
+
+		j = +indices[i];
 		PM[j][i] = ge_scalarmult_base(ai[i]);
 		while (j > 0) {
 			j--;
 			PM[j][i] = ge_add(PM[j + 1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
 		}
-		j = indices[i];
+
+		j = +indices[i];
 		while (j < size - 1) {
 			j++;
 			PM[j][i] = ge_sub(PM[j - 1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
@@ -1466,10 +1468,12 @@ function verRctMG(
 		throw Error("Empty pubs");
 	}
 	const rows = pubs[0].length;
+
 	if (rows < 1) {
 		throw Error("Empty pubs");
 	}
-	for (let i = 0; i < cols.length; ++i) {
+
+	for (let i = 0; i < cols; ++i) {
 		if (pubs[i].length !== rows) {
 			throw Error("Pubs is not rectangular");
 		}
@@ -1580,8 +1584,8 @@ export function genRct(
 	message: string,
 	inSk: SecretCommitment[],
 	kimg: string[],
-	inAmounts: BigInt[],
-	outAmounts: BigInt[],
+	inAmounts: (BigInt | string)[],
+	outAmounts: (BigInt | string)[],
 	mixRing: MixCommitment[][],
 	amountKeys: string[],
 	indices: number[],
@@ -1612,7 +1616,7 @@ export function genRct(
 			MGs: [],
 		},
 		ecdhInfo: [],
-		txnFee: txnFee.toString(),
+		txnFee,
 		pseudoOuts: [],
 	};
 
@@ -1641,7 +1645,7 @@ export function genRct(
 	//simple
 	if (rv.type === 2) {
 		if (inAmounts.length !== inSk.length) {
-			throw "mismatched inAmounts/inSk";
+			throw Error("mismatched inAmounts/inSk");
 		}
 
 		const ai = [];
@@ -1998,12 +2002,12 @@ function abs_to_rel_offsets(offsets: string[]) {
 	return offsets;
 }
 
-function get_tx_prefix_hash(tx) {
+function get_tx_prefix_hash(tx: SignedTransaction) {
 	const prefix = serialize_tx(tx, true);
 	return cn_fast_hash(prefix);
 }
 
-function get_tx_hash(tx) {
+function get_tx_hash(tx: SignedTransaction) {
 	if (typeof tx === "string") {
 		return cn_fast_hash(tx);
 	} else {
@@ -2011,7 +2015,7 @@ function get_tx_hash(tx) {
 	}
 }
 
-export function serialize_tx(tx, headeronly?: boolean) {
+export function serialize_tx(tx: SignedTransaction, headeronly?: boolean) {
 	//tx: {
 	//	version: uint64,
 	//	unlock_time: uint64,
@@ -2020,6 +2024,10 @@ export function serialize_tx(tx, headeronly?: boolean) {
 	//	vout: [{amount: uint64, target: {key: hex}},...],
 	//	signatures: [[s,s,...],...]
 	//}
+
+	if (!tx.signatures) {
+		throw Error("This transaction does not contain pre rct signatures");
+	}
 
 	let buf = "";
 	buf += encode_varint(tx.version);
@@ -2073,7 +2081,12 @@ export function serialize_tx(tx, headeronly?: boolean) {
 	return buf;
 }
 
-export function serialize_rct_tx_with_hash(tx) {
+// RCT only
+export function serialize_rct_tx_with_hash(tx: SignedTransaction) {
+	if (!tx.rct_signatures) {
+		throw Error("This transaction does not contain rct_signatures");
+	}
+
 	let hashes = "";
 	let buf = "";
 	buf += serialize_tx(tx, true);
@@ -2099,7 +2112,7 @@ export function serialize_rct_tx_with_hash(tx) {
 	};
 }
 
-function serialize_rct_base(rv) {
+function serialize_rct_base(rv: RCTSignatures) {
 	let buf = "";
 	buf += encode_varint(rv.type);
 	buf += encode_varint(rv.txnFee);
@@ -2121,7 +2134,13 @@ function serialize_rct_base(rv) {
 	return buf;
 }
 
-function generate_ring_signature(prefix_hash, k_image, keys, sec, real_index) {
+function generate_ring_signature(
+	prefix_hash: string,
+	k_image: string,
+	keys: string[],
+	sec: string,
+	real_index: number,
+) {
 	if (k_image.length !== STRUCT_SIZES.KEY_IMAGE * 2) {
 		throw "invalid key image length";
 	}
@@ -2301,6 +2320,31 @@ function generate_ring_signature(prefix_hash, k_image, keys, sec, real_index) {
 	return sigs;
 }
 
+interface TransactionInput {
+	type: string;
+	amount: string;
+	k_image: string;
+	key_offsets: string[];
+}
+
+interface TransactionOutput {
+	amount: string;
+	target: {
+		type: string;
+		key: string;
+	};
+}
+
+export interface SignedTransaction {
+	unlock_time: number;
+	version: number;
+	extra: string;
+	vin: TransactionInput[];
+	vout: TransactionOutput[];
+	rct_signatures?: RCTSignatures;
+	signatures?: string[][];
+}
+
 function construct_tx(
 	keys: Keys,
 	sources: Source[],
@@ -2337,25 +2381,23 @@ function construct_tx(
 		console.log("Extra nonce: " + nonce);
 		extra = add_nonce_to_extra(extra, nonce);
 	}
-	const tx = {
-		unlock_time: unlock_time,
+
+	const tx: SignedTransaction = {
+		unlock_time,
 		version: rct ? CURRENT_TX_VERSION : OLD_TX_VERSION,
-		extra: extra,
+		extra,
 		vin: [],
 		vout: [],
+		rct_signatures: undefined,
+		signatures: undefined,
 	};
-	if (rct) {
-		tx.rct_signatures = {};
-	} else {
-		tx.signatures = [];
-	}
 
 	const inputs_money = sources.reduce<BigInt>(
 		(totalAmount, { amount }) => totalAmount.add(amount),
 		BigInt.ZERO,
 	);
 
-	let i, j;
+	let i;
 	console.log("Sources: ");
 
 	//run the for loop twice to sort ins by key image
@@ -2411,75 +2453,90 @@ function construct_tx(
 
 	tx.vin = vin;
 
-	let outputs_money = BigInt.ZERO;
-	let out_index = 0;
-	const amountKeys = []; //rct only
-	for (i = 0; i < dsts.length; ++i) {
-		if (new BigInt(dsts[i].amount).compare(0) < 0) {
-			throw "dst.amount < 0"; //amount can be zero if no change
+	const dstsWithKeys = dsts.map(d => {
+		if (d.amount.compare(0) < 0) {
+			throw Error("dst.amount < 0"); //amount can be zero if no change
 		}
-		dsts[i].keys = decode_address(dsts[i].address, nettype);
+		const keys = decode_address(d.address, nettype);
+		return { ...d, keys };
+	});
 
-		// R = rD for subaddresses
-		if (is_subaddress(dsts[i].address, nettype)) {
-			if (typeof payment_id !== "undefined" && payment_id) {
-				// this could stand to be placed earlier in the function but we save repeating a little algo time this way
-				throw "Payment ID must not be supplied when sending to a subaddress";
-			}
-			txkey.pub = ge_scalarmult(dsts[i].keys.spend, txkey.sec);
-		}
+	const outputs_money = dstsWithKeys.reduce<BigInt>(
+		(outputs_money, { amount }) => outputs_money.add(amount),
+		BigInt.ZERO,
+	);
 
-		let out_derivation;
-
-		// send change to ourselves
-		if (dsts[i].keys.view == keys.view.pub) {
-			out_derivation = generate_key_derivation(txkey.pub, keys.view.sec);
-		} else {
-			out_derivation = generate_key_derivation(
-				dsts[i].keys.view,
-				txkey.sec,
-			);
-		}
-
-		if (rct) {
-			amountKeys.push(derivation_to_scalar(out_derivation, out_index));
-		}
-		const out_ephemeral_pub = derive_public_key(
-			out_derivation,
-			out_index,
-			dsts[i].keys.spend,
-		);
-		const out = {
-			amount: dsts[i].amount.toString(),
-		};
-		// txout_to_key
-		out.target = {
-			type: "txout_to_key",
-			key: out_ephemeral_pub,
-		};
-		tx.vout.push(out);
-		++out_index;
-		outputs_money = outputs_money.add(dsts[i].amount);
+	interface Ret {
+		amountKeys: string[];
+		vout: TransactionOutput[];
 	}
+
+	const ret: Ret = { amountKeys: [], vout: [] };
+	//amountKeys is rct only
+	const { amountKeys, vout } = dstsWithKeys.reduce<Ret>(
+		({ amountKeys, vout }, dstWKey, out_index) => {
+			// R = rD for subaddresses
+			if (is_subaddress(dstWKey.address, nettype)) {
+				if (payment_id) {
+					// this could stand to be placed earlier in the function but we save repeating a little algo time this way
+					throw Error(
+						"Payment ID must not be supplied when sending to a subaddress",
+					);
+				}
+				txkey.pub = ge_scalarmult(dstWKey.keys.spend, txkey.sec);
+			}
+			// send change to ourselves
+			const out_derivation =
+				dstWKey.keys.view === keys.view.pub
+					? generate_key_derivation(txkey.pub, keys.view.sec)
+					: generate_key_derivation(dstWKey.keys.view, txkey.sec);
+
+			const out_ephemeral_pub = derive_public_key(
+				out_derivation,
+				out_index,
+				dstWKey.keys.spend,
+			);
+
+			const out = {
+				amount: dstWKey.amount.toString(),
+				// txout_to_key
+				target: {
+					type: "txout_to_key",
+					key: out_ephemeral_pub,
+				},
+			};
+
+			const nextAmountKeys = rct
+				? [
+						...amountKeys,
+						derivation_to_scalar(out_derivation, out_index),
+				  ]
+				: amountKeys;
+			const nextVout = [...vout, out];
+			const nextVal: Ret = { amountKeys: nextAmountKeys, vout: nextVout };
+			return nextVal;
+		},
+		ret,
+	);
+
+	tx.vout = vout;
 
 	// add pub key to extra after we know whether to use R = rG or R = rD
 	tx.extra = add_pub_key_to_extra(tx.extra, txkey.pub);
 
 	if (outputs_money.add(fee_amount).compare(inputs_money) > 0) {
-		throw "outputs money (" +
-			formatMoneyFull(outputs_money) +
-			") + fee (" +
-			formatMoneyFull(fee_amount) +
-			") > inputs money (" +
-			formatMoneyFull(inputs_money) +
-			")";
+		throw Error(
+			`outputs money:${formatMoneyFull(
+				outputs_money,
+			)} + fee:${formatMoneyFull(
+				fee_amount,
+			)} > inputs money:${formatMoneyFull(inputs_money)}`,
+		);
 	}
+
 	if (!rct) {
-		for (i = 0; i < sourcesWithKeyImgAndKeys.length; ++i) {
-			const src_keys = [];
-			for (j = 0; j < sourcesWithKeyImgAndKeys[i].outputs.length; ++j) {
-				src_keys.push(sourcesWithKeyImgAndKeys[i].outputs[j].key);
-			}
+		const signatures = sourcesWithKeyImgAndKeys.map((src, i) => {
+			const src_keys = src.outputs.map(s => s.key);
 			const sigs = generate_ring_signature(
 				get_tx_prefix_hash(tx),
 				tx.vin[i].k_image,
@@ -2487,36 +2544,38 @@ function construct_tx(
 				in_contexts[i].sec,
 				sourcesWithKeyImgAndKeys[i].real_out,
 			);
-			tx.signatures.push(sigs);
-		}
+			return sigs;
+		});
+		tx.signatures = signatures;
 	} else {
 		//rct
-		const txnFee = fee_amount;
-		const keyimages = [];
-		const inSk = [];
-		const inAmounts = [];
+		const keyimages: string[] = [];
+		const inSk: SecretCommitment[] = [];
+		const inAmounts: string[] = [];
 		const mixRing: MixCommitment[][] = [];
-		const indices = [];
-		for (i = 0; i < tx.vin.length; i++) {
-			keyimages.push(tx.vin[i].k_image);
+		const indices: number[] = [];
+
+		tx.vin.forEach((input, i) => {
+			keyimages.push(input.k_image);
 			inSk.push({
 				x: in_contexts[i].sec,
 				a: in_contexts[i].mask,
 			});
-			inAmounts.push(tx.vin[i].amount);
+			inAmounts.push(input.amount);
+
 			if (in_contexts[i].mask !== I) {
 				//if input is rct (has a valid mask), 0 out amount
-				tx.vin[i].amount = "0";
+				input.amount = "0";
 			}
-			mixRing[i] = [];
-			for (j = 0; j < sourcesWithKeyImgAndKeys[i].outputs.length; j++) {
-				mixRing[i].push({
-					dest: sourcesWithKeyImgAndKeys[i].outputs[j].key,
-					mask: sourcesWithKeyImgAndKeys[i].outputs[j].commit,
-				});
-			}
-			indices.push(sources[i].real_out);
-		}
+
+			mixRing[i] = sourcesWithKeyImgAndKeys[i].outputs.map(o => ({
+				dest: o.key,
+				mask: o.commit,
+			}));
+
+			indices.push(sourcesWithKeyImgAndKeys[i].real_out);
+		});
+
 		const outAmounts = [];
 		for (i = 0; i < tx.vout.length; i++) {
 			outAmounts.push(tx.vout[i].amount);
@@ -2532,7 +2591,7 @@ function construct_tx(
 			mixRing,
 			amountKeys,
 			indices,
-			txnFee,
+			fee_amount.toString(),
 		);
 	}
 	console.log(tx);
@@ -2698,11 +2757,8 @@ export function create_transaction(
 		src.real_out = real_index;
 		src.real_out_in_tx = outputs[i].index;
 		if (rct) {
-			if (outputs[i].rct) {
-				src.mask = outputs[i].rct.slice(64, 128); //encrypted
-			} else {
-				src.mask = null; //will be set by generate_key_image_helper_rct
-			}
+			// if rct, slice encrypted, otherwise will be set by generate_key_image_helper_rct
+			src.mask = outputs[i].rct ? outputs[i].rct.slice(64, 128) : null;
 		}
 		sources.push(src);
 	}

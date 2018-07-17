@@ -20,6 +20,7 @@ import {
 	serialize_tx,
 	cn_fast_hash,
 	serialize_rct_tx_with_hash,
+	SignedTransaction,
 } from "cryptonote_utils";
 import { decompose_tx_destinations } from "cryptonote_utils/formatters";
 
@@ -364,7 +365,7 @@ function makeSignedTx(params: ConstructTxParams) {
 	}
 }
 
-function getSerializedTxAndHash(signedTx) {
+function getSerializedTxAndHash(signedTx: SignedTransaction) {
 	type ReturnVal = {
 		serializedSignedTx: string;
 		txHash: string;

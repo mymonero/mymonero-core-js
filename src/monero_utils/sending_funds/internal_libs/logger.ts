@@ -7,6 +7,7 @@ import {
 	formatMoneyFull,
 	printDsts,
 } from "cryptonote_utils/formatters";
+import { SignedTransaction } from "cryptonote_utils";
 
 export namespace Log {
 	export namespace Amount {
@@ -155,7 +156,7 @@ export namespace Log {
 	}
 
 	export namespace Transaction {
-		export function signed(signedTx) {
+		export function signed(signedTx: SignedTransaction) {
 			console.log("signed tx: ", JSON.stringify(signedTx));
 		}
 		export function serializedAndHash(
