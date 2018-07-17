@@ -430,7 +430,7 @@ function new__int_addr_from_addr_and_short_pid(
 }
 
 // Generate keypair from seed
-function generate_keys(seed: string) {
+function generate_keys(seed: string): Key {
 	if (seed.length !== 64) throw "Invalid input length!";
 	const sec = sc_reduce32(seed);
 	const pub = sec_key_to_pub(sec);
@@ -452,8 +452,17 @@ export function random_scalar() {
 // alias
 export const skGen = random_scalar;
 
-export function create_address(seed: string, nettype: NetType) {
-	const keys = {};
+interface Key {
+	pub: string;
+	sec: string;
+}
+interface Account {
+	spend: Key;
+	view: Key;
+	public_addr: string;
+}
+
+export function create_address(seed: string, nettype: NetType): Account {
 	// updated by Luigi and PS to support reduced and non-reduced seeds
 	let first;
 	if (seed.length !== 64) {
@@ -461,15 +470,11 @@ export function create_address(seed: string, nettype: NetType) {
 	} else {
 		first = sc_reduce32(seed);
 	}
-	keys.spend = generate_keys(first);
+	const spend = generate_keys(first);
 	const second = cn_fast_hash(first);
-	keys.view = generate_keys(second);
-	keys.public_addr = pubkeys_to_string(
-		keys.spend.pub,
-		keys.view.pub,
-		nettype,
-	);
-	return keys;
+	const view = generate_keys(second);
+	const public_addr = pubkeys_to_string(spend.pub, view.pub, nettype);
+	return { spend, view, public_addr };
 }
 
 function create_addr_prefix(seed: string, nettype: NetType) {
@@ -807,10 +812,10 @@ export function generate_key_image(
 }
 
 function generate_key_image_helper_rct(
-	keys,
+	keys: Keys,
 	tx_pub_key: string,
 	out_index: number,
-	enc_mask: string,
+	enc_mask?: string | null,
 ) {
 	const recv_derivation = generate_key_derivation(tx_pub_key, keys.view.sec);
 	if (!recv_derivation) throw "Failed to generate key image";
@@ -833,14 +838,14 @@ function generate_key_image_helper_rct(
 		out_index,
 		keys.spend.sec,
 	);
-	const image = generate_key_image_2(ephemeral_pub, ephemeral_sec);
+	const key_image = generate_key_image_2(ephemeral_pub, ephemeral_sec);
 	return {
 		in_ephemeral: {
 			pub: ephemeral_pub,
 			sec: ephemeral_sec,
 			mask: mask,
 		},
-		image: image,
+		key_image,
 	};
 }
 
@@ -1985,7 +1990,7 @@ function get_payment_id_nonce(payment_id: string, pid_encrypt: boolean) {
 	return res;
 }
 
-function abs_to_rel_offsets(offsets) {
+function abs_to_rel_offsets(offsets: string[]) {
 	if (offsets.length === 0) return offsets;
 	for (let i = offsets.length - 1; i >= 1; --i) {
 		offsets[i] = new BigInt(offsets[i]).subtract(offsets[i - 1]).toString();
@@ -2297,16 +2302,16 @@ function generate_ring_signature(prefix_hash, k_image, keys, sec, real_index) {
 }
 
 function construct_tx(
-	keys,
-	sources,
-	dsts,
-	fee_amount,
-	payment_id,
-	pid_encrypt,
-	realDestViewKey,
-	unlock_time,
-	rct,
-	nettype,
+	keys: Keys,
+	sources: Source[],
+	dsts: ParsedTarget[],
+	fee_amount: BigInt,
+	payment_id: string | null,
+	pid_encrypt: boolean,
+	realDestViewKey: string | undefined,
+	unlock_time: number,
+	rct: boolean,
+	nettype: NetType,
 ) {
 	//we move payment ID stuff here, because we need txkey to encrypt
 	const txkey = random_keypair();
@@ -2345,54 +2350,67 @@ function construct_tx(
 		tx.signatures = [];
 	}
 
-	const in_contexts = [];
-	let inputs_money = BigInt.ZERO;
+	const inputs_money = sources.reduce<BigInt>(
+		(totalAmount, { amount }) => totalAmount.add(amount),
+		BigInt.ZERO,
+	);
+
 	let i, j;
 	console.log("Sources: ");
+
 	//run the for loop twice to sort ins by key image
 	//first generate key image and other construction data to sort it all in one go
-	for (i = 0; i < sources.length; i++) {
-		console.log(i + ": " + formatMoneyFull(sources[i].amount));
-		if (sources[i].real_out >= sources[i].outputs.length) {
-			throw "real index >= outputs.length";
+	const sourcesWithKeyImgAndKeys = sources.map((source, idx) => {
+		console.log(idx + ": " + formatMoneyFull(source.amount));
+		if (source.real_out >= source.outputs.length) {
+			throw Error("real index >= outputs.length");
 		}
-		const res = generate_key_image_helper_rct(
+		const { key_image, in_ephemeral } = generate_key_image_helper_rct(
 			keys,
-			sources[i].real_out_tx_key,
-			sources[i].real_out_in_tx,
-			sources[i].mask,
+			source.real_out_tx_key,
+			source.real_out_in_tx,
+			source.mask,
 		); //mask will be undefined for non-rct
-		if (
-			res.in_ephemeral.pub !== sources[i].outputs[sources[i].real_out].key
-		) {
-			throw "in_ephemeral.pub != source.real_out.key";
+
+		if (in_ephemeral.pub !== source.outputs[source.real_out].key) {
+			throw Error("in_ephemeral.pub != source.real_out.key");
 		}
-		sources[i].key_image = res.image;
-		sources[i].in_ephemeral = res.in_ephemeral;
-	}
+
+		return {
+			...source,
+			key_image,
+			in_ephemeral,
+		};
+	});
+
 	//sort ins
-	sources.sort((a, b) => {
+	sourcesWithKeyImgAndKeys.sort((a, b) => {
 		return (
 			BigInt.parse(a.key_image, 16).compare(
 				BigInt.parse(b.key_image, 16),
 			) * -1
 		);
 	});
-	//copy the sorted sources data to tx
-	for (i = 0; i < sources.length; i++) {
-		inputs_money = inputs_money.add(sources[i].amount);
-		in_contexts.push(sources[i].in_ephemeral);
-		const input_to_key = {};
-		input_to_key.type = "input_to_key";
-		input_to_key.amount = sources[i].amount;
-		input_to_key.k_image = sources[i].key_image;
-		input_to_key.key_offsets = [];
-		for (j = 0; j < sources[i].outputs.length; ++j) {
-			input_to_key.key_offsets.push(sources[i].outputs[j].index);
-		}
+
+	const in_contexts = sourcesWithKeyImgAndKeys.map(
+		source => source.in_ephemeral,
+	);
+
+	//copy the sorted sourcesWithKeyImgAndKeys data to tx
+	const vin = sourcesWithKeyImgAndKeys.map(source => {
+		const input_to_key = {
+			type: "input_to_key",
+			amount: source.amount,
+			k_image: source.key_image,
+			key_offsets: source.outputs.map(s => s.index),
+		};
+
 		input_to_key.key_offsets = abs_to_rel_offsets(input_to_key.key_offsets);
-		tx.vin.push(input_to_key);
-	}
+		return input_to_key;
+	});
+
+	tx.vin = vin;
+
 	let outputs_money = BigInt.ZERO;
 	let out_index = 0;
 	const amountKeys = []; //rct only
@@ -2457,17 +2475,17 @@ function construct_tx(
 			")";
 	}
 	if (!rct) {
-		for (i = 0; i < sources.length; ++i) {
+		for (i = 0; i < sourcesWithKeyImgAndKeys.length; ++i) {
 			const src_keys = [];
-			for (j = 0; j < sources[i].outputs.length; ++j) {
-				src_keys.push(sources[i].outputs[j].key);
+			for (j = 0; j < sourcesWithKeyImgAndKeys[i].outputs.length; ++j) {
+				src_keys.push(sourcesWithKeyImgAndKeys[i].outputs[j].key);
 			}
 			const sigs = generate_ring_signature(
 				get_tx_prefix_hash(tx),
 				tx.vin[i].k_image,
 				src_keys,
 				in_contexts[i].sec,
-				sources[i].real_out,
+				sourcesWithKeyImgAndKeys[i].real_out,
 			);
 			tx.signatures.push(sigs);
 		}
@@ -2491,10 +2509,10 @@ function construct_tx(
 				tx.vin[i].amount = "0";
 			}
 			mixRing[i] = [];
-			for (j = 0; j < sources[i].outputs.length; j++) {
+			for (j = 0; j < sourcesWithKeyImgAndKeys[i].outputs.length; j++) {
 				mixRing[i].push({
-					dest: sources[i].outputs[j].key,
-					mask: sources[i].outputs[j].commit,
+					dest: sourcesWithKeyImgAndKeys[i].outputs[j].key,
+					mask: sourcesWithKeyImgAndKeys[i].outputs[j].commit,
 				});
 			}
 			indices.push(sources[i].real_out);
@@ -2521,6 +2539,25 @@ function construct_tx(
 	return tx;
 }
 
+interface Keys {
+	view: Key;
+	spend: Key;
+}
+
+interface SourceOutput {
+	index: string;
+	key: string;
+	commit?: string;
+}
+
+interface Source {
+	amount: string;
+	outputs: SourceOutput[];
+	real_out_tx_key: string;
+	real_out: number;
+	real_out_in_tx: number;
+	mask?: string | null;
+}
 export function create_transaction(
 	pub_keys: ViewSendKeys,
 	sec_keys: ViewSendKeys,
@@ -2554,7 +2591,7 @@ export function create_transaction(
 			throw "Not enough outputs to mix with";
 		}
 	}
-	const keys = {
+	const keys: Keys = {
 		view: {
 			pub: pub_keys.view,
 			sec: sec_keys.view,
@@ -2589,10 +2626,15 @@ export function create_transaction(
 		if (found_money.compare(UINT64_MAX) !== -1) {
 			throw "Input overflow!";
 		}
-		const src = {
+
+		const src: Source = {
+			amount: outputs[i].amount,
 			outputs: [],
+			real_out: 0,
+			real_out_in_tx: 0,
+			real_out_tx_key: "",
 		};
-		src.amount = new BigInt(outputs[i].amount).toString();
+
 		if (mix_outs.length !== 0) {
 			// Sort fake outputs by global index
 			mix_outs[i].outputs.sort(function(a, b) {
@@ -2604,14 +2646,17 @@ export function create_transaction(
 				j < mix_outs[i].outputs.length
 			) {
 				const out = mix_outs[i].outputs[j];
-				if (out.global_index === outputs[i].global_index) {
+				if (+out.global_index === outputs[i].global_index) {
 					console.log("got mixin the same as output, skipping");
 					j++;
 					continue;
 				}
-				const oe = {};
-				oe.index = out.global_index.toString();
-				oe.key = out.public_key;
+
+				const oe: SourceOutput = {
+					index: out.global_index.toString(),
+					key: out.public_key,
+				};
+
 				if (rct) {
 					if (out.rct) {
 						oe.commit = out.rct.slice(0, 64); //add commitment from rct mix outs
@@ -2626,9 +2671,11 @@ export function create_transaction(
 				j++;
 			}
 		}
-		const real_oe = {};
-		real_oe.index = new BigInt(outputs[i].global_index || 0).toString();
-		real_oe.key = outputs[i].public_key;
+		const real_oe: SourceOutput = {
+			index: outputs[i].global_index.toString(),
+			key: outputs[i].public_key,
+		};
+
 		if (rct) {
 			if (outputs[i].rct) {
 				real_oe.commit = outputs[i].rct.slice(0, 64); //add commitment for real input
@@ -2636,7 +2683,8 @@ export function create_transaction(
 				real_oe.commit = zeroCommit(d2s(src.amount)); //create identity-masked commitment for non-rct input
 			}
 		}
-		const real_index = src.outputs.length;
+
+		let real_index = src.outputs.length;
 		for (j = 0; j < src.outputs.length; j++) {
 			if (new BigInt(real_oe.index).compare(src.outputs[j].index) < 0) {
 				real_index = j;

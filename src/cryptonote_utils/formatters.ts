@@ -1,7 +1,7 @@
 import { config } from "monero_utils/monero_config";
 import { BigInt } from "biginteger";
 
-export function formatMoneyFull(units: BigInt) {
+export function formatMoneyFull(units: BigInt | string) {
 	let strUnits = units.toString();
 	const symbol = strUnits[0] === "-" ? "-" : "";
 	if (symbol === "-") {
@@ -24,11 +24,11 @@ export function formatMoneyFull(units: BigInt) {
 	);
 }
 
-export function formatMoneyFullSymbol(units: BigInt) {
+export function formatMoneyFullSymbol(units: BigInt | string) {
 	return formatMoneyFull(units) + " " + config.coinSymbol;
 }
 
-export function formatMoney(units: BigInt) {
+export function formatMoney(units: BigInt | string) {
 	const f = trimRight(formatMoneyFull(units), "0");
 	if (f[f.length - 1] === ".") {
 		return f.slice(0, f.length - 1);
@@ -36,7 +36,7 @@ export function formatMoney(units: BigInt) {
 	return f;
 }
 
-export function formatMoneySymbol(units: BigInt) {
+export function formatMoneySymbol(units: BigInt | string) {
 	return formatMoney(units) + " " + config.coinSymbol;
 }
 
