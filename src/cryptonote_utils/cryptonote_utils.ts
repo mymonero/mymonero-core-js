@@ -983,7 +983,7 @@ interface BorromeanSignature {
 export function genBorromean(
 	xv: string[],
 	pm: string[][],
-	iv: string,
+	iv: string[],
 	size: number,
 	nrings: number,
 ) {

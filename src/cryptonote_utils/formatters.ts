@@ -1,5 +1,6 @@
 import { config } from "monero_utils/monero_config";
 import { BigInt } from "biginteger";
+import { ParsedTarget } from "monero_utils/sending_funds/internal_libs/types";
 
 export function formatMoneyFull(units: BigInt | string) {
 	let strUnits = units.toString();
@@ -78,13 +79,13 @@ export function parseMoney(str: string) {
 		);
 }
 
-export function printDsts(dsts) {
+export function printDsts(dsts: ParsedTarget[]) {
 	for (let i = 0; i < dsts.length; i++) {
 		console.log(dsts[i].address + ": " + formatMoneyFull(dsts[i].amount));
 	}
 }
 
-export function decompose_tx_destinations(dsts, rct: boolean) {
+export function decompose_tx_destinations(dsts: ParsedTarget[], rct: boolean) {
 	const out = [];
 	if (rct) {
 		for (let i = 0; i < dsts.length; i++) {
@@ -123,19 +124,19 @@ export function padLeft(str: string, len: number, char: string) {
 	return str;
 }
 
-function decompose_amount_into_digits(amount) {
-	amount = amount.toString();
+function decompose_amount_into_digits(amount: BigInt) {
+	let amtStr = amount.toString();
 	const ret = [];
-	while (amount.length > 0) {
+	while (amtStr.length > 0) {
 		//check so we don't create 0s
-		if (amount[0] !== "0") {
-			let digit = amount[0];
-			while (digit.length < amount.length) {
+		if (amtStr[0] !== "0") {
+			let digit = amtStr[0];
+			while (digit.length < amtStr.length) {
 				digit += "0";
 			}
 			ret.push(new BigInt(digit));
 		}
-		amount = amount.slice(1);
+		amtStr = amtStr.slice(1);
 	}
 	return ret;
 }

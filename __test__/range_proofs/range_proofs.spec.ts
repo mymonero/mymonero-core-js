@@ -82,7 +82,7 @@ it("range_proofs", () => {
 		Z,
 		inSk,
 		kimg,
-		[[]],
+		[],
 		amounts,
 		mixRing,
 		amount_keys,
@@ -101,17 +101,7 @@ it("range_proofs", () => {
 
 	amounts[1] = new BigInt(12501);
 
-	s = genRct(
-		Z,
-		inSk,
-		kimg,
-		[[]],
-		amounts,
-		mixRing,
-		amount_keys,
-		[index],
-		"0",
-	);
+	s = genRct(Z, inSk, kimg, [], amounts, mixRing, amount_keys, [index], "0");
 
 	expect(verRct(s, true, mixRing, kimg[0])).toEqual(true);
 	expect(verRct(s, false, mixRing, kimg[0])).toEqual(false);
