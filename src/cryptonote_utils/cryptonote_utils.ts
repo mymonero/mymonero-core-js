@@ -1481,7 +1481,7 @@ function verRctMGSimple(
 	}
 }
 
-function verBulletProof() {
+function verBulletProof(..._: any[]) {
 	throw Error("verBulletProof is not implemented");
 }
 
@@ -1686,7 +1686,7 @@ export function verRct(
 				// might want to parallelize this like its done in the c++ codebase
 				// via some abstraction library to support browser + node
 				if (rv.p.rangeSigs.length === 0) {
-					results[i] = verBulletProof(rv.p.bulletproofs[i]);
+					results[i] = verBulletProof((rv.p as any).bulletproofs[i]);
 				} else {
 					// mask -> C if public
 					results[i] = verRange(rv.outPk[i], rv.p.rangeSigs[i]);
@@ -1757,7 +1757,7 @@ export function verRctSimple(
 				}
 				// originally the check is rv.p.pseudoOuts.length, but this'll throw
 				// until p.pseudoOuts is added as a property to the rv object
-				if (rv.p.pseudoOuts) {
+				if ((rv.p as any).pseudoOuts) {
 					throw Error("rv.p.pseudoOuts must be empty");
 				}
 			}
@@ -1775,7 +1775,10 @@ export function verRctSimple(
 		}
 
 		// if bulletproof, then use rv.p.pseudoOuts, otherwise use rv.pseudoOuts
-		const pseudoOuts = rv.type === 0x04 ? rv.p.pseudoOuts : rv.pseudoOuts;
+		const pseudoOuts =
+			(rv.type as number) === 0x04
+				? (rv.p as any).pseudoOuts
+				: rv.pseudoOuts;
 
 		if (semantics) {
 			let sumOutpks = identity();
@@ -1801,7 +1804,7 @@ export function verRctSimple(
 				// might want to parallelize this like its done in the c++ codebase
 				// via some abstraction library to support browser + node
 				if (rv.p.rangeSigs.length === 0) {
-					results[i] = verBulletProof(rv.p.bulletproofs[i]);
+					results[i] = verBulletProof((rv.p as any).bulletproofs[i]);
 				} else {
 					// mask -> C if public
 					results[i] = verRange(rv.outPk[i], rv.p.rangeSigs[i]);
