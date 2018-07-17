@@ -45,7 +45,7 @@ export function formatMoneySymbol(units: BigInt | string) {
  *
  * @param {string} str
  */
-export function parseMoney(str: string) {
+export function parseMoney(str: string): BigInt {
 	if (!str) return BigInt.ZERO;
 	const negative = str[0] === "-";
 	if (negative) {
@@ -54,9 +54,9 @@ export function parseMoney(str: string) {
 	const decimalIndex = str.indexOf(".");
 	if (decimalIndex == -1) {
 		if (negative) {
-			return BigInt.multiply(str, config.coinUnits).negate();
+			return config.coinUnits.multiply(str).negate();
 		}
-		return BigInt.multiply(str, config.coinUnits);
+		return config.coinUnits.multiply(str);
 	}
 	if (decimalIndex + config.coinUnitPlaces + 1 < str.length) {
 		str = str.substr(0, decimalIndex + config.coinUnitPlaces + 1);
@@ -68,7 +68,8 @@ export function parseMoney(str: string) {
 				new BigInt(str.substr(decimalIndex + 1)).exp10(
 					decimalIndex + config.coinUnitPlaces - str.length + 1,
 				),
-			).negate;
+			)
+			.negate();
 	}
 	return new BigInt(str.substr(0, decimalIndex))
 		.exp10(config.coinUnitPlaces)
@@ -107,9 +108,7 @@ export function decompose_tx_destinations(dsts: ParsedTarget[], rct: boolean) {
 			}
 		}
 	}
-	return out.sort(function(a, b) {
-		return a["amount"] - b["amount"];
-	});
+	return out.sort((a, b) => a.amount.subtract(b.amount).toJSValue());
 }
 
 function trimRight(str: string, char: string) {

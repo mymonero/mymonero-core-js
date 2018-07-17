@@ -42,7 +42,7 @@ export function parseTargets(
 		}
 
 		try {
-			const parsedAmount: BigInt = parseMoney(amountStr);
+			const parsedAmount = parseMoney(amountStr);
 			return { address, amount: parsedAmount };
 		} catch (e) {
 			throw ERR.PARSE_TRGT.amount(amountStr, e);
