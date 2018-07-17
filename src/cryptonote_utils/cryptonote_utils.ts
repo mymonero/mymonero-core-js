@@ -256,11 +256,6 @@ export function d2s(integer: string | BigInt) {
 	return swapEndian(d2h(integer));
 }
 
-//scalar to integer (string)
-function s2d(scalar: string) {
-	return BigInt.parse(swapEndian(scalar), 16).toString();
-}
-
 //convert integer string to 64bit "binary" little-endian string
 function d2b(integer: string | BigInt) {
 	let padding = "";
@@ -341,19 +336,6 @@ function encode_varint(input: number | string) {
 	return out;
 }
 
-function sc_reduce(hex: string) {
-	const input = hextobin(hex);
-	if (input.length !== 64) {
-		throw "Invalid input length";
-	}
-	const mem = CNCrypto._malloc(64);
-	CNCrypto.HEAPU8.set(input, mem);
-	CNCrypto.ccall("sc_reduce", "void", ["number"], [mem]);
-	const output = CNCrypto.HEAPU8.subarray(mem, mem + 64);
-	CNCrypto._free(mem);
-	return bintohex(output);
-}
-
 function sc_reduce32(hex: string) {
 	const input = hextobin(hex);
 	if (input.length !== 32) {
@@ -405,7 +387,7 @@ function pubkeys_to_string(spend: string, view: string, nettype: NetType) {
 	return cnBase58.encode(data + checksum.slice(0, ADDRESS_CHECKSUM_SIZE * 2));
 }
 
-function new__int_addr_from_addr_and_short_pid(
+export function makeIntegratedAddressFromAddressAndShortPid(
 	address: string,
 	short_pid: string,
 	nettype: NetType,
@@ -475,20 +457,6 @@ export function create_address(seed: string, nettype: NetType): Account {
 	const view = generate_keys(second);
 	const public_addr = pubkeys_to_string(spend.pub, view.pub, nettype);
 	return { spend, view, public_addr };
-}
-
-function create_addr_prefix(seed: string, nettype: NetType) {
-	let first;
-	if (seed.length !== 64) {
-		first = cn_fast_hash(seed);
-	} else {
-		first = seed;
-	}
-	const spend = generate_keys(first);
-	const prefix = encode_varint(
-		nettype_utils.cryptonoteBase58PrefixForStandardAddressOn(nettype),
-	);
-	return cnBase58.encode(prefix + spend.pub).slice(0, 44);
 }
 
 export function decode_address(address: string, nettype: NetType) {
@@ -925,19 +893,6 @@ function sc_sub(scalar1: string, scalar2: string) {
 	CNCrypto._free(scalar2_m);
 	CNCrypto._free(derived_m);
 	return bintohex(res);
-}
-
-//fun mul function
-function sc_mul(scalar1: string, scalar2: string) {
-	if (scalar1.length !== 64 || scalar2.length !== 64) {
-		throw "Invalid input length!";
-	}
-	return d2s(
-		new BigInt(s2d(scalar1))
-			.multiply(new BigInt(s2d(scalar2)))
-			.remainder(l)
-			.toString(),
-	);
 }
 
 //res = c - (ab) mod l; argument names copied from the signature implementation
@@ -2005,14 +1960,6 @@ function abs_to_rel_offsets(offsets: string[]) {
 function get_tx_prefix_hash(tx: SignedTransaction) {
 	const prefix = serialize_tx(tx, true);
 	return cn_fast_hash(prefix);
-}
-
-function get_tx_hash(tx: SignedTransaction) {
-	if (typeof tx === "string") {
-		return cn_fast_hash(tx);
-	} else {
-		return cn_fast_hash(serialize_tx(tx));
-	}
 }
 
 export function serialize_tx(tx: SignedTransaction, headeronly?: boolean) {
