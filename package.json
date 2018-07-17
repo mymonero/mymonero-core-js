@@ -8,6 +8,7 @@
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
   },
   "scripts": {
+    "build": "tsc",
     "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
     "test": "jest",
     "test:coverage": "jest --coverage"
@@ -38,7 +39,8 @@
   "devDependencies": {
     "jest": "^23.1.0",
     "ts-node": "^7.0.0",
-    "tsconfig-paths": "^3.4.2"
+    "tsconfig-paths": "^3.4.2",
+    "typescript": "^2.9.2"
   },
   "jest": {
     "testEnvironment": "node",
