@@ -2,7 +2,6 @@ import { ParsedTarget, RawTarget } from "./types";
 import { NetType } from "cryptonote_utils/nettype";
 import { ERR } from "./errors";
 import { possibleOAAddress } from "./open_alias_lite";
-import { BigInt } from "biginteger";
 import { decode_address } from "cryptonote_utils";
 import { parseMoney } from "cryptonote_utils/formatters";
 

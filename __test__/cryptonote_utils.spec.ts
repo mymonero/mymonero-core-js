@@ -26,7 +26,6 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import assert from "assert";
 import {
 	cn_fast_hash,
 	NetType,
@@ -49,21 +48,19 @@ const nettype = NetType.MAINNET;
 describe("cryptonote_utils tests", function() {
 	it("is valid hex", function() {
 		const valid = valid_hex(private_key);
-		assert.strictEqual(valid, true);
+		expect(valid).toEqual(true);
 	});
 
 	it("fast hash / keccak-256", function() {
 		const hash = cn_fast_hash(private_key);
-		assert.equal(
-			hash,
+		expect(hash).toEqual(
 			"64997ff54f0d82ee87d51e971a0329d4315481eaeb4ad2403c65d5843480c414",
 		);
 	});
 
 	it("generate key derivation", function() {
 		const derivation = generate_key_derivation(public_key, private_key);
-		assert.equal(
-			derivation,
+		expect(derivation).toEqual(
 			"591c749f1868c58f37ec3d2a9d2f08e7f98417ac4f8131e3a57c1fd71273ad00",
 		);
 	});
@@ -79,7 +76,7 @@ describe("cryptonote_utils tests", function() {
 			view:
 				"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
 		};
-		assert.deepEqual(decoded, expected);
+		expect(decoded).toEqual(expected);
 	});
 
 	it("decode mainnet integrated address", function() {
@@ -94,13 +91,12 @@ describe("cryptonote_utils tests", function() {
 				"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
 			intPaymentId: "83eab71fbee84eb9",
 		};
-		assert.deepEqual(decoded, expected);
+		expect(decoded).toEqual(expected);
 	});
 
 	it("hash_to_scalar", function() {
 		const scalar = hash_to_scalar(private_key);
-		assert.equal(
-			scalar,
+		expect(scalar).toEqual(
 			"77c5899835aa6f96b13827f43b094abf315481eaeb4ad2403c65d5843480c404",
 		);
 	});
@@ -108,8 +104,7 @@ describe("cryptonote_utils tests", function() {
 	it("derivation_to_scalar", function() {
 		const derivation = generate_key_derivation(public_key, private_key);
 		const scalar = derivation_to_scalar(derivation, 1);
-		assert.equal(
-			scalar,
+		expect(scalar).toEqual(
 			"201ce3c258e09eeb6132ec266d24ee1ca957828f384ce052d5bc217c2c55160d",
 		);
 	});
@@ -117,8 +112,7 @@ describe("cryptonote_utils tests", function() {
 	it("derive public key", function() {
 		const derivation = generate_key_derivation(public_key, private_key);
 		const output_key = derive_public_key(derivation, 1, public_key);
-		assert.equal(
-			output_key,
+		expect(output_key).toEqual(
 			"da26518ddb54cde24ccfc59f36df13bbe9bdfcb4ef1b223d9ab7bef0a50c8be3",
 		);
 	});
@@ -130,8 +124,7 @@ describe("cryptonote_utils tests", function() {
 			derivation,
 			1,
 		);
-		assert.equal(
-			subaddress_public_key,
+		expect(subaddress_public_key).toEqual(
 			"dfc9e4a0039e913204c1c0f78e954a7ec7ce291d8ffe88265632f0da9d8de1be",
 		);
 	});

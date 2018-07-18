@@ -45,43 +45,33 @@ const __STAGENET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 25;
 const __STAGENET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX = 36;
 
 export function cryptonoteBase58PrefixForStandardAddressOn(nettype: NetType) {
-	if (!nettype) {
-		console.warn("Unexpected nil nettype");
-	}
-
-	if (nettype == NetType.MAINNET) {
+	if (nettype === NetType.MAINNET) {
 		return __MAINNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == NetType.TESTNET) {
+	} else if (nettype === NetType.TESTNET) {
 		return __TESTNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == NetType.STAGENET) {
+	} else if (nettype === NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX;
 	}
 	throw Error("Illegal nettype");
 }
 
 export function cryptonoteBase58PrefixForIntegratedAddressOn(nettype: NetType) {
-	if (!nettype) {
-		console.warn("Unexpected nil nettype");
-	}
-	if (nettype == NetType.MAINNET) {
+	if (nettype === NetType.MAINNET) {
 		return __MAINNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == NetType.TESTNET) {
+	} else if (nettype === NetType.TESTNET) {
 		return __TESTNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX;
-	} else if (nettype == NetType.STAGENET) {
+	} else if (nettype === NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX;
 	}
 	throw Error("Illegal nettype");
 }
 
 export function cryptonoteBase58PrefixForSubAddressOn(nettype: NetType) {
-	if (!nettype) {
-		console.warn("Unexpected nil nettype");
-	}
-	if (nettype == NetType.MAINNET) {
+	if (nettype === NetType.MAINNET) {
 		return __MAINNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX;
-	} else if (nettype == NetType.TESTNET) {
+	} else if (nettype === NetType.TESTNET) {
 		return __TESTNET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX;
-	} else if (nettype == NetType.STAGENET) {
+	} else if (nettype === NetType.STAGENET) {
 		return __STAGENET_CRYPTONOTE_PUBLIC_SUBADDRESS_BASE58_PREFIX;
 	}
 	throw Error("Illegal nettype");

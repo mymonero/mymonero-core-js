@@ -355,7 +355,7 @@ export function cn_fast_hash(input: string) {
 	}
 
 	const hasher = new SHA3(256);
-	hasher.update(hextobin(input));
+	hasher.update(Buffer.from((hextobin(input).buffer as any) as Buffer));
 	return hasher.digest("hex");
 }
 
@@ -983,7 +983,7 @@ interface BorromeanSignature {
 export function genBorromean(
 	xv: string[],
 	pm: string[][],
-	iv: string[],
+	iv: string[] | string,
 	size: number,
 	nrings: number,
 ) {
@@ -1466,13 +1466,7 @@ function verRctMGSimple(
 	kimg: string,
 ) {
 	try {
-		const cols = pubs.length;
-		const M: string[][] = [];
-
-		for (let i = 0; i < cols; i++) {
-			M[i][0] = pubs[i].dest;
-			M[i][1] = ge_sub(pubs[i].mask, C);
-		}
+		const M: string[][] = pubs.map(pub => [pub.dest, ge_sub(pub.mask, C)]);
 
 		return MLSAG_ver(message, M, mg, kimg);
 	} catch (error) {
@@ -2323,6 +2317,9 @@ function construct_tx(
 		}
 		console.log("Adding payment id: " + payment_id);
 		if (pid_encrypt) {
+			if (!realDestViewKey) {
+				throw Error("RealDestViewKey not found");
+			}
 			//get the derivation from our passed viewkey, then hash that + tail to get encryption key
 			const pid_key = cn_fast_hash(
 				generate_key_derivation(realDestViewKey, txkey.sec) +
@@ -2522,10 +2519,15 @@ function construct_tx(
 				input.amount = "0";
 			}
 
-			mixRing[i] = sourcesWithKeyImgAndKeys[i].outputs.map(o => ({
-				dest: o.key,
-				mask: o.commit,
-			}));
+			mixRing[i] = sourcesWithKeyImgAndKeys[i].outputs.map(o => {
+				if (!o.commit) {
+					throw Error("Commit not found");
+				}
+				return {
+					dest: o.key,
+					mask: o.commit,
+				};
+			});
 
 			indices.push(sourcesWithKeyImgAndKeys[i].real_out);
 		});

@@ -123,7 +123,7 @@ export function parseAddressTransactions(
 		scanned_block_height: account_scanned_block_height,
 		scanned_height: account_scanned_height,
 		start_height: account_scan_start_height,
-		total_received,
+		/*total_received*/
 		transaction_height,
 		transactions,
 	} = normalizeAddressTransactions(data);

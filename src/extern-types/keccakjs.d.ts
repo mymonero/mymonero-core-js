@@ -2,6 +2,8 @@ declare module "keccakjs" {
 	type Message = Buffer | string;
 
 	class Hasher {
+		constructor(bitlength: number);
+
 		/**
 		 * Update hash
 		 *
@@ -12,7 +14,7 @@ declare module "keccakjs" {
 		/**
 		 * Return hash in integer array.
 		 */
-		digest(): number[];
+		digest(encoding?: "hex" | "binary"): string;
 	}
 
 	export = Hasher;
