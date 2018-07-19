@@ -27,7 +27,11 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { generate_parameters } from "./test_parameters";
-import { genBorromean, verifyBorromean } from "cryptonote_utils";
+import {
+	genBorromean,
+	verifyBorromean,
+} from "xmr-transaction/libs/ringct/components/prove_range/borromean";
+
 const { indi, P1v, P2v, xv, N } = generate_parameters();
 
 it("borromean_2", () => {

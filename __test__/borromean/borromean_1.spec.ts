@@ -1,5 +1,8 @@
 import { generate_parameters } from "./test_parameters";
-import { genBorromean, verifyBorromean } from "cryptonote_utils";
+import {
+	genBorromean,
+	verifyBorromean,
+} from "xmr-transaction/libs/ringct/components/prove_range/borromean";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //

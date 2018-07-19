@@ -1,12 +1,14 @@
+import { skGen } from "xmr-key-utils";
 import {
-	skGen,
 	ge_scalarmult_base,
-	identity,
 	ge_scalarmult,
-	hashToPoint,
+} from "xmr-crypto-ops/primitive_ops";
+import { identity } from "xmr-crypto-ops/constants";
+import { hashToPoint } from "xmr-crypto-ops/hash_ops";
+import {
 	MLSAG_Gen,
 	MLSAG_ver,
-} from "cryptonote_utils";
+} from "xmr-transaction/libs/ringct/components/prove_ringct_mg";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //
