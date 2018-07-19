@@ -1,5 +1,3 @@
-import { genBorromean, verifyBorromean } from "cryptonote_utils";
-
 // Copyright (c) 2014-2018, MyMonero.com
 //
 // All rights reserved.
@@ -28,6 +26,10 @@ import { genBorromean, verifyBorromean } from "cryptonote_utils";
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import {
+	genBorromean,
+	verifyBorromean,
+} from "xmr-transaction/libs/ringct/components/prove_range/borromean";
 import { generate_parameters } from "./test_parameters";
 const { indi, P1v, P2v, xv, N } = generate_parameters();
 

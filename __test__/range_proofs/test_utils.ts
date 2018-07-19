@@ -26,18 +26,16 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import { randomBytes } from "crypto";
-import {
-	random_keypair,
-	d2s,
-	ge_scalarmult,
-	ge_add,
-	H,
-} from "cryptonote_utils";
-import { SecretCommitment, MixCommitment } from "types";
+
+import { SecretCommitment, RingMember } from "xmr-types";
+import { random_keypair } from "xmr-key-utils";
+import { d2s } from "xmr-str-utils/integer-strings";
+import { ge_scalarmult, ge_add } from "xmr-crypto-ops/primitive_ops";
+import { H } from "xmr-crypto-ops/constants";
 
 //generates a <secret , public> / Pedersen commitment to the amount
 
-export function ctskpkGen(amount: number): [SecretCommitment, MixCommitment] {
+export function ctskpkGen(amount: number): [SecretCommitment, RingMember] {
 	let sk = { x: "", a: "" },
 		pk = { dest: "", mask: "" };
 	const key_pair1 = random_keypair();
@@ -72,11 +70,11 @@ export function getKeyFromBlockchain() {
 
 //	populateFromBlockchain creates a keymatrix with "mixin" + 1 columns and one of the columns is inPk
 //  the return values are the key matrix, and the index where inPk was put (random).
-export function populateFromBlockchain(inPk: MixCommitment[], mixin: number) {
+export function populateFromBlockchain(inPk: RingMember[], mixin: number) {
 	const rows = inPk.length;
 	const inPkCpy = [...inPk];
 	// ctkeyMatrix
-	const mixRing: MixCommitment[][] = [];
+	const mixRing: RingMember[][] = [];
 	const index = randomNum(mixin);
 
 	for (let i = 0; i < rows; i++) {
@@ -85,7 +83,7 @@ export function populateFromBlockchain(inPk: MixCommitment[], mixin: number) {
 			if (j !== index) {
 				mixRing[i][j] = getKeyFromBlockchain(); /*?*/
 			} else {
-				mixRing[i][j] = inPkCpy.pop() as MixCommitment;
+				mixRing[i][j] = inPkCpy.pop() as RingMember;
 			}
 		}
 	}
@@ -93,10 +91,7 @@ export function populateFromBlockchain(inPk: MixCommitment[], mixin: number) {
 	return { mixRing, index };
 }
 
-export function populateFromBlockchainSimple(
-	inPk: MixCommitment,
-	mixin: number,
-) {
+export function populateFromBlockchainSimple(inPk: RingMember, mixin: number) {
 	const index = randomNum(mixin);
 	const mixRing = [];
 

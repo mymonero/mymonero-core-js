@@ -27,14 +27,14 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { randomBytes } from "crypto";
+import { padLeft } from "xmr-str-utils/std-strings";
+import { skGen } from "xmr-key-utils";
 import {
-	skGen,
 	ge_scalarmult_base,
 	ge_add,
 	ge_sub,
-	H2,
-} from "cryptonote_utils";
-import { padLeft } from "cryptonote_utils/formatters";
+} from "xmr-crypto-ops/primitive_ops";
+import { H2 } from "xmr-crypto-ops/constants";
 
 function randomBit() {
 	// get random 8 bits in hex

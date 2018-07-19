@@ -1,14 +1,10 @@
 import { BigInt } from "biginteger";
-import {
-	hash_to_scalar,
-	Z,
-	generate_key_image_2,
-	genRct,
-	verRct,
-	decodeRct,
-} from "cryptonote_utils";
 import { ctskpkGen, populateFromBlockchain } from "./test_utils";
-import { SecretCommitment, MixCommitment } from "types";
+import { SecretCommitment, RingMember } from "xmr-types";
+import { hash_to_scalar } from "xmr-crypto-ops/hash_ops";
+import { Z } from "xmr-crypto-ops/constants";
+import { generate_key_image_2 } from "xmr-crypto-ops/key_image";
+import { genRct, verRct, decodeRct } from "xmr-transaction/libs/ringct";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //
@@ -43,7 +39,7 @@ it("range_proofs", () => {
 	//ct range proofs
 	// ctkey vectors
 	let inSk: SecretCommitment[] = [],
-		inPk: MixCommitment[] = [];
+		inPk: RingMember[] = [];
 
 	// ctkeys
 	// we test only a single input here since the current impl of

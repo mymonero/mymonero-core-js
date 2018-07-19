@@ -1,3 +1,15 @@
+import { valid_hex } from "xmr-str-utils/hex-strings";
+import { NetType } from "xmr-types";
+import { cn_fast_hash } from "xmr-fast-hash";
+import {
+	generate_key_derivation,
+	derivation_to_scalar,
+	derive_public_key,
+	derive_subaddress_public_key,
+} from "xmr-crypto-ops/derivation";
+import { decode_address } from "xmr-address-utils";
+import { hash_to_scalar } from "xmr-crypto-ops/hash_ops";
+
 // Copyright (c) 2014-2018, MyMonero.com
 //
 // All rights reserved.
@@ -25,18 +37,6 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import {
-	cn_fast_hash,
-	NetType,
-	valid_hex,
-	generate_key_derivation,
-	decode_address,
-	hash_to_scalar,
-	derivation_to_scalar,
-	derive_public_key,
-	derive_subaddress_public_key,
-} from "cryptonote_utils";
 
 const public_key =
 	"904e49462268d771cc1649084c35aa1296bfb214880fe2e7f373620a3e2ba597";

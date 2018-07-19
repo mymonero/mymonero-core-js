@@ -27,16 +27,16 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import { ctskpkGen, populateFromBlockchainSimple } from "./test_utils";
+import { hash_to_scalar } from "xmr-crypto-ops/hash_ops";
+import { Z } from "xmr-crypto-ops/constants";
+import { generate_key_image_2 } from "xmr-crypto-ops/key_image";
 import {
-	hash_to_scalar,
-	Z,
-	random_scalar,
-	generate_key_image_2,
 	genRct,
 	verRctSimple,
 	decodeRctSimple,
-} from "cryptonote_utils";
-import { BigInt } from "index";
+} from "xmr-transaction/libs/ringct";
+import { BigInt } from "biginteger";
+import { random_scalar } from "xmr-rand";
 
 it("should test ringct simple transactions", () => {
 	//Ring CT Stuff
