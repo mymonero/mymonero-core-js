@@ -24,33 +24,26 @@ export function proveRange(
 	amount: string | BigInt,
 	nrings: number,
 ) {
-	const size = 2;
 	let C = I; //identity
 	let mask = Z; //zero scalar
+
+	// bitstring representation of amount
 	const indices = d2b(amount); //base 2 for now
 	const Ci: string[] = [];
 
 	const ai: string[] = [];
-	const PM: string[][] = [];
-	for (let i = 0; i < size; i++) {
-		PM[i] = [];
-	}
-	let j;
+	const PM: string[][] = [[], []];
+
 	//start at index and fill PM left and right -- PM[0] holds Ci
 	for (let i = 0; i < nrings; i++) {
 		ai[i] = random_scalar();
 
-		j = +indices[i];
-		PM[j][i] = ge_scalarmult_base(ai[i]);
-		while (j > 0) {
-			j--;
-			PM[j][i] = ge_add(PM[j + 1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
-		}
-
-		j = +indices[i];
-		while (j < size - 1) {
-			j++;
-			PM[j][i] = ge_sub(PM[j - 1][i], H2[i]); //will need to use i*2 for base 4 (or different object)
+		if (+indices[i] === 1) {
+			PM[1][i] = ge_scalarmult_base(ai[i]);
+			PM[0][i] = ge_add(PM[1][i], H2[i]);
+		} else {
+			PM[0][i] = ge_scalarmult_base(ai[i]);
+			PM[1][i] = ge_sub(PM[0][i], H2[i]);
 		}
 		mask = sc_add(mask, ai[i]);
 	}
@@ -61,12 +54,12 @@ export function proveRange(
 	for (let i = 0; i < nrings; i++) {
 		//if (i < nrings - 1) //for later version
 		Ci[i] = PM[0][i];
-		C = ge_add(C, PM[0][i]);
+		C = ge_add(C, Ci[i]);
 	}
 
 	const sig: RangeSignature = {
 		Ci,
-		bsig: genBorromean(ai, PM, indices, size, nrings),
+		bsig: genBorromean(ai, PM, indices, nrings),
 	};
 	//exp: exponent //doesn't exist for now
 

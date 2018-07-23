@@ -39,7 +39,7 @@ it("borromean_3", () => {
 	indi[3] = `${(+indi[3] + 1) % 2}`;
 	indi[3] = `${(+indi[3] + 1) % 2}`;
 
-	const bb = genBorromean(xv, [P1v, P2v], indi, 2, N); /*?.*/
+	const bb = genBorromean(xv, [P1v, P2v], indi, N); /*?.*/
 	const valid = verifyBorromean(bb, P1v, P2v); /*?.*/
 	expect(valid).toBe(true);
 });
