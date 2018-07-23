@@ -1,4 +1,4 @@
-import { encode_rct_ecdh, decode_rct_ecdh } from "./components/ecdh";
+import { encode_ecdh, decode_ecdh } from "xmr-crypto-ops/rct";
 import { proveRange, verRange } from "./components/prove_range";
 import {
 	proveRctMG,
@@ -18,7 +18,7 @@ import {
 } from "xmr-crypto-ops/primitive_ops";
 import { d2s } from "xmr-str-utils/integer-strings";
 import { random_scalar } from "xmr-rand";
-import { commit } from "xmr-crypto-ops/rctOps";
+import { commit } from "xmr-crypto-ops/rct";
 import { get_pre_mlsag_hash } from "./utils";
 import { verBulletProof } from "./components/bullet_proofs";
 
@@ -92,8 +92,9 @@ export function genRct(
 		const testfinish = new Date().getTime() - teststart;
 		console.log("Time take for range proof " + i + ": " + testfinish);
 		rv.outPk[i] = cmObj.C;
+		// the mask is the sum
 		sumout = sc_add(sumout, cmObj.mask);
-		rv.ecdhInfo[i] = encode_rct_ecdh(
+		rv.ecdhInfo[i] = encode_ecdh(
 			{ mask: cmObj.mask, amount: d2s(outAmounts[i]) },
 			amountKeys[i],
 		);
@@ -105,14 +106,16 @@ export function genRct(
 			throw Error("mismatched inAmounts/inSk");
 		}
 
-		const ai = [];
+		const ai = []; // blinding factor
 		let sumpouts = Z;
 		//create pseudoOuts
 		for (i = 0; i < inAmounts.length - 1; i++) {
+			// set each blinding factor to be random except for the last
 			ai[i] = random_scalar();
 			sumpouts = sc_add(sumpouts, ai[i]);
 			rv.pseudoOuts[i] = commit(d2s(inAmounts[i]), ai[i]);
 		}
+
 		ai[i] = sc_sub(sumout, sumpouts);
 		rv.pseudoOuts[i] = commit(d2s(inAmounts[i]), ai[i]);
 		const full_message = get_pre_mlsag_hash(rv);
@@ -371,7 +374,7 @@ export function decodeRct(rv: RCTSignatures, sk: string, i: number) {
 
 	// mask amount and mask
 	const ecdh_info = rv.ecdhInfo[i];
-	const { mask, amount } = decode_rct_ecdh(ecdh_info, sk);
+	const { mask, amount } = decode_ecdh(ecdh_info, sk);
 
 	const C = rv.outPk[i];
 	const Ctmp = ge_double_scalarmult_base_vartime(amount, H, mask);
@@ -398,7 +401,7 @@ export function decodeRctSimple(rv: RCTSignatures, sk: string, i: number) {
 
 	// mask amount and mask
 	const ecdh_info = rv.ecdhInfo[i];
-	const { mask, amount } = decode_rct_ecdh(ecdh_info, sk);
+	const { mask, amount } = decode_ecdh(ecdh_info, sk);
 
 	const C = rv.outPk[i];
 	const Ctmp = ge_double_scalarmult_base_vartime(amount, H, mask);

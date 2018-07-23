@@ -1,10 +1,7 @@
 import { BigInt } from "biginteger";
 import { skGen } from "xmr-key-utils";
 import { d2s } from "xmr-str-utils/integer-strings";
-import {
-	encode_rct_ecdh,
-	decode_rct_ecdh,
-} from "xmr-transaction/libs/ringct/components/ecdh";
+import { encode_ecdh, decode_ecdh } from "xmr-crypto-ops/rct";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //
@@ -62,9 +59,9 @@ it("ecdh_roundtrip", () => {
 		// both are strings so we can shallow copy
 		let t1 = { ...t0 };
 
-		t1 = encode_rct_ecdh(t1, k);
+		t1 = encode_ecdh(t1, k);
 
-		t1 = decode_rct_ecdh(t1, k);
+		t1 = decode_ecdh(t1, k);
 		expect(t1.mask).toEqual(t0.mask);
 		expect(t1.amount).toEqual(t0.amount);
 	}
