@@ -1,6 +1,11 @@
 import { BigInt } from "biginteger";
 import { RCTSignatures } from "xmr-transaction/libs/ringct";
 
+export interface Commit {
+	mask: string;
+	amount: string;
+}
+
 export interface TransactionInput {
 	type: string;
 	amount: string;
@@ -85,12 +90,12 @@ export interface SecretCommitment {
 	a: string;
 }
 
-export interface Key {
+export interface KeyPair {
 	pub: string;
 	sec: string;
 }
 
 export interface Keys {
-	view: Key;
-	spend: Key;
+	view: KeyPair;
+	spend: KeyPair;
 }

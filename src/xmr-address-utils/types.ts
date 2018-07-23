@@ -1,7 +1,7 @@
-import { Key } from "xmr-types";
+import { KeyPair } from "xmr-types";
 
 export interface Account {
-	spend: Key;
-	view: Key;
+	spend: KeyPair;
+	view: KeyPair;
 	public_addr: string;
 }

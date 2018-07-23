@@ -5,9 +5,9 @@ import { cn_fast_hash } from "xmr-fast-hash";
 import { ADDRESS_CHECKSUM_SIZE } from "xmr-constants/address";
 import { cnBase58 } from "xmr-b58/xmr-base58";
 import { rand_32, random_scalar } from "xmr-rand";
-import { NetType, Key } from "xmr-types";
+import { NetType, KeyPair } from "xmr-types";
 
-export function sec_key_to_pub(sec: string) {
+export function secret_key_to_public_key(sec: string) {
 	return ge_scalarmult_base(sec);
 }
 
@@ -25,13 +25,13 @@ export function pubkeys_to_string(
 }
 
 // Generate keypair from seed
-export function generate_keys(seed: string): Key {
+export function generate_keys(seed: string): KeyPair {
 	if (seed.length !== 64) throw Error("Invalid input length!");
 	const sec = sc_reduce32(seed);
-	const pub = sec_key_to_pub(sec);
+	const pub = secret_key_to_public_key(sec);
 	return {
-		sec: sec,
-		pub: pub,
+		sec,
+		pub,
 	};
 }
 
@@ -41,8 +41,8 @@ export function valid_keys(
 	spend_pub: string,
 	spend_sec: string,
 ) {
-	const expected_view_pub = sec_key_to_pub(view_sec);
-	const expected_spend_pub = sec_key_to_pub(spend_sec);
+	const expected_view_pub = secret_key_to_public_key(view_sec);
+	const expected_spend_pub = secret_key_to_public_key(spend_sec);
 	return expected_spend_pub === spend_pub && expected_view_pub === view_pub;
 }
 

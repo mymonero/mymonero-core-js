@@ -1,6 +1,6 @@
 import { RangeSignature } from "./components/prove_range";
 import { MGSig } from "./components/prove_ringct_mg";
-import { Commit } from "./components/ecdh";
+import { Commit } from "xmr-types";
 
 export interface RCTSignatures {
 	type: number;
