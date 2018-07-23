@@ -7,7 +7,7 @@ import {
 	ge_scalarmult_base,
 } from "xmr-crypto-ops/primitive_ops";
 import { random_scalar } from "xmr-rand";
-import { generate_key_image_2 } from "xmr-crypto-ops/key_image";
+import { generate_key_image } from "xmr-crypto-ops/key_image";
 import { MGSig } from "./types";
 
 // Gen creates a signature which proves that for some column in the keymatrix "pk"
@@ -67,7 +67,7 @@ export function MLSAG_Gen(
 	//  rv.II[0] = ge_scalarmult(H1, xx[0]) // k_in.Hp(K_in)
 
 	toHash[2] = ge_scalarmult_base(alpha[0]); //dsRow L, a.G
-	toHash[3] = generate_key_image_2(pk[index][0], alpha[0]); //dsRow R (key image check)
+	toHash[3] = generate_key_image(pk[index][0], alpha[0]); //dsRow R (key image check)
 	//secret index (commitment section)
 	alpha[1] = random_scalar();
 	toHash[4] = pk[index][1]; //secret index commitment

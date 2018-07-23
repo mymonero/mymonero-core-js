@@ -3,7 +3,7 @@ import { ctskpkGen, populateFromBlockchain } from "./test_utils";
 import { SecretCommitment, RingMember } from "xmr-types";
 import { hash_to_scalar } from "xmr-crypto-ops/hash_ops";
 import { Z } from "xmr-crypto-ops/constants";
-import { generate_key_image_2 } from "xmr-crypto-ops/key_image";
+import { generate_key_image } from "xmr-crypto-ops/key_image";
 import { genRct, verRct, decodeRct } from "xmr-transaction/libs/ringct";
 
 // Copyright (c) 2014-2018, MyMonero.com
@@ -70,7 +70,7 @@ it("range_proofs", () => {
 	const { index, mixRing } = populateFromBlockchain(inPk, 2);
 
 	// generate kimg
-	const kimg = [generate_key_image_2(inPk[0].dest, inSk[0].x)];
+	const kimg = [generate_key_image(inPk[0].dest, inSk[0].x)];
 
 	// add fee of 1 NOTE: fee is passed in with its endian not swapped, hence no usage of d2s
 	const fee = "1";

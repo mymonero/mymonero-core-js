@@ -29,7 +29,7 @@
 import { ctskpkGen, populateFromBlockchainSimple } from "./test_utils";
 import { hash_to_scalar } from "xmr-crypto-ops/hash_ops";
 import { Z } from "xmr-crypto-ops/constants";
-import { generate_key_image_2 } from "xmr-crypto-ops/key_image";
+import { generate_key_image } from "xmr-crypto-ops/key_image";
 import {
 	genRct,
 	verRctSimple,
@@ -89,8 +89,8 @@ it("should test ringct simple transactions", () => {
 
 	// generate kimg
 	const kimg = [
-		generate_key_image_2(inPk[0].dest, inSk[0].x),
-		generate_key_image_2(inPk[1].dest, inSk[1].x),
+		generate_key_image(inPk[0].dest, inSk[0].x),
+		generate_key_image(inPk[1].dest, inSk[1].x),
 	];
 
 	const s = genRct(

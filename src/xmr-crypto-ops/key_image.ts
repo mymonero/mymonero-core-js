@@ -11,7 +11,7 @@ import { hash_to_ec, hash_to_scalar } from "./hash_ops";
 import { sc_sub } from "./primitive_ops";
 import { Keys } from "xmr-types";
 
-export function generate_key_image(
+export function derive_key_image_from_tx(
 	tx_pub: string,
 	view_sec: string,
 	spend_pub: string,
@@ -41,14 +41,14 @@ export function generate_key_image(
 		output_index,
 		spend_sec,
 	);
-	const k_image = generate_key_image_2(ephemeral_pub, ephemeral_sec);
+	const k_image = generate_key_image(ephemeral_pub, ephemeral_sec);
 	return {
 		ephemeral_pub: ephemeral_pub,
 		key_image: k_image,
 	};
 }
 
-export function generate_key_image_2(pub: string, sec: string) {
+export function generate_key_image(pub: string, sec: string) {
 	if (!pub || !sec || pub.length !== 64 || sec.length !== 64) {
 		throw Error("Invalid input length");
 	}
@@ -115,7 +115,7 @@ export function generate_key_image_helper_rct(
 		out_index,
 		keys.spend.sec,
 	);
-	const key_image = generate_key_image_2(ephemeral_pub, ephemeral_sec);
+	const key_image = generate_key_image(ephemeral_pub, ephemeral_sec);
 	return {
 		in_ephemeral: {
 			pub: ephemeral_pub,

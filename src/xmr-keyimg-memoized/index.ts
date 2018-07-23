@@ -1,4 +1,4 @@
-import { generate_key_image } from "xmr-crypto-ops/key_image";
+import { derive_key_image_from_tx } from "xmr-crypto-ops/key_image";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //
@@ -62,7 +62,7 @@ export function genKeyImage(
 		return cachedKeyImage;
 	}
 
-	const { key_image } = generate_key_image(
+	const { key_image } = derive_key_image_from_tx(
 		txPubKey,
 		privViewKey,
 		pubSpendKey,
