@@ -8,6 +8,7 @@
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
   },
   "scripts": {
+    "build": "tsc",
     "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
     "test": "jest",
     "test:coverage": "jest --coverage"
@@ -32,18 +33,32 @@
   },
   "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
   "dependencies": {
-    "async": "^2.6.0"
+    "keccakjs": "^0.2.1",
+    "moment": "^2.22.2"
   },
   "devDependencies": {
-    "jest": "^23.1.0"
+    "jest": "^23.1.0",
+    "ts-jest": "^23.0.1",
+    "ts-node": "^7.0.0",
+    "tsconfig-paths": "^3.4.2",
+    "typescript": "^2.9.2"
   },
-  "jest" : {
-    "testEnvironment":"node",
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "json",
+      "ts",
+      "tsx"
+    ],
+    "transform": {
+      "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "modulePaths": ["<rootDir>/src" ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.ts$",
     "coveragePathIgnorePatterns": [
-      "node_modules", 
-      "cryptonote_utils/biginteger.js",
-      "cryptonote_utils/nacl-fast-cn.js",
-      "cryptonote_utils/sha3.js",
-      "cryptonote_utils/cryptonote_crypto_EMSCRIPTEN.js"]
+      "/node_modules/",
+      "__test__"
+    ]
   }
 }

@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"target": "es2017",
+		"sourceMap": false,
+		"module": "commonjs",
+		"baseUrl": "src",
+		"outDir": "dist",
+		"lib": ["es2017", "dom"],
+		"allowSyntheticDefaultImports": true,
+
+		"moduleResolution": "node",
+		"noEmitOnError": false,
+		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"strictNullChecks": true,
+		"strictPropertyInitialization": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitThis": true,
+		"noErrorTruncation": true,
+		"pretty": true,
+		"resolveJsonModule": true
+	},
+	"include": ["./src/", "./__test__/", "examples"]
+}
