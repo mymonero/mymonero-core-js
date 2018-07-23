@@ -1,4 +1,8 @@
 import { rand_8 } from "xmr-rand";
+import { cn_fast_hash } from "xmr-fast-hash";
+import { INTEGRATED_ID_SIZE } from "xmr-constants/address";
+import { generate_key_derivation } from "xmr-crypto-ops/derivation";
+import { hex_xor } from "xmr-str-utils/hex-strings";
 
 // Copyright (c) 2014-2018, MyMonero.com
 //
@@ -30,6 +34,24 @@ import { rand_8 } from "xmr-rand";
 
 export function makePaymentID() {
 	return rand_8();
+}
+
+export function encrypt_payment_id(
+	payment_id: string,
+	public_key: string,
+	secret_key: string,
+) {
+	// get the derivation from our passed viewkey, then hash that + tail to get encryption key
+	const INTEGRATED_ID_SIZE_BYTES = INTEGRATED_ID_SIZE * 2;
+	const ENCRYPTED_PAYMENT_ID_TAIL_BYTE = "8d";
+
+	const derivation = generate_key_derivation(public_key, secret_key);
+	const data = `${derivation}${ENCRYPTED_PAYMENT_ID_TAIL_BYTE}`;
+	const pid_key = cn_fast_hash(data).slice(0, INTEGRATED_ID_SIZE_BYTES);
+
+	const encryptedPid = hex_xor(payment_id, pid_key);
+
+	return encryptedPid;
 }
 
 export function isValidOrNoPaymentID(pid?: string | null) {

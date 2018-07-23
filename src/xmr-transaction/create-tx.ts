@@ -13,20 +13,15 @@ import {
 } from "xmr-types";
 import { BigInt } from "biginteger";
 import { valid_keys, random_keypair } from "xmr-key-utils";
-import { zeroCommit } from "xmr-crypto-ops/rctOps";
+import { zeroCommit } from "xmr-crypto-ops/rct";
 import { d2s } from "xmr-str-utils/integer-strings";
 import { formatMoney, formatMoneyFull } from "xmr-money/formatters";
-import {
-	INTEGRATED_ID_SIZE,
-	ENCRYPTED_PAYMENT_ID_TAIL,
-} from "xmr-constants/address";
-import { cn_fast_hash } from "xmr-fast-hash";
+import { INTEGRATED_ID_SIZE } from "xmr-constants/address";
 import {
 	generate_key_derivation,
 	derive_public_key,
 	derivation_to_scalar,
 } from "xmr-crypto-ops/derivation";
-import { hex_xor } from "xmr-str-utils/hex-strings";
 import { I } from "xmr-crypto-ops/constants";
 import { generate_key_image_helper_rct } from "xmr-crypto-ops/key_image";
 import { decode_address, is_subaddress } from "xmr-address-utils";
@@ -41,6 +36,7 @@ import {
 } from "./libs/utils";
 import { generate_ring_signature } from "./libs/non-ringct";
 import { genRct } from "./libs/ringct";
+import { encrypt_payment_id } from "xmr-pid";
 
 const UINT64_MAX = new BigInt(2).pow(64);
 
@@ -266,14 +262,14 @@ function construct_tx(
 			if (!realDestViewKey) {
 				throw Error("RealDestViewKey not found");
 			}
-			//get the derivation from our passed viewkey, then hash that + tail to get encryption key
-			const pid_key = cn_fast_hash(
-				generate_key_derivation(realDestViewKey, txkey.sec) +
-					ENCRYPTED_PAYMENT_ID_TAIL.toString(16),
-			).slice(0, INTEGRATED_ID_SIZE * 2);
-			console.log("Txkeys:", txkey, "Payment ID key:", pid_key);
-			payment_id = hex_xor(payment_id, pid_key);
+
+			payment_id = encrypt_payment_id(
+				payment_id,
+				realDestViewKey,
+				txkey.sec,
+			);
 		}
+
 		const nonce = get_payment_id_nonce(payment_id, pid_encrypt);
 		console.log("Extra nonce: " + nonce);
 		extra = add_nonce_to_extra(extra, nonce);

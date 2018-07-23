@@ -1,3 +1,2 @@
 export const ADDRESS_CHECKSUM_SIZE = 4;
 export const INTEGRATED_ID_SIZE = 8;
-export const ENCRYPTED_PAYMENT_ID_TAIL = 141;
