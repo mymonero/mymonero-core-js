@@ -68,11 +68,11 @@ Download a copy of the contents of the Boost source into `./contrib/boost-sdk/`.
 
 *Depends upon:* Emscripten SDK, Boost for Emscripten
 
-* Execute `npm run-script build-emcpp`
+* Execute `bin/build-emcpp.sh`
 
 Or if you want to copy the build products to their distribution locations, 
 
-* Execute `npm run-script archive-emcpp`
+* Execute `bin/archive-emcpp.sh`
 
 
 # Contributing

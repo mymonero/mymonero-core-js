@@ -41,7 +41,6 @@ require("./MyMoneroCoreCpp")().then(function(Module)
 function loaded_CNCrypto()
 { // CAUTION: calling this method blocks until _CNCrypto is loaded
 	while (typeof _CNCrypto === 'undefined' || !_CNCrypto) {
-		// console.log("Blocking until MyMoneroCoreCpp is loaded.")
 	}
 	return _CNCrypto;
 }

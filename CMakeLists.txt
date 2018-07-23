@@ -109,6 +109,9 @@ set(
     #unsure if the -I...boost..include is necessary here due to include above
 	"-Wall -std=c++11 -s MODULARIZE=1 -s WASM=1 -s ASSERTIONS=1 \
     --bind \
+    -Oz \
+    -s NO_DYNAMIC_EXECUTION=1 \
+    -s \"BINARYEN_METHOD='native-wasm'\" \
     -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
     -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
     -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"#"-s SAFE_HEAP=1 --bind -O3 -s LEGACY_GL_EMULATION=0  -s GL_UNSAFE_OPTS=0 --pre-js pre-module.js --post-js post-module.js -s GL_ASSERTIONS=1 -s INVOKE_RUN=0  -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s OFFSCREENCANVAS_SUPPORT=1 --preload-file shaders --preload-file extern --use-preload-plugins"
@@ -120,7 +123,7 @@ add_executable(
 	${SRC_FILES}
 )
 set_target_properties(MyMoneroCoreCpp PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS}")
-# set_target_properties(MyMoneroCoreCpp PROPERTIES SUFFIX ".bc")
+#set_target_properties(MyMoneroCoreCpp PROPERTIES SUFFIX ".html")
 
 target_link_libraries(
     MyMoneroCoreCpp
