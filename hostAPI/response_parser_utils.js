@@ -370,9 +370,9 @@ function Parsed_UnspentOuts__sync(
 				!finalized_unspentOutput_atI_beforeSplice ||
 				typeof finalized_unspentOutput_atI_beforeSplice === "undefined"
 			) {
-				console.warn(
-					`This unspent output at i ${i} was literally undefined! Skipping.`,
-				); // NOTE: Looks like the i-- code below should exit earlier if this is necessary
+				// console.warn(
+				// 	`This unspent output at i ${i} was literally undefined! Skipping.`,
+				// ); // NOTE: Looks like the i-- code below should exit earlier if this is necessary
 				continue;
 			}
 			const beforeSplice__tx_pub_key =
@@ -414,17 +414,17 @@ function Parsed_UnspentOuts__sync(
 				}
 				i--;
 			} else {
-				console.log(
-					"💬  Output used as mixin (" +
-						key_image +
-						"/" +
-						finalized_unspentOutputs[i].spend_key_images[j] +
-						")",
-				);
+				// console.log(
+				// 	"💬  Output used as mixin (" +
+				// 		key_image +
+				// 		"/" +
+				// 		finalized_unspentOutputs[i].spend_key_images[j] +
+				// 		")",
+				// );
 			}
 		}
 	}
-	console.log("Unspent outs: " + JSON.stringify(finalized_unspentOutputs));
+	// console.log("Unspent outs: " + JSON.stringify(finalized_unspentOutputs));
 	const unusedOuts = finalized_unspentOutputs.slice(0);
 	const returnValuesByKey = {
 		unspentOutputs: finalized_unspentOutputs,
