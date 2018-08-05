@@ -27,7 +27,7 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 "use strict";
-const MyMoneroCoreCpp = require("../../cryptonote_utils/MyMoneroCoreCpp.js");
+const MyMoneroCoreCpp_builder = require("../../cryptonote_utils/MyMoneroCoreCpp.js");
 
 var public_key =
 	"904e49462268d771cc1649084c35aa1296bfb214880fe2e7f373620a3e2ba597";
@@ -49,8 +49,10 @@ exports.OnceModuleReady = function(fn)
 		fn(Module)
 	}
 }
-
-MyMoneroCoreCpp().then(function(thisModule)
+var Module_template =
+{
+}
+MyMoneroCoreCpp_builder(Module_template).then(function(thisModule)
 {
 	Module = thisModule
 	exports.Module = Module

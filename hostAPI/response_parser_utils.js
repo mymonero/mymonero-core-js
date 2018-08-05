@@ -29,7 +29,7 @@
 "use strict";
 //
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
-const monero_utils = require("../monero_utils/monero_cryptonote_utils_instance");
+const monero_amount_format_utils = require("../monero_utils/monero_amount_format_utils");
 const monero_keyImage_cache_utils = require("../monero_utils/monero_keyImage_cache_utils");
 //
 function Parsed_AddressInfo__sync(
@@ -228,7 +228,7 @@ function Parsed_AddressTransactions__sync(
 			.subtract(transactions[i].total_sent || 0)
 			.toString();
 		transactions[i].approx_float_amount = parseFloat(
-			monero_utils.formatMoney(transactions[i].amount),
+			monero_amount_format_utils.formatMoney(transactions[i].amount),
 		);
 		transactions[i].timestamp = transactions[i].timestamp;
 		const record__payment_id = transactions[i].payment_id;
@@ -370,9 +370,9 @@ function Parsed_UnspentOuts__sync(
 				!finalized_unspentOutput_atI_beforeSplice ||
 				typeof finalized_unspentOutput_atI_beforeSplice === "undefined"
 			) {
-				console.warn(
-					`This unspent output at i ${i} was literally undefined! Skipping.`,
-				); // NOTE: Looks like the i-- code below should exit earlier if this is necessary
+				// console.warn(
+				// 	`This unspent output at i ${i} was literally undefined! Skipping.`,
+				// ); // NOTE: Looks like the i-- code below should exit earlier if this is necessary
 				continue;
 			}
 			const beforeSplice__tx_pub_key =
@@ -402,7 +402,7 @@ function Parsed_UnspentOuts__sync(
 				key_image ===
 				finalized_unspentOutput_atI_beforeSplice.spend_key_images[j]
 			) {
-				// console.log("💬  Output was spent; key image: " + key_image + " amount: " + monero_utils.formatMoneyFull(finalized_unspentOutputs[i].amount));
+				// console.log("💬  Output was spent; key image: " + key_image + " amount: " + monero_amount_format_utils.formatMoneyFull(finalized_unspentOutputs[i].amount));
 				// Remove output from list
 				finalized_unspentOutputs.splice(i, 1);
 				const finalized_unspentOutput_atI_afterSplice =
@@ -414,17 +414,17 @@ function Parsed_UnspentOuts__sync(
 				}
 				i--;
 			} else {
-				console.log(
-					"💬  Output used as mixin (" +
-						key_image +
-						"/" +
-						finalized_unspentOutputs[i].spend_key_images[j] +
-						")",
-				);
+				// console.log(
+				// 	"💬  Output used as mixin (" +
+				// 		key_image +
+				// 		"/" +
+				// 		finalized_unspentOutputs[i].spend_key_images[j] +
+				// 		")",
+				// );
 			}
 		}
 	}
-	console.log("Unspent outs: " + JSON.stringify(finalized_unspentOutputs));
+	// console.log("Unspent outs: " + JSON.stringify(finalized_unspentOutputs));
 	const unusedOuts = finalized_unspentOutputs.slice(0);
 	const returnValuesByKey = {
 		unspentOutputs: finalized_unspentOutputs,

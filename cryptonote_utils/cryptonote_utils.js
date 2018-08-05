@@ -33,29 +33,95 @@
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
 const JSBigInt = require("./biginteger").BigInteger;
 const cnBase58 = require("./cryptonote_base58").cnBase58;
-var _CNCrypto = undefined; // undefined -> cause 'early' calls to CNCrypto to throw exception
-require("./MyMoneroCoreCpp")().then(function(Module) 
-{
-	_CNCrypto = Module;
-});
-function loaded_CNCrypto()
-{ // CAUTION: calling this method blocks until _CNCrypto is loaded
-	while (typeof _CNCrypto === 'undefined' || !_CNCrypto) {
-	}
-	return _CNCrypto;
-}
 const mnemonic = require("./mnemonic");
 const nacl = require("./nacl-fast-cn");
 const sha3 = require("./sha3");
 const nettype_utils = require("./nettype");
 
-var cnUtil = function(currencyConfig) {
+var cnUtil = function(currencyConfig) 
+{
+	const currency_amount_format_utils = require("../cryptonote_utils/money_format_utils")(currencyConfig)
+	//
+	this._CNCrypto = undefined; // undefined -> cause 'early' calls to CNCrypto to throw exception
+	const ENVIRONMENT_IS_WEB = typeof window==="object";
+	const ENVIRONMENT_IS_WORKER = typeof importScripts==="function";
+	const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
+	const ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
+	var _CNCrypto_template =
+	{
+		locateFile: function(filename, scriptDirectory)
+		{
+			if (currencyConfig["locateFile"]) {
+				return currencyConfig["locateFile"](filename, scriptDirectory)
+			}
+			var this_scriptDirectory = scriptDirectory
+			const lastChar = this_scriptDirectory.charAt(this_scriptDirectory.length - 1)
+			if (lastChar == "/") { 
+				this_scriptDirectory = this_scriptDirectory.substring(0, this_scriptDirectory.length - 1) // remove trailing "/"
+			}
+			const scriptDirectory_pathComponents = this_scriptDirectory.split("/")
+			const lastPathComponent = scriptDirectory_pathComponents[scriptDirectory_pathComponents.length - 1]
+			var pathTo_cryptonoteUtilsDir; // add trailing slash to this
+			if (lastPathComponent == "cryptonote_utils") { // typical node or electron-main process
+				pathTo_cryptonoteUtilsDir = scriptDirectory_pathComponents.join("/") + "/"
+			} else if (ENVIRONMENT_IS_WEB) { // this will still match on electron-renderer, so the path must be patched up…
+				if (typeof __dirname !== undefined && __dirname !== "/") { // looks like node running in browser.. assuming Electron-renderer
+					// have to check != "/" b/c webpack (I think) replaces __dirname
+					pathTo_cryptonoteUtilsDir = "file://" + __dirname + "/" // prepending "file://" because it's going to try to stream it
+				} else { // actual web browser
+					pathTo_cryptonoteUtilsDir = this_scriptDirectory + "/mymonero_core_js/cryptonote_utils/" // this works for the MyMonero browser build, and is quite general, at least
+				}
+			} else {
+				throw "Undefined pathTo_cryptonoteUtilsDir. Please pass locateFile() to cryptonote_utils init."
+			}
+			const fullPath = pathTo_cryptonoteUtilsDir + filename
+			//
+			return fullPath
+		}
+	}
+	// if (ENVIRONMENT_IS_WEB && ENVIRONMENT_IS_NODE) { // that means it's probably electron-renderer
+	// 	const fs = require("fs");
+	// 	const path = require("path");
+	// 	const filepath = path.normalize(path.join(__dirname, "MyMoneroCoreCpp.wasm"));
+	// 	const wasmBinary = fs.readFileSync(filepath)
+	// 	console.log("wasmBinary", wasmBinary)
+	// 	_CNCrypto_template["wasmBinary"] = wasmBinary
+	// }
+	this._CNCrypto = undefined;
+	var loaded_CNCrypto = this.loaded_CNCrypto = function()
+	{ // CAUTION: calling this method blocks until _CNCrypto is loaded
+		if (typeof this._CNCrypto === 'undefined' || !this._CNCrypto) {
+			throw "You must call OnceModuleReady to wait for _CNCrypto to be ready"
+		}
+		return this._CNCrypto;
+	}
+	this.moduleReadyFns = [] // initial (gets set to undefined once Module ready)
+	this.OnceModuleReady = function(fn)
+	{
+		if (this._CNCrypto == null) {
+			if (typeof this.moduleReadyFns == 'undefined' || !this.moduleReadyFns) {
+				throw "Expected moduleReadyFns"
+			}
+			this.moduleReadyFns.push(fn)
+		} else {
+			fn(Module)
+		}
+	}
+	require("./MyMoneroCoreCpp")(_CNCrypto_template).then(function(thisModule) 
+	{
+		this._CNCrypto = thisModule
+		{
+			for (let fn of this.moduleReadyFns) {
+				fn(thisModule)
+			}
+		}
+		this.moduleReadyFns = [] // flash/free
+	});
+	//
 	var config = {}; // shallow copy of initConfig
 	for (var key in currencyConfig) {
 		config[key] = currencyConfig[key];
 	}
-
-	config.coinUnits = new JSBigInt(10).pow(config.coinUnitPlaces);
 
 	var HASH_STATE_BYTES = 200;
 	var HASH_SIZE = 32;
@@ -2613,7 +2679,7 @@ var cnUtil = function(currencyConfig) {
 		//run the for loop twice to sort ins by key image
 		//first generate key image and other construction data to sort it all in one go
 		for (i = 0; i < sources.length; i++) {
-			console.log(i + ": " + this.formatMoneyFull(sources[i].amount));
+			console.log(i + ": " + currency_amount_format_utils.formatMoneyFull(sources[i].amount));
 			if (sources[i].real_out >= sources[i].outputs.length) {
 				throw "real index >= outputs.length";
 			}
@@ -2718,11 +2784,11 @@ var cnUtil = function(currencyConfig) {
 
 		if (outputs_money.add(fee_amount).compare(inputs_money) > 0) {
 			throw "outputs money (" +
-				this.formatMoneyFull(outputs_money) +
+				currency_amount_format_utils.formatMoneyFull(outputs_money) +
 				") + fee (" +
-				this.formatMoneyFull(fee_amount) +
+				currency_amount_format_utils.formatMoneyFull(fee_amount) +
 				") > inputs money (" +
-				this.formatMoneyFull(inputs_money) +
+				currency_amount_format_utils.formatMoneyFull(inputs_money) +
 				")";
 		}
 		if (!rct) {
@@ -2789,6 +2855,43 @@ var cnUtil = function(currencyConfig) {
 		console.log(tx);
 		return tx;
 	};
+
+	this.create_transaction__IPCsafe = function(
+		pub_keys,
+		sec_keys,
+		serialized__dsts, // amounts are strings
+		outputs,
+		mix_outs,
+		fake_outputs_count,
+		serialized__fee_amount, // string amount
+		payment_id,
+		pid_encrypt,
+		realDestViewKey,
+		unlock_time,
+		rct,
+		nettype,
+	) {
+		const dsts = serialized__dsts.map(function(i) {
+			i.amount = new JSBigInt(i.amount)
+			return i
+		})
+		console.log("deserialized DSTS is... ", dsts)
+		return this.create_transaction(
+			pub_keys,
+			sec_keys,
+			dsts,
+			outputs,
+			mix_outs,
+			fake_outputs_count,
+			new JSBigInt(serialized__fee_amount),
+			payment_id,
+			pid_encrypt,
+			realDestViewKey,
+			unlock_time,
+			rct,
+			nettype,
+		);
+	}
 
 	this.create_transaction = function(
 		pub_keys,
@@ -2944,9 +3047,9 @@ var cnUtil = function(currencyConfig) {
 			}
 		} else if (cmp > 0) {
 			throw "Need more money than found! (have: " +
-				cnUtil.formatMoney(found_money) +
+				currency_amount_format_utils.formatMoney(found_money) +
 				" need: " +
-				cnUtil.formatMoney(needed_money) +
+				currency_amount_format_utils.formatMoney(needed_money) +
 				")";
 		}
 		return this.construct_tx(
@@ -2994,156 +3097,6 @@ var cnUtil = function(currencyConfig) {
 		// console.log(logStr)
 
 		return size;
-	};
-
-	function trimRight(str, char) {
-		while (str[str.length - 1] == char) str = str.slice(0, -1);
-		return str;
-	}
-
-	function padLeft(str, len, char) {
-		while (str.length < len) {
-			str = char + str;
-		}
-		return str;
-	}
-
-	this.padLeft = padLeft;
-
-	this.printDsts = function(dsts) {
-		for (var i = 0; i < dsts.length; i++) {
-			console.log(
-				dsts[i].address + ": " + this.formatMoneyFull(dsts[i].amount),
-			);
-		}
-	};
-
-	this.formatMoneyFull = function(units) {
-		units = units.toString();
-		var symbol = units[0] === "-" ? "-" : "";
-		if (symbol === "-") {
-			units = units.slice(1);
-		}
-		var decimal;
-		if (units.length >= config.coinUnitPlaces) {
-			decimal = units.substr(
-				units.length - config.coinUnitPlaces,
-				config.coinUnitPlaces,
-			);
-		} else {
-			decimal = padLeft(units, config.coinUnitPlaces, "0");
-		}
-		return (
-			symbol +
-			(units.substr(0, units.length - config.coinUnitPlaces) || "0") +
-			"." +
-			decimal
-		);
-	};
-
-	this.formatMoneyFullSymbol = function(units) {
-		return this.formatMoneyFull(units) + " " + config.coinSymbol;
-	};
-
-	this.formatMoney = function(units) {
-		var f = trimRight(this.formatMoneyFull(units), "0");
-		if (f[f.length - 1] === ".") {
-			return f.slice(0, f.length - 1);
-		}
-		return f;
-	};
-
-	this.formatMoneySymbol = function(units) {
-		return this.formatMoney(units) + " " + config.coinSymbol;
-	};
-
-	this.parseMoney = function(str) {
-		if (!str) return JSBigInt.ZERO;
-		var negative = str[0] === "-";
-		if (negative) {
-			str = str.slice(1);
-		}
-		var decimalIndex = str.indexOf(".");
-		if (decimalIndex == -1) {
-			if (negative) {
-				return JSBigInt.multiply(str, config.coinUnits).negate();
-			}
-			return JSBigInt.multiply(str, config.coinUnits);
-		}
-		if (decimalIndex + config.coinUnitPlaces + 1 < str.length) {
-			str = str.substr(0, decimalIndex + config.coinUnitPlaces + 1);
-		}
-		if (negative) {
-			return new JSBigInt(str.substr(0, decimalIndex))
-				.exp10(config.coinUnitPlaces)
-				.add(
-					new JSBigInt(str.substr(decimalIndex + 1)).exp10(
-						decimalIndex + config.coinUnitPlaces - str.length + 1,
-					),
-				).negate;
-		}
-		return new JSBigInt(str.substr(0, decimalIndex))
-			.exp10(config.coinUnitPlaces)
-			.add(
-				new JSBigInt(str.substr(decimalIndex + 1)).exp10(
-					decimalIndex + config.coinUnitPlaces - str.length + 1,
-				),
-			);
-	};
-
-	this.decompose_amount_into_digits = function(amount) {
-		/*if (dust_threshold === undefined) {
-			dust_threshold = config.dustThreshold;
-		}*/
-		amount = amount.toString();
-		var ret = [];
-		while (amount.length > 0) {
-			//split all the way down since v2 fork
-			/*var remaining = new JSBigInt(amount);
-			if (remaining.compare(config.dustThreshold) <= 0) {
-				if (remaining.compare(0) > 0) {
-					ret.push(remaining);
-				}
-				break;
-			}*/
-			//check so we don't create 0s
-			if (amount[0] !== "0") {
-				var digit = amount[0];
-				while (digit.length < amount.length) {
-					digit += "0";
-				}
-				ret.push(new JSBigInt(digit));
-			}
-			amount = amount.slice(1);
-		}
-		return ret;
-	};
-
-	this.decompose_tx_destinations = function(dsts, rct) {
-		var out = [];
-		if (rct) {
-			for (var i = 0; i < dsts.length; i++) {
-				out.push({
-					address: dsts[i].address,
-					amount: dsts[i].amount,
-				});
-			}
-		} else {
-			for (var i = 0; i < dsts.length; i++) {
-				var digits = this.decompose_amount_into_digits(dsts[i].amount);
-				for (var j = 0; j < digits.length; j++) {
-					if (digits[j].compare(0) > 0) {
-						out.push({
-							address: dsts[i].address,
-							amount: digits[j],
-						});
-					}
-				}
-			}
-		}
-		return out.sort(function(a, b) {
-			return a["amount"] - b["amount"];
-		});
 	};
 
 	this.is_tx_unlocked = function(unlock_time, blockchain_height) {

@@ -32,6 +32,7 @@ const async = require("async");
 //
 const monero_config = require("./monero_config");
 const monero_utils = require("./monero_cryptonote_utils_instance");
+const monero_amount_format_utils = require("./monero_amount_format_utils");
 const monero_paymentID_utils = require("./monero_paymentID_utils");
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 //
@@ -254,7 +255,7 @@ function SendFunds(
 		console.log(
 			"💬  Total to send, before fee: " + sweeping
 				? "all"
-				: monero_utils.formatMoney(totalAmountWithoutFee_JSBigInt),
+				: monero_amount_format_utils.formatMoney(totalAmountWithoutFee_JSBigInt),
 		);
 		if (!sweeping && totalAmountWithoutFee_JSBigInt.compare(0) <= 0) {
 			const errStr = "The amount you've entered is too low";
@@ -338,7 +339,7 @@ function SendFunds(
 				}
 				console.log(
 					"Received dynamic per kb fee",
-					monero_utils.formatMoneySymbol(dynamic_feePerKB_JSBigInt),
+					monero_amount_format_utils.formatMoneySymbol(dynamic_feePerKB_JSBigInt),
 				);
 				_proceedTo_constructFundTransferListAndSendFundsByUsingUnusedUnspentOutsForMixin(
 					moneroReady_targetDescription_address,
@@ -405,7 +406,7 @@ function SendFunds(
 			); /*.add(hostingService_chargeAmount) NOTE service fee removed for now */
 			console.log(
 				"Balance required: " +
-					monero_utils.formatMoneySymbol(totalAmountIncludingFees),
+					monero_amount_format_utils.formatMoneySymbol(totalAmountIncludingFees),
 			);
 		}
 		const usableOutputsAndAmounts = _outputsAndAmountToUseForMixin(
@@ -440,11 +441,11 @@ function SendFunds(
 					newNeededFee,
 				);
 				if (totalAmountWithoutFee_JSBigInt.compare(0) < 1) {
-					const errStr = `Your spendable balance is too low. Have ${monero_utils.formatMoney(
+					const errStr = `Your spendable balance is too low. Have ${monero_amount_format_utils.formatMoney(
 						usingOutsAmount,
 					)} ${
 						monero_config.coinSymbol
-					} spendable, need ${monero_utils.formatMoney(
+					} spendable, need ${monero_amount_format_utils.formatMoney(
 						newNeededFee,
 					)} ${monero_config.coinSymbol}.`;
 					__trampolineFor_err_withStr(errStr);
@@ -467,7 +468,7 @@ function SendFunds(
 					);
 					console.log(
 						"Using output: " +
-							monero_utils.formatMoney(out.amount) +
+							monero_amount_format_utils.formatMoney(out.amount) +
 							" - " +
 							JSON.stringify(out),
 					);
@@ -488,7 +489,7 @@ function SendFunds(
 			}
 			console.log(
 				"New fee: " +
-					monero_utils.formatMoneySymbol(newNeededFee) +
+					monero_amount_format_utils.formatMoneySymbol(newNeededFee) +
 					" for " +
 					usingOuts.length +
 					" inputs",
@@ -497,18 +498,18 @@ function SendFunds(
 		}
 		console.log(
 			"~ Balance required: " +
-				monero_utils.formatMoneySymbol(totalAmountIncludingFees),
+				monero_amount_format_utils.formatMoneySymbol(totalAmountIncludingFees),
 		);
 		// Now we can validate available balance with usingOutsAmount (TODO? maybe this check can be done before selecting outputs?)
 		const usingOutsAmount_comparedTo_totalAmount = usingOutsAmount.compare(
 			totalAmountIncludingFees,
 		);
 		if (usingOutsAmount_comparedTo_totalAmount < 0) {
-			const errStr = `Your spendable balance is too low. Have ${monero_utils.formatMoney(
+			const errStr = `Your spendable balance is too low. Have ${monero_amount_format_utils.formatMoney(
 				usingOutsAmount,
 			)} ${
 				monero_config.coinSymbol
-			} spendable, need ${monero_utils.formatMoney(
+			} spendable, need ${monero_amount_format_utils.formatMoney(
 				totalAmountIncludingFees,
 			)} ${monero_config.coinSymbol}.`;
 			__trampolineFor_err_withStr(errStr);
@@ -540,7 +541,7 @@ function SendFunds(
 				// for RCT we don't presently care about dustiness so add entire change amount
 				console.log(
 					"Sending change of " +
-						monero_utils.formatMoneySymbol(changeAmount) +
+						monero_amount_format_utils.formatMoneySymbol(changeAmount) +
 						" to " +
 						wallet__public_address,
 				);
@@ -559,7 +560,7 @@ function SendFunds(
 					// miners will add dusty change to fee
 					console.log(
 						"💬  Miners will add change of " +
-							monero_utils.formatMoneyFullSymbol(
+							monero_amount_format_utils.formatMoneyFullSymbol(
 								changeAmountDivRem[1],
 							) +
 							" to transaction fee (below dust threshold)",
@@ -572,7 +573,7 @@ function SendFunds(
 					);
 					console.log(
 						"💬  Sending change of " +
-							monero_utils.formatMoneySymbol(usableChange) +
+							monero_amount_format_utils.formatMoneySymbol(usableChange) +
 							" to " +
 							wallet__public_address,
 					);
@@ -632,10 +633,16 @@ function SendFunds(
 			preSuccess_nonTerminal_statusUpdate_fn(
 				SendFunds_ProcessStep_Code.constructingTransaction,
 			);
+			function printDsts(dsts) 
+			{
+				for (var i = 0; i < dsts.length; i++) {
+					console.log(dsts[i].address + ": " + monero_amount_format_utils.formatMoneyFull(dsts[i].amount))
+				}
+			}
 			var signedTx;
 			try {
 				console.log("Destinations: ");
-				monero_utils.printDsts(fundTransferDescriptions);
+				printDsts(fundTransferDescriptions); // TODO: port this out
 				//
 				var realDestViewKey; // need to get viewkey for encrypting here, because of splitting and sorting
 				if (final__pid_encrypt) {
@@ -645,21 +652,22 @@ function SendFunds(
 					).view;
 					console.log("got realDestViewKey", realDestViewKey);
 				}
-				var splitDestinations = monero_utils.decompose_tx_destinations(
+				console.log("fundTransferDescriptions", fundTransferDescriptions)
+				var IPCsafe_splitDestinations = decompose_tx_destinations( // TODO: port this out
 					fundTransferDescriptions,
 					isRingCT,
+					true // serialize (convert JSBigInts to strings for IPC)
 				);
-				console.log("Decomposed destinations:");
-				monero_utils.printDsts(splitDestinations);
+				printDsts(IPCsafe_splitDestinations);
 				//
-				signedTx = monero_utils.create_transaction(
+				signedTx = monero_utils.create_transaction__IPCsafe(
 					wallet__public_keys,
 					wallet__private_keys,
-					splitDestinations,
+					IPCsafe_splitDestinations,
 					usingOuts,
 					mix_outs,
 					mixin,
-					attemptAt_network_minimumFee,
+					attemptAt_network_minimumFee.toString(), // must serialize for IPC
 					final__payment_id,
 					final__pid_encrypt,
 					realDestViewKey,
@@ -705,7 +713,7 @@ function SendFunds(
 					" bytes <= " +
 					numKB +
 					" KB (current fee: " +
-					monero_utils.formatMoneyFull(attemptAt_network_minimumFee) +
+					monero_amount_format_utils.formatMoneyFull(attemptAt_network_minimumFee) +
 					")",
 			);
 			const feeActuallyNeededByNetwork = calculate_fee__kb(
@@ -721,11 +729,11 @@ function SendFunds(
 			) {
 				console.log(
 					"💬  Need to reconstruct the tx with enough of a network fee. Previous fee: " +
-						monero_utils.formatMoneyFull(
+						monero_amount_format_utils.formatMoneyFull(
 							attemptAt_network_minimumFee,
 						) +
 						" New fee: " +
-						monero_utils.formatMoneyFull(
+						monero_amount_format_utils.formatMoneyFull(
 							feeActuallyNeededByNetwork,
 						),
 				);
@@ -747,7 +755,7 @@ function SendFunds(
 			const final_networkFee = attemptAt_network_minimumFee; // just to make things clear
 			console.log(
 				"💬  Successful tx generation, submitting tx. Going with final_networkFee of ",
-				monero_utils.formatMoney(final_networkFee),
+				monero_amount_format_utils.formatMoney(final_networkFee),
 			);
 			// status: submitting…
 			preSuccess_nonTerminal_statusUpdate_fn(
@@ -770,7 +778,7 @@ function SendFunds(
 						moneroReady_targetDescription_address,
 						sweeping
 							? parseFloat(
-									monero_utils.formatMoneyFull(
+									monero_amount_format_utils.formatMoneyFull(
 										totalAmountWithoutFee_JSBigInt,
 									),
 							  )
@@ -831,7 +839,7 @@ function new_moneroReadyTargetDescriptions_fromTargetDescriptions(
 			// amount:
 			var moneroReady_amountToSend; // possibly need this ; here for the JS parser
 			try {
-				moneroReady_amountToSend = monero_utils.parseMoney(
+				moneroReady_amountToSend = monero_amount_format_utils.parseMoney(
 					targetDescription_amount,
 				);
 			} catch (e) {
@@ -873,7 +881,7 @@ function _outputsAndAmountToUseForMixin(
 ) {
 	console.log(
 		"Selecting outputs to use. target: " +
-			monero_utils.formatMoney(target_amount),
+			monero_amount_format_utils.formatMoney(target_amount),
 	);
 	var toFinalize_usingOutsAmount = new JSBigInt(0);
 	const toFinalize_usingOuts = [];
@@ -913,7 +921,7 @@ function _outputsAndAmountToUseForMixin(
 		);
 		console.log(
 			"Using output: " +
-				monero_utils.formatMoney(out_amount_JSBigInt) +
+				monero_amount_format_utils.formatMoney(out_amount_JSBigInt) +
 				" - " +
 				JSON.stringify(out),
 		);
@@ -924,3 +932,59 @@ function _outputsAndAmountToUseForMixin(
 		remaining_unusedOuts: remaining_unusedOuts,
 	};
 }
+
+function decompose_amount_into_digits(amount) 
+{
+	/*if (dust_threshold === undefined) {
+		dust_threshold = config.dustThreshold;
+	}*/
+	amount = amount.toString();
+	var ret = [];
+	while (amount.length > 0) {
+		//split all the way down since v2 fork
+		/*var remaining = new JSBigInt(amount);
+		if (remaining.compare(config.dustThreshold) <= 0) {
+			if (remaining.compare(0) > 0) {
+				ret.push(remaining);
+			}
+			break;
+		}*/
+		//check so we don't create 0s
+		if (amount[0] !== "0") {
+			var digit = amount[0];
+			while (digit.length < amount.length) {
+				digit += "0";
+			}
+			ret.push(new JSBigInt(digit));
+		}
+		amount = amount.slice(1);
+	}
+	return ret;
+}
+function decompose_tx_destinations(dsts, rct, serializeForIPC) 
+{
+	var out = [];
+	if (rct) {
+		for (var i = 0; i < dsts.length; i++) {
+			out.push({
+				address: dsts[i].address,
+				amount: serializeForIPC ? dsts[i].amount.toString() : dsts[i].amount,
+			});
+		}
+	} else {
+		for (var i = 0; i < dsts.length; i++) {
+			var digits = decompose_amount_into_digits(dsts[i].amount);
+			for (var j = 0; j < digits.length; j++) {
+				if (digits[j].compare(0) > 0) {
+					out.push({
+						address: dsts[i].address,
+						amount: serializeForIPC ? digits[j].toString() : digits[j],
+					});
+				}
+			}
+		}
+	}
+	return out.sort(function(a, b) {
+		return a["amount"] - b["amount"];
+	});
+};

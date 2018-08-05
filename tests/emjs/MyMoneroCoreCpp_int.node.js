@@ -31,8 +31,6 @@
 const dummy_test_utils = require("./dummy-test-utils.js");
 const dummy_cnUtils_instance = require("./dummy-cnutils").cnUtil()
 
-console.log("dummy_test_utils.Module", dummy_test_utils.Module)
-
 dummy_test_utils.OnceModuleReady(
 	function(Module)
 	{
