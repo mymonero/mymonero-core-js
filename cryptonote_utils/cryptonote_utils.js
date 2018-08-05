@@ -2875,7 +2875,6 @@ var cnUtil = function(currencyConfig)
 			i.amount = new JSBigInt(i.amount)
 			return i
 		})
-		console.log("deserialized DSTS is... ", dsts)
 		return this.create_transaction(
 			pub_keys,
 			sec_keys,
