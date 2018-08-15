@@ -33,11 +33,11 @@ fi
 
 # now must manually tweak the Makefile as I'm not sure how to do this via ./Configure
 to_cross_compile_line='CROSS_COMPILE='
-sed -iMakefile.bak 's/^CROSS_COMPILE=\/.*$/'"$to_cross_compile_line"'/' Makefile #must match whole line with start char or we might do it repeatedly .. though this particular one would be idempotent anyway
+sed -i.bak 's/^CROSS_COMPILE=\/.*$/'"$to_cross_compile_line"'/' Makefile #must match whole line with start char or we might do it repeatedly .. though this particular one would be idempotent anyway
 # ^-- not 'g' b/c we only expect one
 
 to_defined_atomics_line='\&\& !defined(__STDC_NO_ATOMICS__) \&\& !defined(__EMSCRIPTEN__)'
-sed -irefcount_h.bak 's/\&\&\ !defined(__STDC_NO_ATOMICS__)$/'"$to_defined_atomics_line"'/' include/internal/refcount.h #the pattern is relying here on the fact the "ATOMICS__)" comes at the end of the line
+sed -i.bak 's/\&\&\ !defined(__STDC_NO_ATOMICS__)$/'"$to_defined_atomics_line"'/' include/internal/refcount.h #the pattern is relying here on the fact the "ATOMICS__)" comes at the end of the line
 # ^-- not 'g' b/c we only expect one
 
 
