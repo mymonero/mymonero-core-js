@@ -64,9 +64,19 @@ Download a copy of the contents of the Boost source into `./contrib/boost-sdk/`.
 
 * Execute `bin/build-boost-emscripten.sh`
 
+
+### OpenSSL for Emscripten
+
+*Depends upon:* Emscripten SDK
+
+Download a copy of the contents of the OpenSSL source into `./contrib/openssl/`.
+
+* Execute `bin/build-openssl-emscripten.sh`
+
+
 ### Emscripten Module
 
-*Depends upon:* Emscripten SDK, Boost for Emscripten
+*Depends upon:* Emscripten SDK, Boost for Emscripten, OpenSSL for Emscripten
 
 * Execute `bin/build-emcpp.sh`
 
