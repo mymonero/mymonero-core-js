@@ -6,7 +6,7 @@
 2. What's in This Repo?
 3. Library Roadmap
 4. Library API Documentation
-5. Building MyMoneroCoreCpp
+5. Building MyMoneroCoreCpp from Scratch
 
 ### Contributing
 
@@ -45,9 +45,15 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 *Coming soon*
 
-## Building MyMoneroCoreCpp
 
-There's no need to build cryptonote_utils/MyMoneroCoreCpp as a build is provided, but if you were, for example, interested in adding a C++ function, you could use the information in this section to transpile them to JS.
+## Building MyMoneroCoreCpp from Scratch
+
+There's no need to build cryptonote_utils/MyMoneroCoreCpp as a build is provided, but if you were for example interested in adding a C++ function, you could use the information in this section to transpile it to JS.
+
+### Repository Setup
+
+* Execute `bin/update_submodules` 
+
 
 ### Install Emscripten SDK
 
@@ -76,7 +82,7 @@ Download a copy of the contents of the OpenSSL source into `./contrib/openssl/`.
 
 ### Emscripten Module
 
-*Depends upon:* Emscripten SDK, Boost for Emscripten, OpenSSL for Emscripten
+*Depends upon:* Repository Setup, Emscripten SDK, Boost for Emscripten, OpenSSL for Emscripten
 
 * Execute `bin/build-emcpp.sh`
 
