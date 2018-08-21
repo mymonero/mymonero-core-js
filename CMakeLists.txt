@@ -4,23 +4,92 @@ cmake_minimum_required(VERSION 3.4.1)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 project(MyMoneroCoreCpp)
-
-
+#
 include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
 include_directories("build/openssl/include") # must exist already - run bin/build-openssl-emscripten.sh
+#
 include_directories("src")
-include_directories("src/submodules/monero-core-custom/crypto")
-include_directories("src/submodules/monero-core-custom/epee/include")
-
+#
+set(MYMONERO_CORE_CPP "src/submodules/mymonero-core-cpp")
+set(MYMONERO_CORE_CPP_SRC "${MYMONERO_CORE_CPP}/src")
+include_directories("${MYMONERO_CORE_CPP}/src")
+#
+set(MONERO_SRC "${MYMONERO_CORE_CPP}/contrib/monero-core-custom")
+include_directories(${MONERO_SRC})
+include_directories("${MONERO_SRC}/epee/include")
+include_directories("${MONERO_SRC}/common")
+include_directories("${MONERO_SRC}/vtlogger")
+include_directories("${MONERO_SRC}/crypto")
+include_directories("${MONERO_SRC}/cryptonote_basic")
+include_directories("${MONERO_SRC}/multisig")
+include_directories("${MONERO_SRC}/cryptonote_core")
+include_directories("${MONERO_SRC}/cryptonote_protocol")
+include_directories("${MONERO_SRC}/wallet")
+include_directories("${MONERO_SRC}/rpc")
+include_directories("${MONERO_SRC}/mnemonics")
+#
 # keeping test files in a separate source directory 
 # file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/test_*.cpp)
-
+#
 set(
     SRC_FILES
     #
     src/index.cpp
-    src/submodules/monero-core-custom/crypto/crypto-ops.c
-    src/submodules/monero-core-custom/crypto/crypto-ops-data.c
+    #
+    ${MYMONERO_CORE_CPP_SRC}/monero_address_utils.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_address_utils.cpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_paymentID_utils.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_paymentID_utils.cpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_key_image_utils.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_key_image_utils.cpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_transfer_utils.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_transfer_utils.cpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_fork_rules.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_fork_rules.cpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_wallet_utils.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_wallet_utils.cpp
+    ${MYMONERO_CORE_CPP_SRC}/serial_bridge_index.hpp
+    ${MYMONERO_CORE_CPP_SRC}/serial_bridge_index.cpp
+    ${MYMONERO_CORE_CPP_SRC}/tools__ret_vals.hpp
+    ${MYMONERO_CORE_CPP_SRC}/tools__ret_vals.cpp
+    #
+    ${MONERO_SRC}/cryptonote_basic/cryptonote_basic_impl.cpp
+    ${MONERO_SRC}/cryptonote_basic/account.cpp
+    ${MONERO_SRC}/cryptonote_basic/cryptonote_format_utils.cpp
+    ${MONERO_SRC}/crypto/crypto.cpp
+    ${MONERO_SRC}/crypto/hash.c
+    ${MONERO_SRC}/crypto/slow-hash.c
+    ${MONERO_SRC}/crypto/oaes_lib.c
+    ${MONERO_SRC}/crypto/crypto-ops.c
+    ${MONERO_SRC}/crypto/crypto-ops-data.c
+    ${MONERO_SRC}/crypto/keccak.c
+    ${MONERO_SRC}/crypto/random.c
+    ${MONERO_SRC}/crypto/aesb.c
+    ${MONERO_SRC}/crypto/tree-hash.c
+    ${MONERO_SRC}/crypto/hash-extra-blake.c
+    ${MONERO_SRC}/crypto/blake256.c
+    ${MONERO_SRC}/crypto/hash-extra-groestl.c
+    ${MONERO_SRC}/crypto/hash-extra-jh.c
+    ${MONERO_SRC}/crypto/hash-extra-skein.c
+    ${MONERO_SRC}/crypto/groestl.c
+    ${MONERO_SRC}/crypto/jh.c
+    ${MONERO_SRC}/crypto/skein.c
+    ${MONERO_SRC}/cryptonote_core/cryptonote_tx_utils.cpp
+    ${MONERO_SRC}/common/base58.cpp
+    ${MONERO_SRC}/common/threadpool.cpp
+    ${MONERO_SRC}/epee/src/hex.cpp
+    ${MONERO_SRC}/epee/src/string_tools.cpp
+    ${MONERO_SRC}/epee/src/memwipe.c
+    ${MONERO_SRC}/epee/src/wipeable_string.cpp
+    ${MONERO_SRC}/device/device.cpp
+    ${MONERO_SRC}/device/device_default.cpp
+    ${MONERO_SRC}/ringct/rctOps.cpp
+    ${MONERO_SRC}/ringct/rctTypes.cpp
+    ${MONERO_SRC}/ringct/rctCryptoOps.c
+    ${MONERO_SRC}/ringct/rctSigs.cpp
+    ${MONERO_SRC}/ringct/bulletproofs.cc
+    ${MONERO_SRC}/mnemonics/electrum-words.cpp
+    ${MONERO_SRC}/vtlogger/logger.cpp
 )
 
 set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
@@ -123,15 +192,22 @@ set_target_properties(
 set(
 	EMCC_LINKER_FLAGS 
     #unsure if the -I...boost..include is necessary here due to include above
-	"-Wall -std=c++11 -s MODULARIZE=1 -s WASM=1 -s ASSERTIONS=1 \
-    --bind \
-    -Oz \
+	"-Wall -std=c++11 \
+    --bind -s MODULARIZE=1 \
+    -Os \
+    -s WASM=1 \
+    -s ASSERTIONS=1 \
     -s NO_DYNAMIC_EXECUTION=1 \
     -s \"BINARYEN_METHOD='native-wasm'\" \
     -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
-    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"#"-s SAFE_HEAP=1 --bind -O3 -s LEGACY_GL_EMULATION=0  -s GL_UNSAFE_OPTS=0 --pre-js pre-module.js --post-js post-module.js -s GL_ASSERTIONS=1 -s INVOKE_RUN=0  -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s OFFSCREENCANVAS_SUPPORT=1 --preload-file shaders --preload-file extern --use-preload-plugins"
+    -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]' \
+    "
+    # -s DISABLE_EXCEPTION_CATCHING=0 \
+    #    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
+    #"-s SAFE_HEAP=1 --bind -O3 -s LEGACY_GL_EMULATION=0  -s GL_UNSAFE_OPTS=0 --pre-js pre-module.js --post-js post-module.js -s GL_ASSERTIONS=1 -s INVOKE_RUN=0  -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s OFFSCREENCANVAS_SUPPORT=1 --preload-file shaders --preload-file extern --use-preload-plugins"
+
 )
+
 
 # extract the filename without an extension (NAME_WE)
 add_executable(
@@ -143,8 +219,6 @@ set_target_properties(MyMoneroCoreCpp PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS
 
 target_link_libraries(
     MyMoneroCoreCpp
-    #
-    # OpenSSL::SSL
     #
     boost_atomic
     boost_chrono
@@ -160,6 +234,7 @@ target_link_libraries(
     boost_timer
     boost_wserialization
     #
+    # OpenSSL
     crypto
     ssl
     #
