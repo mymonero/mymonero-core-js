@@ -58,6 +58,7 @@ HOST_NCORES=$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1
 ./b2 -q -a -j$HOST_NCORES    \
   toolset=clang-emscripten   \
   link=static                \
+  optimization=speed         \
   variant=release            \
   stage                      \
   --stagedir="$INSTALL_PATH" \
