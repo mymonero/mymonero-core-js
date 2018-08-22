@@ -32,8 +32,26 @@ var network_type = {
 	MAINNET: 0,
 	TESTNET: 1,
 	STAGENET: 2,
+	FAKECHAIN: 3,
+	UNDEFINED: 4
 };
 exports.network_type = network_type;
+exports.nettype_to_API_string = function(nettype)
+{
+	switch (nettype) {
+		case network_type.MAINNET:
+			return "MAINNET"
+		case network_type.TESTNET:
+			return "TESTNET"
+		case network_type.STAGENET:
+			return "STAGENET"
+		case network_type.FAKECHAIN:
+			return "FAKECHAIN"
+		case network_type.UNDEFINED:
+			return "UNDEFINED"
+	}
+	throw "Unrecognized nettype"
+}
 //
 var __MAINNET_CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX = 18;
 var __MAINNET_CRYPTONOTE_PUBLIC_INTEGRATED_ADDRESS_BASE58_PREFIX = 19;
