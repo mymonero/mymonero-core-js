@@ -6,7 +6,6 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 project(MyMoneroCoreCpp)
 #
 include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
-include_directories("build/openssl/include") # must exist already - run bin/build-openssl-emscripten.sh
 #
 include_directories("src")
 #
@@ -93,7 +92,6 @@ set(
 )
 
 set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
-set(openssl_DIR ${CMAKE_SOURCE_DIR}/build/openssl)
 
 add_library(boost_atomic STATIC IMPORTED)
 set_target_properties(
@@ -175,20 +173,6 @@ set_target_properties(
 #
 #
 #
-add_library(crypto STATIC IMPORTED)
-set_target_properties(
-    crypto PROPERTIES IMPORTED_LOCATION
-    ${openssl_DIR}/lib/libcrypto.a
-)
-#
-add_library(ssl STATIC IMPORTED)
-set_target_properties(
-    ssl PROPERTIES IMPORTED_LOCATION
-    ${openssl_DIR}/lib/libssl.a
-)
-#
-#
-#
 set(
 	EMCC_LINKER_FLAGS 
     #unsure if the -I...boost..include is necessary here due to include above
@@ -234,10 +218,6 @@ target_link_libraries(
     boost_thread
     boost_timer
     boost_wserialization
-    #
-    # OpenSSL
-    crypto
-    ssl
     #
     ${log-lib}
 )
