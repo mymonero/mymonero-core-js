@@ -337,7 +337,7 @@ var cnUtil = function(currencyConfig)
 		// tx prefix
 		// first few bytes
 		size += 1 + 6;
-		size += inputs * (1 + 6 + (mixin + 1) * 3 + 32); 
+		size += inputs * (1 + 6 + (mixin + 1) * 2 + 32); 
 		// vout
 		size += outputs * (6 + 32);
 		// extra
