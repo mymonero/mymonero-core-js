@@ -158,14 +158,25 @@ exports.DefaultWalletMnemonicWordsetName =
 // Wallet creation:
 //
 function NewlyCreatedWallet(mnemonic_wordsetName, nettype) {
-	const seed = monero_utils.random_scalar(); // to generate a 32-byte (25-word) but reduced seed
-	const mnemonicString = mnemonic.mn_encode(seed, mnemonic_wordsetName);
-	const keys = monero_utils.create_address(seed, nettype);
-	//
+	// TODO: possibly deprecate this function now that it's basically a passthrough (it existed so as to avoid modifying cryptonote_utils)
+	const ret = monero_utils.newly_created_wallet(
+		mnemonic_wordsetName,
+		nettype
+	);
 	return {
-		seed: seed,
-		mnemonicString: mnemonicString,
-		keys: keys,
+		seed: ret.sec_seed_string,
+		mnemonicString: ret.mnemonic_string,
+		keys: {
+			public_addr: ret.address_string,
+			view: {
+				sec: ret.sec_viewKey_string,
+				pub: ret.pub_viewKey_string
+			},
+			spend: {
+				sec: ret.sec_spendKey_string,
+				pub: ret.pub_spendKey_string
+			}
+		}
 	};
 }
 exports.NewlyCreatedWallet = NewlyCreatedWallet;
@@ -175,12 +186,8 @@ exports.NewlyCreatedWallet = NewlyCreatedWallet;
 // Wallet login:
 //
 function MnemonicStringFromSeed(account_seed, mnemonic_wordsetName) {
-	const mnemonicString = mnemonic.mn_encode(
-		account_seed,
-		mnemonic_wordsetName,
-	);
-	//
-	return mnemonicString;
+	// TODO: possibly deprecate this function as it now merely wraps another
+	return monero_utils.mnemonic_from_seed(account_seed, mnemonic_wordsetName);
 }
 exports.MnemonicStringFromSeed = MnemonicStringFromSeed;
 //
@@ -192,37 +199,25 @@ function SeedAndKeysFromMnemonic_sync(
 	// -> {err_str?, seed?, keys?}
 	mnemonicString = mnemonicString.toLowerCase() || "";
 	try {
-		var seed = null;
-		var keys = null;
-		switch (mnemonic_wordsetName) {
-			case "english":
-				try {
-					seed = mnemonic.mn_decode(mnemonicString);
-				} catch (e) {
-					// Try decoding as an electrum seed, on failure throw the original exception
-					try {
-						seed = mnemonic.mn_decode(mnemonicString, "electrum");
-					} catch (ee) {
-						throw e;
-					}
+		const ret = monero_utils.seed_and_keys_from_mnemonic(
+			mnemonicString,
+			mnemonic_wordsetName
+		);
+		return {
+			err_str: null,
+			seed: ret.sec_seed_string,
+			keys: {
+				public_addr: ret.address_string,
+				view: { 
+					sec: ret.sec_viewKey_string, 
+					pub: ret.pub_viewKey_string
+				},
+				spend: {
+					sec: ret.sec_spendKey_string, 
+					pub: ret.pub_spendKey_string
 				}
-				break;
-			default:
-				seed = mnemonic.mn_decode(mnemonicString, mnemonic_wordsetName);
-				break;
-		}
-		if (seed === null) {
-			return { err_str: "Unable to derive seed", seed: null, keys: null };
-		}
-		keys = monero_utils.create_address(seed, nettype);
-		if (keys === null) {
-			return {
-				err_str: "Unable to derive keys from seed",
-				seed: seed,
-				keys: null,
-			};
-		}
-		return { err_str: null, seed: seed, keys: keys };
+			}
+		};
 	} catch (e) {
 		console.error("Invalid mnemonic!");
 		return {
@@ -257,93 +252,37 @@ function VerifiedComponentsForLogIn_sync(
 	address,
 	nettype,
 	view_key,
-	spend_key_orUndefinedForViewOnly,
-	seed_orUndefined,
-	wasAGeneratedWallet,
+	spend_key__orZero,
+	seed__orZero,
 ) {
-	var spend_key =
-		typeof spend_key_orUndefinedForViewOnly !== "undefined" &&
-		spend_key_orUndefinedForViewOnly != null &&
-		spend_key_orUndefinedForViewOnly != ""
-			? spend_key_orUndefinedForViewOnly
-			: null;
-	var isInViewOnlyMode = spend_key == null;
-	if (
-		!view_key ||
-		view_key.length !== 64 ||
-		(isInViewOnlyMode ? false : spend_key.length !== 64)
-	) {
-		return { err_str: "invalid secret key length" };
-	}
-	if (
-		!monero_utils.valid_hex(view_key) ||
-		(isInViewOnlyMode ? false : !monero_utils.valid_hex(spend_key))
-	) {
-		return { err_str: "invalid hex formatting" };
-	}
-	var public_keys;
+	var spend_key__orEmpty = spend_key__orZero || "";
+	var seed__orEmpty = seed__orZero || "";
 	try {
-		public_keys = monero_utils.decode_address(address, nettype);
+		const ret = monero_utils.validate_components_for_login(
+			address,
+			view_key,
+			spend_key__orEmpty,
+			seed__orEmpty,
+			nettype
+		);
+		if (ret.isValid == false) { // actually don't think we're expecting this..
+			return {
+				err_str: "Invalid input"
+			}
+		}
+		return {
+			err_str: null,
+			public_keys: {
+				view: ret.pub_viewKey_string,
+				spend: ret.pub_spendKey_string
+			},
+			isInViewOnlyMode: ret.isInViewOnlyMode // should be true "if(spend_key__orZero)"
+		};
 	} catch (e) {
-		return { err_str: "invalid address" };
+		return {
+			err_str: typeof e === "string" ? e : "" + e
+		};
 	}
-	var expected_view_pub;
-	try {
-		expected_view_pub = monero_utils.sec_key_to_pub(view_key);
-	} catch (e) {
-		return { err_str: "invalid view key" };
-	}
-	var expected_spend_pub;
-	if (spend_key.length === 64) {
-		try {
-			expected_spend_pub = monero_utils.sec_key_to_pub(spend_key);
-		} catch (e) {
-			return { err_str: "invalid spend key" };
-		}
-	}
-	if (public_keys.view !== expected_view_pub) {
-		return { err_str: "invalid view key" };
-	}
-	if (!isInViewOnlyMode && public_keys.spend !== expected_spend_pub) {
-		return { err_str: "invalid spend key" };
-	}
-	const private_keys = {
-		view: view_key,
-		spend: spend_key,
-	};
-	var account_seed = null; // default
-	if (
-		typeof seed_orUndefined !== "undefined" &&
-		seed_orUndefined &&
-		seed_orUndefined.length != 0
-	) {
-		var expected_account;
-		try {
-			expected_account = monero_utils.create_address(
-				seed_orUndefined,
-				nettype,
-			);
-		} catch (e) {
-			return { err_str: "invalid seed" };
-		}
-		if (
-			expected_account.view.sec !== view_key ||
-			expected_account.spend.sec !== spend_key ||
-			expected_account.public_addr !== address
-		) {
-			return { err_str: "invalid seed" };
-		}
-		account_seed = seed_orUndefined;
-	}
-	const payload = {
-		err_str: null, // err
-		address: address,
-		account_seed: account_seed !== "" ? account_seed : null,
-		public_keys: public_keys,
-		private_keys: private_keys,
-		isInViewOnlyMode: isInViewOnlyMode,
-	};
-	return payload;
 }
 exports.VerifiedComponentsForLogIn_sync = VerifiedComponentsForLogIn_sync;
 //
@@ -351,9 +290,8 @@ function VerifiedComponentsForLogIn(
 	address,
 	nettype,
 	view_key,
-	spend_key_orUndefinedForViewOnly,
-	seed_orUndefined,
-	wasAGeneratedWallet,
+	spend_key_orUndef,
+	seed_orUndef,
 	fn,
 ) {
 	// fn: (err?, address, account_seed, public_keys, private_keys, isInViewOnlyMode) -> Void
@@ -361,16 +299,12 @@ function VerifiedComponentsForLogIn(
 		address,
 		nettype,
 		view_key,
-		spend_key_orUndefinedForViewOnly,
-		seed_orUndefined,
-		wasAGeneratedWallet,
+		spend_key_orUndef,
+		seed_orUndef
 	);
 	fn(
 		payload.err_str ? new Error(payload.err_str) : null,
-		payload.address,
-		payload.account_seed,
 		payload.public_keys,
-		payload.private_keys,
 		payload.isInViewOnlyMode,
 	);
 }

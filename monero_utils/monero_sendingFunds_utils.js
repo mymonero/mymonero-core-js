@@ -69,7 +69,46 @@ function default_priority() {
 } // aka .low
 exports.default_priority = default_priority;
 //
-//
+function estimateRctSize(inputs, mixin, outputs, extra_size, bulletproof) 
+{
+	// keeping this in JS instead of C++ for now b/c it's much faster to access, and we don't have to make it asynchronous by waiting for the module to load
+	bulletproof = bulletproof == true ? true : false
+	extra_size = extra_size || 40
+	//
+	var size = 0;
+	// tx prefix
+	// first few bytes
+	size += 1 + 6;
+	size += inputs * (1 + 6 + (mixin + 1) * 2 + 32); 
+	// vout
+	size += outputs * (6 + 32);
+	// extra
+	size += extra_size;
+	// rct signatures
+	// type
+	size += 1;
+	// rangeSigs
+	if (bulletproof)
+		size += ((2*6 + 4 + 5)*32 + 3) * outputs;
+	else
+		size += (2*64*32+32+64*32) * outputs;
+	// MGs
+	size += inputs * (64 * (mixin + 1) + 32);
+	// mixRing - not serialized, can be reconstructed
+	/* size += 2 * 32 * (mixin+1) * inputs; */
+	// pseudoOuts
+	size += 32 * inputs;
+	// ecdhInfo
+	size += 2 * 32 * outputs;
+	// outPk - only commitment is saved
+	size += 32 * outputs;
+	// txnFee
+	size += 4;
+	// const logStr = `estimated rct tx size for ${inputs} at mixin ${mixin} and ${outputs} : ${size}  (${((32 * inputs/*+1*/) + 2 * 32 * (mixin+1) * inputs + 32 * outputs)}) saved)`
+	// console.log(logStr)
+
+	return size;
+};
 function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier) {
 	const numberOf_kB_JSBigInt = new JSBigInt(
 		(numberOf_bytes + 1023.0) / 1024.0,
@@ -114,7 +153,7 @@ function EstimatedTransaction_networkFee(
 		1 /*dest*/ + 1 /*change*/ + 0; /*no mymonero fee presently*/
 	// TODO: update est tx size for bulletproofs
 	// TODO: normalize est tx size fn naming
-	const estimated_txSize = monero_utils.estimateRctSize(
+	const estimated_txSize = estimateRctSize(
 		numberOf_inputs,
 		nonZero_mixin_int,
 		numberOf_outputs,
@@ -422,7 +461,7 @@ function SendFunds(
 		if (/*usingOuts.length > 1 &&*/ isRingCT) {
 			var newNeededFee = calculate_fee(
 				feePerKB_JSBigInt,
-				monero_utils.estimateRctSize(usingOuts.length, mixin, 2),
+				estimateRctSize(usingOuts.length, mixin, 2),
 				fee_multiplier_for_priority(simple_priority),
 			);
 			// if newNeededFee < neededFee, use neededFee instead (should only happen on the 2nd or later times through (due to estimated fee being too low))
@@ -475,7 +514,7 @@ function SendFunds(
 					// and recalculate invalidated values
 					newNeededFee = calculate_fee(
 						feePerKB_JSBigInt,
-						monero_utils.estimateRctSize(
+						estimateRctSize(
 							usingOuts.length,
 							mixin,
 							2,
@@ -587,10 +626,9 @@ function SendFunds(
 			// this should always fire when sweeping
 			if (isRingCT) {
 				// then create random destination to keep 2 outputs always in case of 0 change
-				var fakeAddress = monero_utils.create_address(
-					monero_utils.random_scalar(),
+				const fakeAddress = monero_utils.new_fake_address_for_rct_tx(
 					nettype,
-				).public_addr;
+				);
 				console.log(
 					"Sending 0 XMR to a fake address to keep tx uniform (no change exists): " +
 						fakeAddress,

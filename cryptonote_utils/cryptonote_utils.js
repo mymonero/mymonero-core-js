@@ -127,6 +127,10 @@ var cnUtil = function(currencyConfig)
 		}
 		throw "ret_val_boolstring_to_bool given illegal input"
 	}
+	function api_safe_wordset_name(wordset_name)
+	{
+		return wordset_name.charAt(0).toUpperCase() + wordset_name.substr(1) // capitalizes first letter
+	}
 	//
 	var config = {}; // shallow copy of initConfig
 	for (var key in currencyConfig) {
@@ -147,6 +151,50 @@ var cnUtil = function(currencyConfig)
 	// Generate a 64-bit / 16-char / 8-byte crypto random
 	this.rand_8 = function() {
 		return mnemonic.mn_random(64);
+	};
+
+	this.is_subaddress = function(addr, nettype) {
+		const args =
+		{
+			address: addr,
+			nettype_string: nettype_utils.nettype_to_API_string(nettype)
+		};
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.is_subaddress(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return ret_val_boolstring_to_bool(ret.retVal);
+	};
+
+	this.is_integrated_address = function(addr, nettype) {
+		const args =
+		{
+			address: addr,
+			nettype_string: nettype_utils.nettype_to_API_string(nettype)
+		};
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.is_integrated_address(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return ret_val_boolstring_to_bool(ret.retVal);
+	};
+
+	this.new_payment_id = function() {
+		const args = {};
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.new_payment_id(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return ret.retVal;
 	};
 
 	this.new__int_addr_from_addr_and_short_pid = function(
@@ -174,9 +222,17 @@ var cnUtil = function(currencyConfig)
 		return ret.retVal;
 	};
 
-	this.create_address = function(seed, nettype) 
-	{
-		// TODO:
+	this.new_fake_address_for_rct_tx = function(nettype)
+	{ // TODO: possibly support sending random_scalar from JS to emscripten to avoid emscripten random
+		const args = { nettype_string: nettype_utils.nettype_to_API_string(nettype) };
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.new_fake_address_for_rct_tx(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return ret.retVal;
 	};
 
 	this.decode_address = function(address, nettype)
@@ -201,20 +257,106 @@ var cnUtil = function(currencyConfig)
 		}
 	};
 
-	this.is_subaddress = function(addr, nettype) {
+	this.newly_created_wallet = function(
+		wordset_name,
+		nettype
+	) {
 		const args =
 		{
-			address: addr,
+			wordset_name: api_safe_wordset_name(wordset_name),
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
 		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.is_subaddress(args_str);
+		const ret_string = CNCrypto.newly_created_wallet(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg // TODO: maybe return this somehow
 		}
-		return ret_val_boolstring_to_bool(ret.retVal)
+		return { // calling these out so as to provide a stable ret val interface
+			mnemonic_string: ret.mnemonic_string,
+			sec_seed_string: ret.sec_seed_string,
+			address_string: ret.address_string,
+			pub_viewKey_string: ret.pub_viewKey_string,
+			sec_viewKey_string: ret.sec_viewKey_string,
+			pub_spendKey_string: ret.pub_spendKey_string,
+			sec_spendKey_string: ret.sec_spendKey_string
+		};
+	};
+
+	this.mnemonic_from_seed = function(
+		seed_string,
+		wordset_name
+	) {
+		const args =
+		{
+			seed_string: seed_string,
+			wordset_name: api_safe_wordset_name(wordset_name)
+		};
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.mnemonic_from_seed(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return ret.retVal;
+	};
+
+	this.seed_and_keys_from_mnemonic = function(
+		mnemonic_string,
+		wordset_name
+	) {
+		const args =
+		{
+			mnemonic_string: mnemonic_string,
+			wordset_name: api_safe_wordset_name(wordset_name)
+		};
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.seed_and_keys_from_mnemonic(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return { // calling these out so as to provide a stable ret val interface
+			sec_seed_string: ret.sec_seed_string,
+			address_string: ret.address_string,
+			pub_viewKey_string: ret.pub_viewKey_string,
+			sec_viewKey_string: ret.sec_viewKey_string,
+			pub_spendKey_string: ret.pub_spendKey_string,
+			sec_spendKey_string: ret.sec_spendKey_string
+		};
+	};
+
+	this.validate_components_for_login = function(
+		address_string,
+		sec_viewKey_string,
+		sec_spendKey_string,
+		seed_string,
+		nettype
+	) {
+		const args =
+		{
+			address_string: address_string,
+			sec_viewKey_string: sec_viewKey_string,
+			sec_spendKey_string: sec_spendKey_string,
+			seed_string: seed_string,
+			nettype_string: nettype_utils.nettype_to_API_string(nettype)
+		};
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.validate_components_for_login(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return { // calling these out so as to provide a stable ret val interface
+			isValid: ret_val_boolstring_to_bool(ret.isValid),
+			isInViewOnlyMode: ret_val_boolstring_to_bool(ret.isInViewOnlyMode),
+			pub_viewKey_string: ret.pub_viewKey_string,
+			pub_spendKey_string: ret.pub_spendKey_string
+		};
 	};
 
 	this.generate_key_image = function(
@@ -321,101 +463,6 @@ var cnUtil = function(currencyConfig)
 			if ((mix_outs[i].outputs || []).length < fake_outputs_count) {
 				throw "Not enough outputs to mix with";
 			}
-		}
-
-		// TODO
-
-	};
-
-	this.estimateRctSize = function(inputs, mixin, outputs, extra_size, bulletproof) 
-	{
-		// keeping this in JS instead of C++ for now b/c it's much faster to access, and we don't have to make it asynchronous by waiting for the module to load
-		bulletproof = bulletproof == true ? true : false
-		extra_size = extra_size || 40
-		//
-		var size = 0;
-		// tx prefix
-		// first few bytes
-		size += 1 + 6;
-		size += inputs * (1 + 6 + (mixin + 1) * 2 + 32); 
-		// vout
-		size += outputs * (6 + 32);
-		// extra
-		size += extra_size;
-		// rct signatures
-		// type
-		size += 1;
-		// rangeSigs
-		if (bulletproof)
-			size += ((2*6 + 4 + 5)*32 + 3) * outputs;
-		else
-			size += (2*64*32+32+64*32) * outputs;
-		// MGs
-		size += inputs * (64 * (mixin + 1) + 32);
-		// mixRing - not serialized, can be reconstructed
-		/* size += 2 * 32 * (mixin+1) * inputs; */
-		// pseudoOuts
-		size += 32 * inputs;
-		// ecdhInfo
-		size += 2 * 32 * outputs;
-		// outPk - only commitment is saved
-		size += 32 * outputs;
-		// txnFee
-		size += 4;
-		// const logStr = `estimated rct tx size for ${inputs} at mixin ${mixin} and ${outputs} : ${size}  (${((32 * inputs/*+1*/) + 2 * 32 * (mixin+1) * inputs + 32 * outputs)}) saved)`
-		// console.log(logStr)
-
-		return size;
-	};
-
-	this.is_tx_unlocked = function(unlock_time, blockchain_height) {
-		if (!config.maxBlockNumber) {
-			throw "Max block number is not set in config!";
-		}
-		if (unlock_time < config.maxBlockNumber) {
-			// unlock time is block height
-			return blockchain_height >= unlock_time;
-		} else {
-			// unlock time is timestamp
-			var current_time = Math.round(new Date().getTime() / 1000);
-			return current_time >= unlock_time;
-		}
-	};
-
-	this.tx_locked_reason = function(unlock_time, blockchain_height) {
-		if (unlock_time < config.maxBlockNumber) {
-			// unlock time is block height
-			var numBlocks = unlock_time - blockchain_height;
-			if (numBlocks <= 0) {
-				return "Transaction is unlocked";
-			}
-			var unlock_prediction = moment().add(
-				numBlocks * config.avgBlockTime,
-				"seconds",
-			);
-			return (
-				"Will be unlocked in " +
-				numBlocks +
-				" blocks, ~" +
-				unlock_prediction.fromNow(true) +
-				", " +
-				unlock_prediction.calendar() +
-				""
-			);
-		} else {
-			// unlock time is timestamp
-			var current_time = Math.round(new Date().getTime() / 1000);
-			var time_difference = unlock_time - current_time;
-			if (time_difference <= 0) {
-				return "Transaction is unlocked";
-			}
-			var unlock_moment = moment(unlock_time * 1000);
-			return (
-				"Will be unlocked " +
-				unlock_moment.fromNow() +
-				", " +
-				unlock_moment.calendar()
-			);
 		}
 	};
 
