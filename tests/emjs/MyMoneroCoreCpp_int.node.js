@@ -122,27 +122,27 @@ dummy_test_utils.OnceModuleReady(
 			console.log("validate_components_for_login ret", ret_string)
 		})
 		//
-		setTimeout(function() {
-			console.time("estimate_rct_tx_size")
-			const args_str = '{"n_inputs":"2","mixin":"6","n_outputs":"2","extra_size":"0","bulletproof":"false"}'
-			const ret_string = Module.estimate_rct_tx_size(args_str)
-			console.timeEnd("estimate_rct_tx_size")
-			console.log("estimate_rct_tx_size ret", ret_string)
-		})
-		setTimeout(function() {
-			console.time("calculate_fee")
-			const args_str = '{"fee_per_kb":"9000000","num_bytes":"13762","fee_multiplier":"4"}'
-			const ret_string = Module.calculate_fee(args_str)
-			console.timeEnd("calculate_fee")
-			console.log("calculate_fee ret", ret_string)
-		})
-		setTimeout(function() {
-			console.time("estimated_tx_network_fee")
-			const args_str = '{"fee_per_kb":"9000000","priority":"2"}'
-			const ret_string = Module.estimated_tx_network_fee(args_str)
-			console.timeEnd("estimated_tx_network_fee")
-			console.log("estimated_tx_network_fee ret", ret_string)
-		})
+		// setTimeout(function() {
+		// 	console.time("estimate_rct_tx_size")
+		// 	const args_str = '{"n_inputs":"2","mixin":"6","n_outputs":"2","extra_size":"0","bulletproof":"false"}'
+		// 	const ret_string = Module.estimate_rct_tx_size(args_str)
+		// 	console.timeEnd("estimate_rct_tx_size")
+		// 	console.log("estimate_rct_tx_size ret", ret_string)
+		// })
+		// setTimeout(function() {
+		// 	console.time("calculate_fee")
+		// 	const args_str = '{"fee_per_kb":"9000000","num_bytes":"13762","fee_multiplier":"4"}'
+		// 	const ret_string = Module.calculate_fee(args_str)
+		// 	console.timeEnd("calculate_fee")
+		// 	console.log("calculate_fee ret", ret_string)
+		// })
+		// setTimeout(function() {
+		// 	console.time("estimated_tx_network_fee")
+		// 	const args_str = '{"fee_per_kb":"9000000","priority":"2"}'
+		// 	const ret_string = Module.estimated_tx_network_fee(args_str)
+		// 	console.timeEnd("estimated_tx_network_fee")
+		// 	console.log("estimated_tx_network_fee ret", ret_string)
+		// })
 		//
 		setTimeout(function() {
 			console.time("generate_key_image")

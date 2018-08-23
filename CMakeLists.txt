@@ -178,14 +178,14 @@ set(
     #unsure if the -I...boost..include is necessary here due to include above
 	"-Wall -std=c++11 \
     --bind -s MODULARIZE=1 \
-    -Oz \
+    -O3 \
     -s WASM=0 \
     -s ASSERTIONS=1 \
     -s NO_DYNAMIC_EXECUTION=1 \
-    -s \"BINARYEN_METHOD='native-wasm'\" \
     -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
     -s PRECISE_F32=1 \
     "
+    #-s \"BINARYEN_METHOD='native-wasm'\" \
     # -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]' \
     # -s DISABLE_EXCEPTION_CATCHING=0 \
     #    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
