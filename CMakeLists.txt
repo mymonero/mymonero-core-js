@@ -93,59 +93,59 @@ set(
 
 set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
 
-add_library(boost_atomic STATIC IMPORTED)
-set_target_properties(
-    boost_atomic PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_atomic.a
-)
-#
-add_library(boost_chrono STATIC IMPORTED)
-set_target_properties(
-    boost_chrono PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_chrono.a
-)
-#
-add_library(boost_date_time STATIC IMPORTED)
-set_target_properties(
-    boost_date_time PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_date_time.a
-)
-#
-add_library(boost_filesystem STATIC IMPORTED)
-set_target_properties(
-    boost_filesystem PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_filesystem.a
-)
-#
-add_library(boost_locale STATIC IMPORTED)
-set_target_properties(
-    boost_locale PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_locale.a
-)
-#
-add_library(boost_program_options STATIC IMPORTED)
-set_target_properties(
-    boost_program_options PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_program_options.a
-)
-#
-add_library(boost_regex STATIC IMPORTED)
-set_target_properties(
-    boost_regex PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_regex.a
-)
-#
-add_library(boost_serialization STATIC IMPORTED)
-set_target_properties(
-    boost_serialization PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_serialization.a
-)
-#
-add_library(boost_signals STATIC IMPORTED)
-set_target_properties(
-    boost_signals PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_signals.a
-)
+# add_library(boost_atomic STATIC IMPORTED)
+# set_target_properties(
+#     boost_atomic PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_atomic.a
+# )
+# #
+# add_library(boost_chrono STATIC IMPORTED)
+# set_target_properties(
+#     boost_chrono PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_chrono.a
+# )
+# #
+# add_library(boost_date_time STATIC IMPORTED)
+# set_target_properties(
+#     boost_date_time PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_date_time.a
+# )
+# #
+# add_library(boost_filesystem STATIC IMPORTED)
+# set_target_properties(
+#     boost_filesystem PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_filesystem.a
+# )
+# #
+# add_library(boost_locale STATIC IMPORTED)
+# set_target_properties(
+#     boost_locale PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_locale.a
+# )
+# #
+# add_library(boost_program_options STATIC IMPORTED)
+# set_target_properties(
+#     boost_program_options PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_program_options.a
+# )
+# #
+# add_library(boost_regex STATIC IMPORTED)
+# set_target_properties(
+#     boost_regex PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_regex.a
+# )
+# #
+# add_library(boost_serialization STATIC IMPORTED)
+# set_target_properties(
+#     boost_serialization PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_serialization.a
+# )
+# #
+# add_library(boost_signals STATIC IMPORTED)
+# set_target_properties(
+#     boost_signals PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_signals.a
+# )
 #
 add_library(boost_system STATIC IMPORTED)
 set_target_properties(
@@ -159,17 +159,17 @@ set_target_properties(
     ${boost_DIR}/lib/libboost_thread.a
 )
 #
-add_library(boost_timer STATIC IMPORTED)
-set_target_properties(
-    boost_timer PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_timer.a
-)
-#
-add_library(boost_wserialization STATIC IMPORTED)
-set_target_properties(
-    boost_wserialization PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_wserialization.a
-)
+# add_library(boost_timer STATIC IMPORTED)
+# set_target_properties(
+#     boost_timer PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_timer.a
+# )
+# #
+# add_library(boost_wserialization STATIC IMPORTED)
+# set_target_properties(
+#     boost_wserialization PROPERTIES IMPORTED_LOCATION
+#     ${boost_DIR}/lib/libboost_wserialization.a
+# )
 #
 #
 #
@@ -178,18 +178,22 @@ set(
     #unsure if the -I...boost..include is necessary here due to include above
 	"-Wall -std=c++11 \
     --bind -s MODULARIZE=1 \
-    -O3 \
-    -s WASM=0 \
-    -s ASSERTIONS=1 \
+    -Oz \
+    --llvm-lto 1 \
+    -s WASM=1 \
+    -s \"BINARYEN_METHOD='native-wasm'\" \
     -s NO_DYNAMIC_EXECUTION=1 \
-    -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
+    -s \"BINARYEN_TRAP_MODE='clamp'\" \
+    -s ALLOW_MEMORY_GROWTH=1 \
     -s PRECISE_F32=1 \
+    -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
     "
-    #-s \"BINARYEN_METHOD='native-wasm'\" \
+    # --closure 1 \
+    # -s ASSERTIONS=1 \ 
     # -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]' \
     # -s DISABLE_EXCEPTION_CATCHING=0 \
     #    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
-    #"-s SAFE_HEAP=1 --bind -O3 -s LEGACY_GL_EMULATION=0  -s GL_UNSAFE_OPTS=0 --pre-js pre-module.js --post-js post-module.js -s GL_ASSERTIONS=1 -s INVOKE_RUN=0  -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s OFFSCREENCANVAS_SUPPORT=1 --preload-file shaders --preload-file extern --use-preload-plugins"
+    # -s SAFE_HEAP=1
 
 )
 
@@ -205,19 +209,19 @@ set_target_properties(MyMoneroCoreCpp PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS
 target_link_libraries(
     MyMoneroCoreCpp
     #
-    boost_atomic
-    boost_chrono
-    boost_date_time
-    boost_filesystem
-    boost_locale
-    boost_program_options
-    boost_regex
-    boost_serialization
-    boost_signals
+    # boost_atomic
+    # boost_chrono
+    # boost_date_time
+    # boost_filesystem
+    # boost_locale
+    # boost_program_options
+    # boost_regex
+    # boost_serialization
+    # boost_signals
     boost_system
     boost_thread
-    boost_timer
-    boost_wserialization
+    # boost_timer
+    # boost_wserialization
     #
     ${log-lib}
 )

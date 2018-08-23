@@ -34,8 +34,11 @@ rm -rf bin.v2
 export NO_BZIP2=1 #bc it's supplied by emscripten but b2 will fail to find it
 
 
+#  --with-libraries=atomic,signals,timer,system,filesystem,thread,date_time,chrono,regex,serialization,program_options,locale \
+
+
 ./bootstrap.sh \
-  --with-libraries=atomic,signals,timer,system,filesystem,thread,date_time,chrono,regex,serialization,program_options,locale \
+  --with-libraries=system,thread \
 2>&1
 
 if [ $? != 0 ]; then
@@ -58,7 +61,7 @@ HOST_NCORES=$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1
 ./b2 -q -a -j$HOST_NCORES    \
   toolset=clang-emscripten   \
   link=static                \
-  optimization=speed         \
+  optimization=space         \
   variant=release            \
   stage                      \
   --stagedir="$INSTALL_PATH" \
