@@ -48,6 +48,7 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("new_payment_id", &serial_bridge::new_payment_id);
     //
     emscripten::function("newly_created_wallet", &serial_bridge::newly_created_wallet);
+    emscripten::function("are_equal_mnemonics", &serial_bridge::are_equal_mnemonics);
     emscripten::function("mnemonic_from_seed", &serial_bridge::mnemonic_from_seed);
     emscripten::function("seed_and_keys_from_mnemonic", &serial_bridge::seed_and_keys_from_mnemonic);
     emscripten::function("validate_components_for_login", &serial_bridge::validate_components_for_login);

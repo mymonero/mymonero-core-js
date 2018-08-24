@@ -101,6 +101,13 @@ dummy_test_utils.OnceModuleReady(
 			console.log("newly_created_wallet ret", ret_string)
 		})
 		setTimeout(function() {
+			console.time("are_equal_mnemonics")
+			const args_str = '{"a":"foxe selfish hum nexus juven dodeg pepp ember biscuti elap jazz vibrate biscui","b":"fox sel hum nex juv dod pep emb bis ela jaz vib bis"}'
+			const ret_string = Module.are_equal_mnemonics(args_str)
+			console.timeEnd("are_equal_mnemonics")
+			console.log("are_equal_mnemonics ret", ret_string)
+		})
+		setTimeout(function() {
 			console.time("mnemonic_from_seed")
 			const args_str = '{"seed_string":"9c973aa296b79bbf452781dd3d32ad7f","wordset_name":"English"}'
 			const ret_string = Module.mnemonic_from_seed(args_str)

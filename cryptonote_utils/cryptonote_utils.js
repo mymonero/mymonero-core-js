@@ -284,6 +284,22 @@ var cnUtil = function(currencyConfig)
 		};
 	};
 
+	this.are_equal_mnemonics = function(a, b) {
+		const args =
+		{
+			a: a,
+			b: b
+		};
+		const args_str = JSON.stringify(args);
+		const CNCrypto = loaded_CNCrypto();
+		const ret_string = CNCrypto.are_equal_mnemonics(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg // TODO: maybe return this somehow
+		}
+		return ret_val_boolstring_to_bool(ret.retVal);
+	}
+
 	this.mnemonic_from_seed = function(
 		seed_string,
 		wordset_name
