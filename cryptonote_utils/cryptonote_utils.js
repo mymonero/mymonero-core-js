@@ -337,6 +337,7 @@ var cnUtil = function(currencyConfig)
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			sec_seed_string: ret.sec_seed_string,
+			mnemonic_language: ret.mnemonic_language,
 			address_string: ret.address_string,
 			pub_viewKey_string: ret.pub_viewKey_string,
 			sec_viewKey_string: ret.sec_viewKey_string,
