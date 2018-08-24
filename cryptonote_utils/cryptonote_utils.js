@@ -321,12 +321,12 @@ var cnUtil = function(currencyConfig)
 
 	this.seed_and_keys_from_mnemonic = function(
 		mnemonic_string,
-		wordset_name
+		nettype
 	) {
 		const args =
 		{
 			mnemonic_string: mnemonic_string,
-			wordset_name: api_safe_wordset_name(wordset_name)
+			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
 		const CNCrypto = loaded_CNCrypto();

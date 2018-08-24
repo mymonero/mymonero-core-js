@@ -116,7 +116,7 @@ dummy_test_utils.OnceModuleReady(
 		})
 		setTimeout(function() {
 			console.time("seed_and_keys_from_mnemonic")
-			const args_str = '{"mnemonic_string":"foxe selfish hum nexus juven dodeg pepp ember biscuti elap jazz vibrate biscui","wordset_name":"English"}'
+			const args_str = '{"mnemonic_string":"foxe selfish hum nexus juven dodeg pepp ember biscuti elap jazz vibrate biscui","nettype_string":"MAINNET"}'
 			const ret_string = Module.seed_and_keys_from_mnemonic(args_str)
 			console.timeEnd("seed_and_keys_from_mnemonic")
 			console.log("seed_and_keys_from_mnemonic ret", ret_string)

@@ -34,111 +34,6 @@ const monero_config = require("./monero_config");
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-// Mnemonic wordset utilities - Exposing available names
-//
-const wordsetNamesByWordsetName = {};
-const allWordsetNames = Object.keys(mnemonic.mn_words);
-for (let wordsetName of allWordsetNames) {
-	wordsetNamesByWordsetName[wordsetName] = wordsetName;
-}
-exports.WordsetNamesByWordsetName = wordsetNamesByWordsetName;
-exports.AllWordsetNames = allWordsetNames;
-//
-//
-// Mnemonic wordset utilities - Comparison
-// TODO: perhaps move this to mnemonic.js
-function AreEqualMnemonics(a, b, a__wordsetName, b__wordsetName) {
-	if (a__wordsetName !== b__wordsetName) {
-		return false;
-	}
-	const wordsetName = a__wordsetName;
-	const wordset = mnemonic.mn_words[wordsetName];
-	const prefix_len = wordset.prefix_len;
-	// since mnemonics can be entered with only the first N letters, we must check equality of mnemonics by prefix
-	let a__mnemonicString_words = a.split(" ");
-	let b__mnemonicString_words = b.split(" ");
-	if (a__mnemonicString_words.length != b__mnemonicString_words.length) {
-		return false;
-	}
-	let numberOf_mnemonicString_words = a__mnemonicString_words.length;
-	for (var i = 0; i < numberOf_mnemonicString_words; i++) {
-		let a__word = a__mnemonicString_words[i];
-		let b__word = b__mnemonicString_words[i];
-		// ... We're assuming that a and b are already valid mneminics
-		const a_prefix = a__word.slice(0, prefix_len);
-		const b_prefix = b__word.slice(0, prefix_len);
-		if (a_prefix !== b_prefix) {
-			return false;
-		}
-	}
-	return true;
-}
-exports.AreEqualMnemonics = AreEqualMnemonics;
-//
-////////////////////////////////////////////////////////////////////////////////
-// Mnemonic wordset utilities - Wordset name detection by mnemonic contents
-// TODO: perhaps move this to mnemonic.js
-function WordsetNameAccordingToMnemonicString(
-	mnemonicString, // throws
-) {
-	const mnemonicString_words = mnemonicString.split(" ");
-	if (mnemonicString_words.length == 0) {
-		throw "Invalid mnemonic";
-	}
-	var wholeMnemonicSuspectedAsWordsetNamed = null; // to derive
-	for (let mnemonicString_word of mnemonicString_words) {
-		var thisWordIsInWordsetNamed = null; // to derive
-		for (let wordsetName of allWordsetNames) {
-			if (wordsetName === "electrum") {
-				continue; // skip because it conflicts with 'english'
-			}
-			const wordset = mnemonic.mn_words[wordsetName];
-			const prefix_len = wordset.prefix_len;
-			if (mnemonicString_word.length < prefix_len) {
-				throw "Please enter more than " +
-					(prefix_len - 1) +
-					" letters per word";
-			}
-			const wordsetWords = wordset.words;
-			for (let wordsetWord of wordsetWords) {
-				if (wordsetWord.indexOf(mnemonicString_word) == 0) {
-					// we can safely check prefix b/c we've checked mnemonicString_word is of at least min length
-					thisWordIsInWordsetNamed = wordsetName;
-					break; // done looking; exit interior then exterior loops
-				}
-			}
-			if (thisWordIsInWordsetNamed != null) {
-				// just found
-				break; // also exit
-			}
-			// haven't found it yet; keep looking
-		}
-		if (thisWordIsInWordsetNamed === null) {
-			// didn't find this word in any of the mnemonic wordsets
-			throw "Unrecognized mnemonic language";
-		}
-		if (wholeMnemonicSuspectedAsWordsetNamed === null) {
-			// haven't found it yet
-			wholeMnemonicSuspectedAsWordsetNamed = thisWordIsInWordsetNamed;
-		} else if (
-			thisWordIsInWordsetNamed !== wholeMnemonicSuspectedAsWordsetNamed
-		) {
-			throw "Ambiguous mnemonic language"; // multiple wordset names detected
-		} else {
-			// nothing to do but keep verifying the rest of the words that it's the same suspsected wordset
-		}
-	}
-	if (wholeMnemonicSuspectedAsWordsetNamed === null) {
-		// this might be redundant, but for logical rigor……
-		throw "Unrecognized mnemonic language";
-	}
-	//
-	return wholeMnemonicSuspectedAsWordsetNamed;
-}
-exports.WordsetNameAccordingToMnemonicString = WordsetNameAccordingToMnemonicString;
-//
-//
-////////////////////////////////////////////////////////////////////////////////
 // Mnemonic wordset utilities - By locale
 //
 const mnemonicWordsetNamesByAppLocaleNames = {
@@ -193,7 +88,6 @@ exports.MnemonicStringFromSeed = MnemonicStringFromSeed;
 //
 function SeedAndKeysFromMnemonic_sync(
 	mnemonicString,
-	mnemonic_wordsetName,
 	nettype,
 ) {
 	// -> {err_str?, seed?, keys?}
@@ -201,10 +95,11 @@ function SeedAndKeysFromMnemonic_sync(
 	try {
 		const ret = monero_utils.seed_and_keys_from_mnemonic(
 			mnemonicString,
-			mnemonic_wordsetName
+			nettype
 		);
 		return {
 			err_str: null,
+			mnemonic_language: ret.mnemonic_language,
 			seed: ret.sec_seed_string,
 			keys: {
 				public_addr: ret.address_string,
@@ -222,6 +117,7 @@ function SeedAndKeysFromMnemonic_sync(
 		console.error("Invalid mnemonic!");
 		return {
 			err_str: typeof e === "string" ? e : "" + e,
+			mnemonic_language: null,
 			seed: null,
 			keys: null,
 		};
@@ -231,20 +127,20 @@ exports.SeedAndKeysFromMnemonic_sync = SeedAndKeysFromMnemonic_sync;
 
 function SeedAndKeysFromMnemonic(
 	mnemonicString,
-	mnemonic_wordsetName,
 	nettype,
 	fn, // made available via callback not because it's async but for convenience
 ) {
 	// fn: (err?, seed?, keys?)
 	const payload = SeedAndKeysFromMnemonic_sync(
 		mnemonicString,
-		mnemonic_wordsetName,
 		nettype,
 	);
-	const err = payload.err_str ? new Error(payload.err_str) : null;
-	const seed = payload.seed;
-	const keys = payload.keys;
-	fn(err, seed, keys);
+	fn(
+		payload.err_str ? new Error(payload.err_str) : null, 
+		payload.mnemonic_language, 
+		payload.seed, 
+		payload.keys
+	);
 }
 exports.SeedAndKeysFromMnemonic = SeedAndKeysFromMnemonic;
 //
