@@ -26,24 +26,22 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-"use strict";
+// This file is here merely to share configuration
 //
-const monero_wallet_utils = require("./monero_wallet_utils");
-//
-function MnemonicWordsetNameWithLocale(
-	currentLocale, // e.g. 'en'
-) {
-	const mnemonicWordsetNamesByAppLocaleNames =
-		monero_wallet_utils.MnemonicWordsetNamesByAppLocaleNames;
-	if (currentLocale.indexOf("en") === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.English;
-	} else if (currentLocale.indexOf("es") === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.Spanish;
-	} else if (currentLocale.indexOf("pt") === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.Portuguese;
-	} else if (currentLocale.indexOf("ja") === 0) {
-		return mnemonicWordsetNamesByAppLocaleNames.Japanese;
-	}
-	return monero_wallet_utils.DefaultWalletMnemonicWordsetName; // which would be .English
-}
-exports.MnemonicWordsetNameWithLocale = MnemonicWordsetNameWithLocale;
+exports.cryptonote_utils_bridge_fn_interface_names =
+[
+	"is_subaddress",
+	"is_integrated_address",
+	"new_payment_id",
+	"new__int_addr_from_addr_and_short_pid",
+	"new_fake_address_for_rct_tx",
+	"decode_address",
+	"newly_created_wallet",
+	"are_equal_mnemonics",
+	"mnemonic_from_seed",
+	"seed_and_keys_from_mnemonic",
+	"validate_components_for_login",
+	"generate_key_image",
+	"create_signed_transaction__IPCsafe",
+	"create_signed_transaction"
+];

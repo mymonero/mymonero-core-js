@@ -28,20 +28,22 @@
 //
 "use strict";
 //
-// NOTE: The main downside to using an index.js file like this is that it will pull in all the code - rather than the consumer requiring code module-by-module
-// It's of course possible to construct your own stripped-down index.[custom name].js file for, e.g., special webpack bundling usages.
-const mymonero_core_js = {};
-mymonero_core_js.monero_utils = require("./monero_utils/monero_cryptonote_utils_instance");
-mymonero_core_js.monero_wallet_utils = require("./monero_utils/monero_wallet_utils");
-mymonero_core_js.monero_config = require("./monero_utils/monero_config");
-mymonero_core_js.monero_txParsing_utils = require("./monero_utils/monero_txParsing_utils");
-mymonero_core_js.monero_sendingFunds_utils = require("./monero_utils/monero_sendingFunds_utils");
-mymonero_core_js.monero_requestURI_utils = require("./monero_utils/monero_requestURI_utils");
-mymonero_core_js.monero_keyImage_cache_utils = require("./monero_utils/monero_keyImage_cache_utils");
-mymonero_core_js.monero_paymentID_utils = require("./monero_utils/monero_paymentID_utils");
-mymonero_core_js.api_response_parser_utils = require("./hostAPI/response_parser_utils");
-//
-mymonero_core_js.nettype_utils = require("./cryptonote_utils/nettype");
-mymonero_core_js.JSBigInt = require("./cryptonote_utils/biginteger").BigInteger; // so that it is available to a hypothetical consumer's language-bridging web context for constructing string arguments to the above modules
-//
-module.exports = mymonero_core_js;
+const ENVIRONMENT_IS_WEB = typeof window==="object";
+const ENVIRONMENT_IS_WORKER = typeof importScripts==="function";
+const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
+if (!ENVIRONMENT_IS_NODE || ENVIRONMENT_IS_WEB) {
+	throw "Not expecting this module to be included in this environment: non-node or web"
+}
+const monero_config = require("./monero_config");
+const cryptonote_utils = require("../cryptonote_utils/cryptonote_utils").cnUtil;
+const monero_cryptonote_utils_instance = cryptonote_utils(monero_config);
+const local_fns = {};
+const fn_names = require('./bridged_fns_spec').cryptonote_utils_bridge_fn_interface_names;
+for (const i in fn_names) {
+	const name = fn_names[i]
+	local_fns[name] = function()
+	{
+		return monero_cryptonote_utils_instance[name].apply(null, arguments); // We are not intercepting the err_msg here -- because we will kill the remote fn call if we throw -- so we'll let the renderer-side throw
+	}
+}
+module.exports = local_fns;

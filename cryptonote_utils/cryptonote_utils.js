@@ -136,23 +136,7 @@ var cnUtil = function(currencyConfig)
 	for (var key in currencyConfig) {
 		config[key] = currencyConfig[key];
 	}
-
-
-	// Generate a 256-bit / 64-char / 32-byte crypto random
-	this.rand_32 = function() {
-		return mnemonic.mn_random(256);
-	};
-
-	// Generate a 128-bit / 32-char / 16-byte crypto random
-	this.rand_16 = function() {
-		return mnemonic.mn_random(128);
-	};
-
-	// Generate a 64-bit / 16-char / 8-byte crypto random
-	this.rand_8 = function() {
-		return mnemonic.mn_random(64);
-	};
-
+	//
 	this.is_subaddress = function(addr, nettype) {
 		const args =
 		{
@@ -258,12 +242,12 @@ var cnUtil = function(currencyConfig)
 	};
 
 	this.newly_created_wallet = function(
-		wordset_name,
+		locale_language_code,
 		nettype
 	) {
 		const args =
 		{
-			wordset_name: api_safe_wordset_name(wordset_name),
+			locale_language_code: locale_language_code, // NOTE: this function takes the locale, not the wordset name
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
@@ -271,10 +255,11 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.newly_created_wallet(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			mnemonic_string: ret.mnemonic_string,
+			mnemonic_language: ret.mnemonic_language,
 			sec_seed_string: ret.sec_seed_string,
 			address_string: ret.address_string,
 			pub_viewKey_string: ret.pub_viewKey_string,
@@ -295,7 +280,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.are_equal_mnemonics(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
@@ -314,7 +299,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.mnemonic_from_seed(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
 		}
 		return ret.retVal;
 	};

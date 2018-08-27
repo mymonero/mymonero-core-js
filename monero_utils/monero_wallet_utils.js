@@ -34,52 +34,8 @@ const monero_config = require("./monero_config");
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-// Mnemonic wordset utilities - By locale
-//
-const mnemonicWordsetNamesByAppLocaleNames = {
-	English: "english",
-	Japanese: "japanese",
-	Spanish: "spanish",
-	Portuguese: "portuguese",
-	// NOTE: no support for 'electrum' wordset here
-};
-exports.MnemonicWordsetNamesByAppLocaleNames = mnemonicWordsetNamesByAppLocaleNames;
-//
-exports.DefaultWalletMnemonicWordsetName =
-	mnemonicWordsetNamesByAppLocaleNames.English;
-//
-//
-////////////////////////////////////////////////////////////////////////////////
-// Wallet creation:
-//
-function NewlyCreatedWallet(mnemonic_wordsetName, nettype) {
-	// TODO: possibly deprecate this function now that it's basically a passthrough (it existed so as to avoid modifying cryptonote_utils)
-	const ret = monero_utils.newly_created_wallet(
-		mnemonic_wordsetName,
-		nettype
-	);
-	return {
-		seed: ret.sec_seed_string,
-		mnemonicString: ret.mnemonic_string,
-		keys: {
-			public_addr: ret.address_string,
-			view: {
-				sec: ret.sec_viewKey_string,
-				pub: ret.pub_viewKey_string
-			},
-			spend: {
-				sec: ret.sec_spendKey_string,
-				pub: ret.pub_spendKey_string
-			}
-		}
-	};
-}
-exports.NewlyCreatedWallet = NewlyCreatedWallet;
-//
-//
-////////////////////////////////////////////////////////////////////////////////
 // Wallet login:
-//
+// TODO: deprecate all
 function MnemonicStringFromSeed(account_seed, mnemonic_wordsetName) {
 	// TODO: possibly deprecate this function as it now merely wraps another
 	return monero_utils.mnemonic_from_seed(account_seed, mnemonic_wordsetName);
@@ -88,7 +44,7 @@ exports.MnemonicStringFromSeed = MnemonicStringFromSeed;
 //
 function SeedAndKeysFromMnemonic_sync(
 	mnemonicString,
-	nettype,
+	nettype
 ) {
 	// -> {err_str?, seed?, keys?}
 	mnemonicString = mnemonicString.toLowerCase() || "";

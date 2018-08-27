@@ -33,6 +33,8 @@ const ENVIRONMENT_IS_WORKER = typeof importScripts==="function";
 const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
 var isElectronRenderer = (ENVIRONMENT_IS_NODE&&ENVIRONMENT_IS_WEB)/*this may become insufficient*/
 	|| (typeof window !== 'undefined' && window.IsElectronRendererProcess == true);
+//
+var monero_cryptonote_utils_instance = null;
 if (isElectronRenderer) {
 	// Require file again except on the main process ...
 	// this avoids a host of issues running wasm on the renderer side, 
@@ -41,12 +43,30 @@ if (isElectronRenderer) {
 	// we can make API async.
 	// 
 	// Resolves relative to the entrypoint of the main process.
-	const remotely_required = require('electron').remote.require("../mymonero_core_js/monero_utils/monero_cryptonote_utils_instance")
-	module.exports = remotely_required;
+	monero_cryptonote_utils_instance = require('electron').remote.require("../mymonero_core_js/monero_utils/_monero_utils_i_nonthrowing")
 } else {
 	const monero_config = require("./monero_config");
 	const cryptonote_utils = require("../cryptonote_utils/cryptonote_utils").cnUtil;
-	const monero_cryptonote_utils_instance = cryptonote_utils(monero_config);
-	//
-	module.exports = monero_cryptonote_utils_instance;
+	monero_cryptonote_utils_instance = cryptonote_utils(monero_config);
 }
+if (monero_cryptonote_utils_instance == null) {
+	throw "Unable to make monero_cryptonote_utils_instance"
+}
+const local_fns = {};
+const fn_names = require('./bridged_fns_spec').cryptonote_utils_bridge_fn_interface_names;
+for (const i in fn_names) {
+	const name = fn_names[i]
+	local_fns[name] = function()
+	{
+		const retVal = monero_cryptonote_utils_instance[name].apply(null, arguments);
+		if (typeof retVal === "object") {
+			const err_msg = retVal.err_msg
+			if (typeof err_msg !== 'undefined' && err_msg) {
+				throw err_msg; // because we can't throw from electron remote w/o killing fn call
+				// ... and because parsing out this err_msg everywhere is sorta inefficient
+			}
+		}
+		return retVal;
+	}
+}
+module.exports = local_fns;
