@@ -2540,9 +2540,10 @@ var cnUtil = function(currencyConfig) {
 		unlock_time,
 		rct,
 		nettype,
+		txkey
 	) {
 		//we move payment ID stuff here, because we need txkey to encrypt
-		var txkey = this.random_keypair();
+		if (!txkey) txkey = this.random_keypair();
 		console.log(txkey);
 		var extra = "";
 		if (payment_id) {
@@ -2776,6 +2777,7 @@ var cnUtil = function(currencyConfig) {
 		unlock_time,
 		rct,
 		nettype,
+		txkey
 	) {
 		unlock_time = unlock_time || 0;
 		mix_outs = mix_outs || [];
@@ -2932,6 +2934,7 @@ var cnUtil = function(currencyConfig) {
 			unlock_time,
 			rct,
 			nettype,
+			txkey
 		);
 	};
 
