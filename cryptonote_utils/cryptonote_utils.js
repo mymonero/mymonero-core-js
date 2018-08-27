@@ -2759,7 +2759,7 @@ var cnUtil = function(currencyConfig) {
 			);
 		}
 		console.log(tx);
-		return tx;
+		return { tx, txkey };
 	};
 
 	this.create_transaction = function(

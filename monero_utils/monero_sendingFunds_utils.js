@@ -652,7 +652,7 @@ function SendFunds(
 				console.log("Decomposed destinations:");
 				monero_utils.printDsts(splitDestinations);
 				//
-				signedTx = monero_utils.create_transaction(
+				var fullTx = monero_utils.create_transaction(
 					wallet__public_keys,
 					wallet__private_keys,
 					splitDestinations,
@@ -667,6 +667,7 @@ function SendFunds(
 					isRingCT,
 					nettype,
 				);
+				var signedTx = fullTx.tx;
 			} catch (e) {
 				var errStr;
 				if (e) {
