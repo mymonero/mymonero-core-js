@@ -95,7 +95,7 @@ dummy_test_utils.OnceModuleReady(
 		//
 		setTimeout(function() {
 			console.time("newly_created_wallet")
-			const args_str = '{"nettype_string":"MAINNET","wordset_name":"English"}'
+			const args_str = '{"nettype_string":"MAINNET","locale_language_code":"en"}'
 			const ret_string = Module.newly_created_wallet(args_str)
 			console.timeEnd("newly_created_wallet")
 			console.log("newly_created_wallet ret", ret_string)
