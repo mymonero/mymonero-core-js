@@ -522,7 +522,6 @@ var cnUtil = function(currencyConfig)
 			args.payment_id_string = payment_id;
 		}
 		const args_str = JSON.stringify(args);
-		console.log("args_str" , JSON.stringify(args, null, '    '))
 		const ret_string = loaded_CNCrypto().create_transaction(args_str);
 		const ret = JSON.parse(ret_string);
 		//
