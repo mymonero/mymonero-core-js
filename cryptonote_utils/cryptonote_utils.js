@@ -153,7 +153,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.is_subaddress(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
 	};
@@ -169,7 +169,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.is_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
 	};
@@ -181,7 +181,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.new_payment_id(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return ret.retVal;
 	};
@@ -191,9 +191,8 @@ var cnUtil = function(currencyConfig)
 		short_pid,
 		nettype
 	) {
-		// throws
 		if (!short_pid || short_pid.length != 16) {
-			throw "expected valid short_pid";
+			return { err_msg: "expected valid short_pid" };
 		}
 		const args =
 		{
@@ -206,7 +205,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.new_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return ret.retVal;
 	};
@@ -219,7 +218,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.new_fake_address_for_rct_tx(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return ret.retVal;
 	};
@@ -236,7 +235,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.decode_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return {
 			spend: ret.pub_spendKey_string,
@@ -323,7 +322,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.seed_and_keys_from_mnemonic(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			sec_seed_string: ret.sec_seed_string,
@@ -356,7 +355,7 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.validate_components_for_login(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg }
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			isValid: ret_val_boolstring_to_bool(ret.isValid),
@@ -374,16 +373,16 @@ var cnUtil = function(currencyConfig)
 		output_index
 	) {
 		if (tx_pub.length !== 64) {
-			throw "Invalid tx_pub length";
+			return { err_msg: "Invalid tx_pub length" };
 		}
 		if (view_sec.length !== 64) {
-			throw "Invalid view_sec length";
+			return { err_msg: "Invalid view_sec length" };
 		}
 		if (spend_pub.length !== 64) {
-			throw "Invalid spend_pub length";
+			return { err_msg: "Invalid spend_pub length" };
 		}
 		if (spend_sec.length !== 64) {
-			throw "Invalid spend_sec length";
+			return { err_msg: "Invalid spend_sec length" };
 		}
 		const args =
 		{
@@ -398,79 +397,166 @@ var cnUtil = function(currencyConfig)
 		const ret_string = CNCrypto.generate_key_image(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg // TODO: maybe return this somehow
+			return { err_msg: ret.err_msg };
 		}
 		return ret.retVal;
 	};
 
 	this.create_signed_transaction__IPCsafe = function(
-		pub_keys,
+		from_address_string,
 		sec_keys,
+		to_address_string,
 		serialized__dsts, // amounts are strings
 		outputs,
 		mix_outs,
 		fake_outputs_count,
+		serialize__sending_amount,
 		serialized__fee_amount, // string amount
 		payment_id,
 		pid_encrypt,
 		realDestViewKey,
 		unlock_time,
 		rct,
-		nettype,
+		nettype
 	) {
 		const dsts = serialized__dsts.map(function(i) {
 			i.amount = new JSBigInt(i.amount)
 			return i
 		})
 		return this.create_signed_transaction(
-			pub_keys,
+			from_address_string,
 			sec_keys,
+			to_address_string,
 			dsts,
 			outputs,
 			mix_outs,
 			fake_outputs_count,
-			new JSBigInt(serialized__fee_amount),
+			new JSBigInt(serialize__sending_amount),
+			new JSBigInt(serialized__fee_amount), // only to be deserialized again is a bit silly but this at least exposes a JSBigInt API for others
 			payment_id,
 			pid_encrypt,
 			realDestViewKey,
 			unlock_time,
 			rct,
-			nettype,
+			nettype
 		);
 	}
 
 	this.create_signed_transaction = function(
-		pub_keys,
+		from_address_string,
 		sec_keys,
+		to_address_string,
 		dsts,
 		outputs,
 		mix_outs,
 		fake_outputs_count,
+		sending_amount,
 		fee_amount,
 		payment_id,
 		pid_encrypt,
 		realDestViewKey,
 		unlock_time,
 		rct,
-		nettype,
+		nettype
 	) {
 		unlock_time = unlock_time || 0;
 		mix_outs = mix_outs || [];
 		if (dsts.length === 0) {
-			throw "Destinations empty";
+			return { err_msg: "Destinations empty" };
+		}
+		if (rct != true) {
+			return { err_msg: "Expected rct=true" }
 		}
 		if (mix_outs.length !== outputs.length && fake_outputs_count !== 0) {
-			throw "Wrong number of mix outs provided (" +
+			return { err_msg: "Wrong number of mix outs provided (" +
 				outputs.length +
 				" outputs, " +
 				mix_outs.length +
-				" mix outs)";
+				" mix outs)" };
 		}
 		for (i = 0; i < mix_outs.length; i++) {
 			if ((mix_outs[i].outputs || []).length < fake_outputs_count) {
-				throw "Not enough outputs to mix with";
+				return { err_msg: "Not enough outputs to mix with" };
 			}
 		}
+		//
+		// Now we need to convert all non-JSON-serializable objects such as JSBigInts to strings etc
+		var sanitary__dsts = [];
+		for (let i in dsts) {
+			const sanitary__dst = 
+			{
+				amount: dsts[i].amount.toString(),
+				addr: dsts[i].address // key changes
+				// no need to pass is_subaddress - core C++ gets it
+			};
+			sanitary__dsts.push(sanitary__dst);
+
+		}
+		var sanitary__outputs = [];
+		for (let i in outputs) {
+			const sanitary__output = 
+			{
+				amount: outputs[i].amount.toString(),
+				public_key: outputs[i].public_key,
+				global_index: "" + outputs[i].global_index,
+				index: "" + outputs[i].index,
+				tx_pub_key: outputs[i].tx_pub_key
+			};
+			if (outputs[i].rct && typeof outputs[i].rct !== 'undefined') {
+				sanitary__output.rct = outputs[i].rct;
+			}
+			sanitary__outputs.push(sanitary__output);
+		}
+		var sanitary__mix_outs = [];
+		for (let i in mix_outs) {
+			const sanitary__mix_outs_and_amount =
+			{
+				amount: "" + mix_outs[i].amount,
+				outputs: [] 
+			};
+			if (mix_outs[i].outputs && typeof mix_outs[i].outputs !== 'undefined') {
+				for (let j in mix_outs[i].outputs) {
+					const sanitary__mix_out =
+					{
+						global_index: "" + mix_outs[i].outputs[j].global_index,
+						public_key: mix_outs[i].outputs[j].public_key
+					};
+					if (mix_outs[i].outputs[j].rct && typeof mix_outs[i].outputs[j].rct !== 'undefined') {
+						sanitary__mix_out.rct = mix_outs[i].outputs[j].rct;
+					}
+					sanitary__mix_outs_and_amount.outputs.push(sanitary__mix_out);
+				}
+			}
+			sanitary__mix_outs.push(sanitary__mix_outs_and_amount);
+		}
+		const args =
+		{
+			from_address_string: from_address_string,
+			sec_viewKey_string: sec_keys.view,
+			sec_spendKey_string: sec_keys.spend,
+			to_address_string: to_address_string,
+			amount: sending_amount.toString(),
+			fee_amount: fee_amount.toString(),
+			dsts: sanitary__dsts,
+			outputs: sanitary__outputs,
+			mix_outs: sanitary__mix_outs,
+			nettype_string: nettype_utils.nettype_to_API_string(nettype)
+		};
+		if (typeof payment_id !== "undefined" && payment_id) {
+			args.payment_id_string = payment_id;
+		}
+		const args_str = JSON.stringify(args);
+		const ret_string = loaded_CNCrypto().create_transaction(args_str);
+		const ret = JSON.parse(ret_string);
+		///
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
+		}
+		return { // calling these out to set an interface
+			signed_serialized_tx: ret.serialized_signed_tx,
+			tx_hash: ret.tx_hash,
+			tx_key: ret.tx_key
+		};
 	};
 
 	function assert(stmt, val) {

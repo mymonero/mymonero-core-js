@@ -677,7 +677,7 @@ function SendFunds(
 					console.log(dsts[i].address + ": " + monero_amount_format_utils.formatMoneyFull(dsts[i].amount))
 				}
 			}
-			var signedTx;
+			var create_transaction__retVals;
 			try {
 				console.log("Destinations: ");
 				printDsts(fundTransferDescriptions); // TODO: port this out
@@ -698,13 +698,16 @@ function SendFunds(
 				);
 				printDsts(IPCsafe_splitDestinations);
 				//
-				signedTx = monero_utils.create_transaction__IPCsafe(
-					wallet__public_keys,
+				console.log('try send ', totalAmountWithoutFee_JSBigInt)
+				create_transaction__retVals = monero_utils.create_signed_transaction__IPCsafe(
+					wallet__public_address,
 					wallet__private_keys,
+					target_address,
 					IPCsafe_splitDestinations,
 					usingOuts,
 					mix_outs,
 					mixin,
+					totalAmountWithoutFee_JSBigInt.toString(), // even though it's in dsts, sending it directly as core C++ takes it
 					attemptAt_network_minimumFee.toString(), // must serialize for IPC
 					final__payment_id,
 					final__pid_encrypt,
@@ -723,22 +726,19 @@ function SendFunds(
 				__trampolineFor_err_withStr(errStr);
 				return;
 			}
-			console.log("signed tx: ", JSON.stringify(signedTx));
+			console.log("created tx: ", JSON.stringify(create_transaction__retVals));
 			//
-			var serialized_signedTx;
-			var tx_hash;
-			if (signedTx.version === 1) {
-				serialized_signedTx = monero_utils.serialize_tx(signedTx);
-				tx_hash = monero_utils.cn_fast_hash(serialized_signedTx);
-			} else {
-				const raw_tx_and_hash = monero_utils.serialize_rct_tx_with_hash(
-					signedTx,
-				);
-				serialized_signedTx = raw_tx_and_hash.raw;
-				tx_hash = raw_tx_and_hash.hash;
+			if (typeof create_transaction__retVals.err_msg !== 'undefined' && create_transaction__retVals.err_msg) {
+				// actually not expecting this! but just in case..
+				__trampolineFor_err_withStr(create_transaction__retVals.err_msg);
+				return;
 			}
+			var serialized_signedTx = create_transaction__retVals.signed_serialized_tx;
+			var tx_hash = create_transaction__retVals.tx_hash;
+			var tx_key = create_transaction__retVals.tx_key;
 			console.log("tx serialized: " + serialized_signedTx);
 			console.log("Tx hash: " + tx_hash);
+			console.log("Tx key: " + tx_key);
 			//
 			// work out per-kb fee for transaction and verify that it's enough
 			var txBlobBytes = serialized_signedTx.length / 2;
