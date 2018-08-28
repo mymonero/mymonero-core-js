@@ -2916,9 +2916,9 @@ var cnUtil = function(currencyConfig) {
 			}
 		} else if (cmp > 0) {
 			throw "Need more money than found! (have: " +
-				cnUtil.formatMoney(found_money) +
+				this.formatMoney(found_money) +
 				" need: " +
-				cnUtil.formatMoney(needed_money) +
+				this.formatMoney(needed_money) +
 				")";
 		}
 		return this.construct_tx(
