@@ -516,6 +516,7 @@ var cnUtil = function(currencyConfig)
 			fee_amount: fee_amount.toString(),
 			outputs: sanitary__outputs,
 			mix_outs: sanitary__mix_outs,
+			unlock_time: "" + unlock_time, // bridge is expecting a string
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		if (typeof payment_id !== "undefined" && payment_id) {
