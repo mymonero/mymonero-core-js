@@ -28,9 +28,7 @@
 
 "use strict";
 //
-const mnemonic = require("../cryptonote_utils/mnemonic");
 const monero_utils = require("./monero_cryptonote_utils_instance");
-const monero_config = require("./monero_config");
 //
 //
 ////////////////////////////////////////////////////////////////////////////////

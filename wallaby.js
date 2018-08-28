@@ -40,10 +40,7 @@ module.exports = function(wallaby) {
 		],
 
 		filesWithNoCoverageCalculated: [
-			"cryptonote_utils/nacl-fast-cn.js",
-			"cryptonote_utils/biginteger.js",
-			"cryptonote_utils/sha3.js",
-			"cryptonote_utils/cryptonote_crypto_EMSCRIPTEN.js",
+			"cryptonote_utils/MyMoneroCoreCpp.js",
 		],
 
 		tests: ["./tests/**/*spec.js"],

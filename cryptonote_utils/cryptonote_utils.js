@@ -32,7 +32,6 @@
 //
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
 const JSBigInt = require("./biginteger").BigInteger;
-const mnemonic = require("./mnemonic");
 const nettype_utils = require("./nettype");
 //
 Math.random = function()

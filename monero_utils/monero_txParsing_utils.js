@@ -29,7 +29,6 @@
 "use strict";
 //
 const monero_config = require("./monero_config");
-const monero_utils = require("./monero_cryptonote_utils_instance");
 //
 function IsTransactionConfirmed(tx, blockchain_height) {
 	return blockchain_height - tx.height > monero_config.txMinConfirms;
