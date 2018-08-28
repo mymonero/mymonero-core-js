@@ -554,95 +554,18 @@ function SendFunds(
 			__trampolineFor_err_withStr(errStr);
 			return;
 		}
-		// Now we can put together the list of fund transfers we need to perform
-		const fundTransferDescriptions = []; // to build…
-		// I. the actual transaction the user is asking to do
-		fundTransferDescriptions.push({
-			address: moneroReady_targetDescription_address,
-			amount: totalAmountWithoutFee_JSBigInt,
-		});
-		// II. the fee that the hosting provider charges
-		// NOTE: The fee has been removed for RCT until a later date
-		// fundTransferDescriptions.push({
-		//			 address: hostedMoneroAPIClient.HostingServiceFeeDepositAddress(),
-		//			 amount: hostingService_chargeAmount
-		// })
-		// III. some amount of the total outputs will likely need to be returned to the user as "change":
+		//
+		// Must calculate change..
+		var changeAmount = JSBigInt("0"); // to initialize
 		if (usingOutsAmount_comparedTo_totalAmount > 0) {
 			if (sweeping) {
 				throw "Unexpected usingOutsAmount_comparedTo_totalAmount > 0 && sweeping";
 			}
-			var changeAmount = usingOutsAmount.subtract(
+			changeAmount = usingOutsAmount.subtract(
 				totalAmountIncludingFees,
 			);
-			console.log("changeAmount", changeAmount);
-			if (isRingCT) {
-				// for RCT we don't presently care about dustiness so add entire change amount
-				console.log(
-					"Sending change of " +
-						monero_amount_format_utils.formatMoneySymbol(changeAmount) +
-						" to " +
-						wallet__public_address,
-				);
-				fundTransferDescriptions.push({
-					address: wallet__public_address,
-					amount: changeAmount,
-				});
-			} else {
-				// pre-ringct
-				// do not give ourselves change < dust threshold
-				var changeAmountDivRem = changeAmount.divRem(
-					monero_config.dustThreshold,
-				);
-				console.log("💬  changeAmountDivRem", changeAmountDivRem);
-				if (changeAmountDivRem[1].toString() !== "0") {
-					// miners will add dusty change to fee
-					console.log(
-						"💬  Miners will add change of " +
-							monero_amount_format_utils.formatMoneyFullSymbol(
-								changeAmountDivRem[1],
-							) +
-							" to transaction fee (below dust threshold)",
-					);
-				}
-				if (changeAmountDivRem[0].toString() !== "0") {
-					// send non-dusty change to our address
-					var usableChange = changeAmountDivRem[0].multiply(
-						monero_config.dustThreshold,
-					);
-					console.log(
-						"💬  Sending change of " +
-							monero_amount_format_utils.formatMoneySymbol(usableChange) +
-							" to " +
-							wallet__public_address,
-					);
-					fundTransferDescriptions.push({
-						address: wallet__public_address,
-						amount: usableChange,
-					});
-				}
-			}
-		} else if (usingOutsAmount_comparedTo_totalAmount == 0) {
-			// this should always fire when sweeping
-			if (isRingCT) {
-				// then create random destination to keep 2 outputs always in case of 0 change
-				const fakeAddress = monero_utils.new_fake_address_for_rct_tx(
-					nettype,
-				);
-				console.log(
-					"Sending 0 XMR to a fake address to keep tx uniform (no change exists): " +
-						fakeAddress,
-				);
-				fundTransferDescriptions.push({
-					address: fakeAddress,
-					amount: 0,
-				});
-			}
 		}
-		console.log(
-			"fundTransferDescriptions so far",
-			fundTransferDescriptions,
-		);
+		console.log("Calculated changeAmount:", changeAmount);
 		if (mixin < 0 || isNaN(mixin)) {
 			__trampolineFor_err_withStr("Invalid mixin");
 			return;
@@ -679,43 +602,22 @@ function SendFunds(
 			}
 			var create_transaction__retVals;
 			try {
-				console.log("Destinations: ");
-				printDsts(fundTransferDescriptions); // TODO: port this out
-				//
-				var realDestViewKey; // need to get viewkey for encrypting here, because of splitting and sorting
-				if (final__pid_encrypt) {
-					realDestViewKey = monero_utils.decode_address(
-						moneroReady_targetDescription_address,
-						nettype,
-					).view;
-					console.log("got realDestViewKey", realDestViewKey);
-				}
-				console.log("fundTransferDescriptions", fundTransferDescriptions)
-				var IPCsafe_splitDestinations = decompose_tx_destinations( // TODO: port this out
-					fundTransferDescriptions,
-					isRingCT,
-					true // serialize (convert JSBigInts to strings for IPC)
-				);
-				printDsts(IPCsafe_splitDestinations);
-				//
-				console.log('try send ', totalAmountWithoutFee_JSBigInt)
 				create_transaction__retVals = monero_utils.create_signed_transaction__IPCsafe(
 					wallet__public_address,
 					wallet__private_keys,
 					target_address,
-					IPCsafe_splitDestinations,
 					usingOuts,
 					mix_outs,
 					mixin,
 					totalAmountWithoutFee_JSBigInt.toString(), // even though it's in dsts, sending it directly as core C++ takes it
+					changeAmount.toString(),
 					attemptAt_network_minimumFee.toString(), // must serialize for IPC
 					final__payment_id,
-					final__pid_encrypt,
-					realDestViewKey,
 					0,
 					isRingCT,
 					nettype,
 				);
+				console.log("got back", create_transaction__retVals)
 			} catch (e) {
 				var errStr;
 				if (e) {

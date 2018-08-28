@@ -406,36 +406,28 @@ var cnUtil = function(currencyConfig)
 		from_address_string,
 		sec_keys,
 		to_address_string,
-		serialized__dsts, // amounts are strings
 		outputs,
 		mix_outs,
 		fake_outputs_count,
-		serialize__sending_amount,
+		serialized__sending_amount,
+		serialized__change_amount,
 		serialized__fee_amount, // string amount
 		payment_id,
-		pid_encrypt,
-		realDestViewKey,
 		unlock_time,
 		rct,
 		nettype
 	) {
-		const dsts = serialized__dsts.map(function(i) {
-			i.amount = new JSBigInt(i.amount)
-			return i
-		})
 		return this.create_signed_transaction(
 			from_address_string,
 			sec_keys,
 			to_address_string,
-			dsts,
 			outputs,
 			mix_outs,
 			fake_outputs_count,
-			new JSBigInt(serialize__sending_amount),
+			new JSBigInt(serialized__sending_amount),
+			new JSBigInt(serialized__change_amount),
 			new JSBigInt(serialized__fee_amount), // only to be deserialized again is a bit silly but this at least exposes a JSBigInt API for others
 			payment_id,
-			pid_encrypt,
-			realDestViewKey,
 			unlock_time,
 			rct,
 			nettype
@@ -446,24 +438,19 @@ var cnUtil = function(currencyConfig)
 		from_address_string,
 		sec_keys,
 		to_address_string,
-		dsts,
 		outputs,
 		mix_outs,
 		fake_outputs_count,
 		sending_amount,
+		change_amount,
 		fee_amount,
 		payment_id,
-		pid_encrypt,
-		realDestViewKey,
 		unlock_time,
 		rct,
 		nettype
 	) {
 		unlock_time = unlock_time || 0;
 		mix_outs = mix_outs || [];
-		if (dsts.length === 0) {
-			return { err_msg: "Destinations empty" };
-		}
 		if (rct != true) {
 			return { err_msg: "Expected rct=true" }
 		}
@@ -474,24 +461,13 @@ var cnUtil = function(currencyConfig)
 				mix_outs.length +
 				" mix outs)" };
 		}
-		for (i = 0; i < mix_outs.length; i++) {
+		for (var i = 0; i < mix_outs.length; i++) {
 			if ((mix_outs[i].outputs || []).length < fake_outputs_count) {
 				return { err_msg: "Not enough outputs to mix with" };
 			}
 		}
 		//
 		// Now we need to convert all non-JSON-serializable objects such as JSBigInts to strings etc
-		var sanitary__dsts = [];
-		for (let i in dsts) {
-			const sanitary__dst = 
-			{
-				amount: dsts[i].amount.toString(),
-				addr: dsts[i].address // key changes
-				// no need to pass is_subaddress - core C++ gets it
-			};
-			sanitary__dsts.push(sanitary__dst);
-
-		}
 		var sanitary__outputs = [];
 		for (let i in outputs) {
 			const sanitary__output = 
@@ -535,9 +511,9 @@ var cnUtil = function(currencyConfig)
 			sec_viewKey_string: sec_keys.view,
 			sec_spendKey_string: sec_keys.spend,
 			to_address_string: to_address_string,
-			amount: sending_amount.toString(),
+			sending_amount: sending_amount.toString(),
+			change_amount: change_amount.toString(),
 			fee_amount: fee_amount.toString(),
-			dsts: sanitary__dsts,
 			outputs: sanitary__outputs,
 			mix_outs: sanitary__mix_outs,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
@@ -546,9 +522,10 @@ var cnUtil = function(currencyConfig)
 			args.payment_id_string = payment_id;
 		}
 		const args_str = JSON.stringify(args);
+		console.log("args_str" , JSON.stringify(args, null, '    '))
 		const ret_string = loaded_CNCrypto().create_transaction(args_str);
 		const ret = JSON.parse(ret_string);
-		///
+		//
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg };
 		}
