@@ -240,7 +240,7 @@ var cnUtil = function(currencyConfig)
 			spend: ret.pub_spendKey_string,
 			view: ret.pub_viewKey_string,
 			intPaymentId: ret.paymentID_string, // may be undefined
-			isSubaddress: ret.isSubaddress
+			isSubaddress: ret_val_boolstring_to_bool(ret.isSubaddress)
 		}
 	};
 
