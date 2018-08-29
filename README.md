@@ -4,9 +4,8 @@
 
 1. Legal
 2. What's in This Repo?
-3. Library Roadmap
-4. Library API Documentation
-5. Building MyMoneroCoreCpp from Scratch
+3. Library API Documentation
+4. Building MyMoneroCoreCpp from Scratch
 
 ### Contributing
 
@@ -37,9 +36,6 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 * This readme is located at `README.md`, and the license is located at `LICENSE.txt`.
 
-## Library Roadmap
-
-* Investigate replacing entire implementation with bindings to lightwallet API in official Monero core wallet C++
 
 ## Library API Documentation
 
@@ -103,10 +99,8 @@ We often collaborate over IRC in #mymonero on Freenode.
 
 * 💿 `endogenic` ([Paul Shapiro](https://github.com/paulshapiro)) Maintainer
 
-* 🍄 `luigi` Major core crypto and Monero routine implementation contributor; Advisor
+* 🍄 `luigi` Major contiributor of original JS core crypto and Monero-specific routines; Advisor
 
 * 🏄‍♂️ `paullinator` ([Paul Puey](https://github.com/paullinator)) API design
 
 * 🔒 `cryptochangement` Subaddress send & decode support; Initial tests
-
-* 💩 `henrynguyen5` Code quality, modernization, tests; HW wallet support *(in progress)*
