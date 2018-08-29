@@ -196,7 +196,6 @@ function SendFunds(
 	hostedMoneroAPIClient, // TODO: possibly factor this dependency
 	monero_openalias_utils,
 	payment_id,
-	mixin,
 	simple_priority,
 	preSuccess_nonTerminal_statusUpdate_fn, // (_ stepCode: SendFunds_ProcessStep_Code) -> Void
 	success_fn,
@@ -205,13 +204,16 @@ function SendFunds(
 	//		sentAmount?,
 	//		final__payment_id?,
 	//		tx_hash?,
-	//		tx_fee?
+	//		tx_fee?,
+	//		tx_key?,
+	//		mixin?,
 	// )
 	failWithErr_fn,
 	// failWithErr_fn: (
 	//		err
 	// )
 ) {
+	const mixin = fixedMixin();
 	var isRingCT = true;
 	var sweeping = isSweep_orZeroWhenAmount === true; // rather than, say, undefined
 	//
@@ -222,6 +224,8 @@ function SendFunds(
 		final__payment_id,
 		tx_hash,
 		tx_fee,
+		tx_key,
+		mixin,
 	) {
 		success_fn(
 			moneroReady_targetDescription_address,
@@ -229,6 +233,8 @@ function SendFunds(
 			final__payment_id,
 			tx_hash,
 			tx_fee,
+			tx_key,
+			mixin,
 		);
 	}
 	function __trampolineFor_err_withErr(err) {
@@ -238,10 +244,6 @@ function SendFunds(
 		const err = new Error(errStr);
 		console.error(errStr);
 		failWithErr_fn(err);
-	}
-	if (mixin < thisFork_minMixin()) {
-		__trampolineFor_err_withStr("Ringsize is below the minimum.");
-		return;
 	}
 	//
 	// parse & normalize the target descriptions by mapping them to Monero addresses & amounts
@@ -566,30 +568,22 @@ function SendFunds(
 			);
 		}
 		console.log("Calculated changeAmount:", changeAmount);
-		if (mixin < 0 || isNaN(mixin)) {
-			__trampolineFor_err_withStr("Invalid mixin");
-			return;
-		}
-		if (mixin > 0) {
-			// first, grab RandomOuts, then enter __createTx
-			preSuccess_nonTerminal_statusUpdate_fn(
-				SendFunds_ProcessStep_Code.fetchingDecoyOutputs,
-			);
-			hostedMoneroAPIClient.RandomOuts(usingOuts, mixin, function(
-				err,
-				amount_outs,
-			) {
-				if (err) {
-					__trampolineFor_err_withErr(err);
-					return;
-				}
-				__createTxAndAttemptToSend(amount_outs);
-			});
-			return;
-		} else {
-			// mixin === 0: -- PSNOTE: is that even allowed?
-			__createTxAndAttemptToSend();
-		}
+		//
+		// first, grab RandomOuts, then enter __createTx
+		preSuccess_nonTerminal_statusUpdate_fn(
+			SendFunds_ProcessStep_Code.fetchingDecoyOutputs,
+		);
+		hostedMoneroAPIClient.RandomOuts(usingOuts, mixin, function(
+			err,
+			amount_outs,
+		) {
+			if (err) {
+				__trampolineFor_err_withErr(err);
+				return;
+			}
+			__createTxAndAttemptToSend(amount_outs);
+		});
+		//
 		function __createTxAndAttemptToSend(mix_outs) {
 			preSuccess_nonTerminal_statusUpdate_fn(
 				SendFunds_ProcessStep_Code.constructingTransaction,
@@ -726,6 +720,8 @@ function SendFunds(
 						final__payment_id,
 						tx_hash,
 						tx_fee,
+						tx_key,
+						mixin,
 					); // 🎉
 				},
 			);
