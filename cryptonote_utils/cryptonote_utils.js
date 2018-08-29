@@ -36,7 +36,7 @@ const nettype_utils = require("./nettype");
 //
 Math.random = function()
 {
-	throw "Math.random calls are disallowed (cryptonote_utils) until emscripten has support to override fallback when (!crypto) - see randomFloat_unit() or remove this in fork"
+	throw "Math.random calls are disallowed (cryptonote_utils) until emscripten has support to override fallback when (!crypto) - see randomFloat_unit() or remove this in fork";
 }
 //
 var cnUtil = function(currencyConfig) 

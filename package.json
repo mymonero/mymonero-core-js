@@ -9,8 +9,8 @@
   },
   "scripts": {
     "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
-    "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test": "jest --verbose",
+    "test:coverage": "jest --coverage --verbose"
   },
   "keywords": [
     "monero",
@@ -39,6 +39,7 @@
   },
   "jest" : {
     "testEnvironment":"node",
+    "verbose": true,
     "coveragePathIgnorePatterns": [
       "node_modules", 
       "cryptonote_utils/MyMoneroCoreCpp.js",
