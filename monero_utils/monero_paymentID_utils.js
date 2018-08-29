@@ -28,17 +28,6 @@
 //
 "use strict";
 //
-const monero_utils = require("./monero_cryptonote_utils_instance");
-//
-// Note: long (64 char, plaintext) payment ids are deprecated.
-//
-function New_Short_TransactionID()
-{
-	return monero_utils.new_payment_id();
-}
-exports.New_Short_TransactionID = New_Short_TransactionID;
-exports.New_TransactionID = New_Short_TransactionID;
-//
 function IsValidPaymentIDOrNoPaymentID(payment_id__orNil) {
 	if (
 		payment_id__orNil == null ||
