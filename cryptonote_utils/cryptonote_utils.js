@@ -411,7 +411,7 @@ var cnUtil = function(currencyConfig)
 		rct,
 		nettype
 	) {
-		return this.create_signed_transaction(
+		return this.create_signed_transaction__nonIPCsafe(
 			from_address_string,
 			sec_keys,
 			to_address_string,
