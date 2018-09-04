@@ -44,6 +44,6 @@ exports.cryptonote_utils_bridge_fn_interface_names =
 	"seed_and_keys_from_mnemonic",
 	"validate_components_for_login",
 	"generate_key_image",
-	"create_signed_transaction__IPCsafe",
-	"create_signed_transaction"
+	"create_signed_transaction",
+	"create_signed_transaction__nonIPCsafe"
 ];

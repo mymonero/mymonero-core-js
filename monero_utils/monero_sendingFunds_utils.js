@@ -596,7 +596,7 @@ function SendFunds(
 			}
 			var create_transaction__retVals;
 			try {
-				create_transaction__retVals = monero_utils.create_signed_transaction__IPCsafe(
+				create_transaction__retVals = monero_utils.create_signed_transaction(
 					wallet__public_address,
 					wallet__private_keys,
 					target_address,

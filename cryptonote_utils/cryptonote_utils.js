@@ -401,7 +401,7 @@ var cnUtil = function(currencyConfig)
 		return ret.retVal;
 	};
 
-	this.create_signed_transaction__IPCsafe = function(
+	this.create_signed_transaction = function(
 		from_address_string,
 		sec_keys,
 		to_address_string,
@@ -433,7 +433,7 @@ var cnUtil = function(currencyConfig)
 		);
 	}
 
-	this.create_signed_transaction = function(
+	this.create_signed_transaction__nonIPCsafe = function( // you can use this function to pass JSBigInts
 		from_address_string,
 		sec_keys,
 		to_address_string,
