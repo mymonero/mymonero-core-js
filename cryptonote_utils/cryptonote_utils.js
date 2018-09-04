@@ -34,11 +34,6 @@
 const JSBigInt = require("./biginteger").BigInteger;
 const nettype_utils = require("./nettype");
 //
-Math.random = function()
-{
-	throw "Math.random calls are disallowed (cryptonote_utils) until emscripten has support to override fallback when (!crypto) - see randomFloat_unit() or remove this in fork";
-}
-//
 var cnUtil = function(currencyConfig) 
 {
 	const currency_amount_format_utils = require("../cryptonote_utils/money_format_utils")(currencyConfig)
