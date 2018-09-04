@@ -30,6 +30,8 @@
 //
 exports.cryptonote_utils_bridge_fn_interface_names =
 [
+	"OnceModuleReady",
+	//
 	"is_subaddress",
 	"is_integrated_address",
 	"new_payment_id",
