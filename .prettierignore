@@ -1,5 +1,5 @@
-cryptonote_utils/MyMoneroCoreCpp.js
-cryptonote_utils/MyMoneroCoreCpp.wasm
+monero_utils/MyMoneroCoreCpp.js
+monero_utils/MyMoneroCoreCpp.wasm
 package.json
 yarn.lock
 

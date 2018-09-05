@@ -9,11 +9,18 @@ var private_key =
 
 var nettype = mymonero.nettype_utils.network_type.MAINNET;
 
-mymonero.monero_utils.OnceModuleReady(function(Module)
+var monero_utils;
+
+async function t1()
 {
-	var decoded = mymonero.monero_utils.decode_address(
-		"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
-		nettype,
-	);
-	console.log("decoded", decoded)
-})
+	try {
+		var decoded = (await mymonero.monero_utils_promise).decode_address(
+			"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
+			nettype,
+		);
+		console.log("decoded", decoded)
+	} catch (e) {
+		console.log(e)
+	}
+}
+t1()

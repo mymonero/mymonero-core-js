@@ -28,22 +28,11 @@
 //
 "use strict";
 //
-const ENVIRONMENT_IS_WEB = typeof window==="object";
-const ENVIRONMENT_IS_WORKER = typeof importScripts==="function";
-const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
-if (!ENVIRONMENT_IS_NODE || ENVIRONMENT_IS_WEB) {
-	throw "Not expecting this module to be included in this environment: non-node or web"
-}
-const monero_config = require("./monero_config");
-const cryptonote_utils = require("../cryptonote_utils/cryptonote_utils").cnUtil;
-const monero_cryptonote_utils_instance = cryptonote_utils(monero_config);
-const local_fns = {};
-const fn_names = require('./bridged_fns_spec').cryptonote_utils_bridge_fn_interface_names;
-for (const i in fn_names) {
-	const name = fn_names[i]
-	local_fns[name] = function()
-	{
-		return monero_cryptonote_utils_instance[name].apply(null, arguments); // We are not intercepting the err_msg here -- because we will kill the remote fn call if we throw -- so we'll let the renderer-side throw
-	}
-}
-module.exports = local_fns;
+const promise = require('./MyMoneroCoreBridge')({}) // this returns a promise
+promise.catch(function(e)
+{
+	console.log("Error: ", e);
+	// this may be insufficient… being able to throw would be nice
+});
+//
+module.exports = promise

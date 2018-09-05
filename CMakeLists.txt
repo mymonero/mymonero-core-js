@@ -181,6 +181,7 @@ set(
     -Oz \
     --llvm-lto 1 \
     -s WASM=1 \
+    --post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
     -s \"BINARYEN_METHOD='native-wasm'\" \
     -s NO_DYNAMIC_EXECUTION=1 \
     -s \"BINARYEN_TRAP_MODE='clamp'\" \

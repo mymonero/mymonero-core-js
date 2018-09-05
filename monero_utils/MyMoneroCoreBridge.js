@@ -31,156 +31,78 @@
 // Modified to add RingCT support by luigi1111 (2017)
 //
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
-const JSBigInt = require("./biginteger").BigInteger;
-const nettype_utils = require("./nettype");
+const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
+const nettype_utils = require("../cryptonote_utils/nettype");
+const monero_config = require('./monero_config');
+const currency_amount_format_utils = require("../cryptonote_utils/money_format_utils")(monero_config);
 //
-var cnUtil = function(currencyConfig) 
+function ret_val_boolstring_to_bool(boolstring)
 {
-	const currency_amount_format_utils = require("../cryptonote_utils/money_format_utils")(currencyConfig)
-	//
-	this._CNCrypto = undefined; // undefined -> cause 'early' calls to CNCrypto to throw exception
-	const ENVIRONMENT_IS_WEB = typeof window==="object";
-	const ENVIRONMENT_IS_WORKER = typeof importScripts==="function";
-	const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
-	const ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
-	var _CNCrypto_template =
-	{
-		locateFile: function(filename, scriptDirectory)
-		{
-			if (currencyConfig["locateFile"]) {
-				return currencyConfig["locateFile"](filename, scriptDirectory)
-			}
-			var this_scriptDirectory = scriptDirectory
-			const lastChar = this_scriptDirectory.charAt(this_scriptDirectory.length - 1)
-			if (lastChar == "/") { 
-				this_scriptDirectory = this_scriptDirectory.substring(0, this_scriptDirectory.length - 1) // remove trailing "/"
-			}
-			const scriptDirectory_pathComponents = this_scriptDirectory.split("/")
-			const lastPathComponent = scriptDirectory_pathComponents[scriptDirectory_pathComponents.length - 1]
-			var pathTo_cryptonoteUtilsDir; // add trailing slash to this
-			if (lastPathComponent == "cryptonote_utils") { // typical node or electron-main process
-				pathTo_cryptonoteUtilsDir = scriptDirectory_pathComponents.join("/") + "/"
-			} else if (ENVIRONMENT_IS_WEB) { // this will still match on electron-renderer, so the path must be patched up…
-				if (typeof __dirname !== undefined && __dirname !== "/") { // looks like node running in browser.. assuming Electron-renderer
-					// have to check != "/" b/c webpack (I think) replaces __dirname
-					pathTo_cryptonoteUtilsDir = "file://" + __dirname + "/" // prepending "file://" because it's going to try to stream it
-				} else { // actual web browser
-					pathTo_cryptonoteUtilsDir = this_scriptDirectory + "/mymonero_core_js/cryptonote_utils/" // this works for the MyMonero browser build, and is quite general, at least
-				}
-			} else {
-				throw "Undefined pathTo_cryptonoteUtilsDir. Please pass locateFile() to cryptonote_utils init."
-			}
-			const fullPath = pathTo_cryptonoteUtilsDir + filename
-			//
-			return fullPath
-		}
+	if (typeof boolstring !== "string") {
+		throw "ret_val_boolstring_to_bool expected string input"
 	}
-	// if (ENVIRONMENT_IS_WEB && ENVIRONMENT_IS_NODE) { // that means it's probably electron-renderer
-	// 	const fs = require("fs");
-	// 	const path = require("path");
-	// 	const filepath = path.normalize(path.join(__dirname, "MyMoneroCoreCpp.wasm"));
-	// 	const wasmBinary = fs.readFileSync(filepath)
-	// 	console.log("wasmBinary", wasmBinary)
-	// 	_CNCrypto_template["wasmBinary"] = wasmBinary
-	// }
-	this._CNCrypto = undefined;
-	var loaded_CNCrypto = this.loaded_CNCrypto = function()
-	{ // CAUTION: calling this method blocks until _CNCrypto is loaded
-		if (typeof this._CNCrypto === 'undefined' || !this._CNCrypto) {
-			throw "You must call OnceModuleReady to wait for _CNCrypto to be ready"
-		}
-		return this._CNCrypto;
+	if (boolstring === "true") {
+		return true
+	} else if (boolstring === "false") {
+		return false
 	}
-	this.moduleReadyFns = [] // initial (gets set to undefined once Module ready)
-	this.OnceModuleReady = function(fn)
+	throw "ret_val_boolstring_to_bool given illegal input"
+}
+function api_safe_wordset_name(wordset_name)
+{
+	return wordset_name.charAt(0).toUpperCase() + wordset_name.substr(1) // capitalizes first letter
+}
+//
+class MyMoneroCoreBridge
+{
+	constructor(Module)
 	{
-		if (this._CNCrypto == null) {
-			if (typeof this.moduleReadyFns == 'undefined' || !this.moduleReadyFns) {
-				throw "Expected moduleReadyFns"
-			}
-			this.moduleReadyFns.push(fn)
-		} else {
-			fn(Module)
-		}
-	}
-	require("./MyMoneroCoreCpp")(_CNCrypto_template).then(function(thisModule) 
-	{
-		this._CNCrypto = thisModule
-		{
-			for (let fn of this.moduleReadyFns) {
-				fn(thisModule)
-			}
-		}
-		this.moduleReadyFns = [] // flash/free
-	});
-	//
-	function ret_val_boolstring_to_bool(boolstring)
-	{
-		if (typeof boolstring !== "string") {
-			throw "ret_val_boolstring_to_bool expected string input"
-		}
-		if (boolstring === "true") {
-			return true
-		} else if (boolstring === "false") {
-			return false
-		}
-		throw "ret_val_boolstring_to_bool given illegal input"
-	}
-	function api_safe_wordset_name(wordset_name)
-	{
-		return wordset_name.charAt(0).toUpperCase() + wordset_name.substr(1) // capitalizes first letter
+		this.Module = Module;
 	}
 	//
-	var config = {}; // shallow copy of initConfig
-	for (var key in currencyConfig) {
-		config[key] = currencyConfig[key];
-	}
 	//
-	this.is_subaddress = function(addr, nettype) {
+	is_subaddress(addr, nettype) {
 		const args =
 		{
 			address: addr,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.is_subaddress(args_str);
+		const ret_string = this.Module.is_subaddress(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
-	};
+	}
 
-	this.is_integrated_address = function(addr, nettype) {
+	is_integrated_address(addr, nettype) {
 		const args =
 		{
 			address: addr,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.is_integrated_address(args_str);
+		const ret_string = this.Module.is_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
-	};
+	}
 
-	this.new_payment_id = function() {
+	new_payment_id() {
 		const args = {};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.new_payment_id(args_str);
+		const ret_string = this.Module.new_payment_id(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
 		}
 		return ret.retVal;
-	};
+	}
 
-	this.new__int_addr_from_addr_and_short_pid = function(
+	new__int_addr_from_addr_and_short_pid(
 		address,
 		short_pid,
 		nettype
@@ -195,29 +117,27 @@ var cnUtil = function(currencyConfig)
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.new_integrated_address(args_str);
+		const ret_string = this.Module.new_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
 		}
 		return ret.retVal;
-	};
+	}
 
-	this.new_fake_address_for_rct_tx = function(nettype)
+	new_fake_address_for_rct_tx(nettype)
 	{ // TODO: possibly support sending random_scalar from JS to emscripten to avoid emscripten random
 		const args = { nettype_string: nettype_utils.nettype_to_API_string(nettype) };
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.new_fake_address_for_rct_tx(args_str);
+		const ret_string = this.Module.new_fake_address_for_rct_tx(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
 		}
 		return ret.retVal;
-	};
+	}
 
-	this.decode_address = function(address, nettype)
+	decode_address(address, nettype)
 	{
 		const args =
 		{
@@ -225,8 +145,7 @@ var cnUtil = function(currencyConfig)
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.decode_address(args_str);
+		const ret_string = this.Module.decode_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -237,9 +156,9 @@ var cnUtil = function(currencyConfig)
 			intPaymentId: ret.paymentID_string, // may be undefined
 			isSubaddress: ret_val_boolstring_to_bool(ret.isSubaddress)
 		}
-	};
+	}
 
-	this.newly_created_wallet = function(
+	newly_created_wallet(
 		locale_language_code,
 		nettype
 	) {
@@ -249,8 +168,7 @@ var cnUtil = function(currencyConfig)
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.newly_created_wallet(args_str);
+		const ret_string = this.Module.newly_created_wallet(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -265,17 +183,16 @@ var cnUtil = function(currencyConfig)
 			pub_spendKey_string: ret.pub_spendKey_string,
 			sec_spendKey_string: ret.sec_spendKey_string
 		};
-	};
+	}
 
-	this.are_equal_mnemonics = function(a, b) {
+	are_equal_mnemonics(a, b) {
 		const args =
 		{
 			a: a,
 			b: b
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.are_equal_mnemonics(args_str);
+		const ret_string = this.Module.are_equal_mnemonics(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -283,7 +200,7 @@ var cnUtil = function(currencyConfig)
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
 
-	this.mnemonic_from_seed = function(
+	mnemonic_from_seed(
 		seed_string,
 		wordset_name
 	) {
@@ -293,16 +210,15 @@ var cnUtil = function(currencyConfig)
 			wordset_name: api_safe_wordset_name(wordset_name)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.mnemonic_from_seed(args_str);
+		const ret_string = this.Module.mnemonic_from_seed(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
 		}
 		return ret.retVal;
-	};
+	}
 
-	this.seed_and_keys_from_mnemonic = function(
+	seed_and_keys_from_mnemonic(
 		mnemonic_string,
 		nettype
 	) {
@@ -312,8 +228,7 @@ var cnUtil = function(currencyConfig)
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.seed_and_keys_from_mnemonic(args_str);
+		const ret_string = this.Module.seed_and_keys_from_mnemonic(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -327,9 +242,9 @@ var cnUtil = function(currencyConfig)
 			pub_spendKey_string: ret.pub_spendKey_string,
 			sec_spendKey_string: ret.sec_spendKey_string
 		};
-	};
+	}
 
-	this.validate_components_for_login = function(
+	validate_components_for_login(
 		address_string,
 		sec_viewKey_string,
 		sec_spendKey_string,
@@ -345,8 +260,7 @@ var cnUtil = function(currencyConfig)
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.validate_components_for_login(args_str);
+		const ret_string = this.Module.validate_components_for_login(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -357,9 +271,9 @@ var cnUtil = function(currencyConfig)
 			pub_viewKey_string: ret.pub_viewKey_string,
 			pub_spendKey_string: ret.pub_spendKey_string
 		};
-	};
+	}
 
-	this.generate_key_image = function(
+	generate_key_image(
 		tx_pub,
 		view_sec,
 		spend_pub,
@@ -387,16 +301,15 @@ var cnUtil = function(currencyConfig)
 			out_index: "" + output_index
 		};
 		const args_str = JSON.stringify(args);
-		const CNCrypto = loaded_CNCrypto();
-		const ret_string = CNCrypto.generate_key_image(args_str);
+		const ret_string = this.Module.generate_key_image(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg };
 		}
 		return ret.retVal;
-	};
+	}
 
-	this.create_signed_transaction = function(
+	create_signed_transaction(
 		from_address_string,
 		sec_keys,
 		to_address_string,
@@ -428,7 +341,7 @@ var cnUtil = function(currencyConfig)
 		);
 	}
 
-	this.create_signed_transaction__nonIPCsafe = function( // you can use this function to pass JSBigInts
+	create_signed_transaction__nonIPCsafe( // you can use this function to pass JSBigInts
 		from_address_string,
 		sec_keys,
 		to_address_string,
@@ -517,7 +430,7 @@ var cnUtil = function(currencyConfig)
 			args.payment_id_string = payment_id;
 		}
 		const args_str = JSON.stringify(args);
-		const ret_string = loaded_CNCrypto().create_transaction(args_str);
+		const ret_string = this.Module.create_transaction(args_str);
 		const ret = JSON.parse(ret_string);
 		//
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
@@ -528,14 +441,62 @@ var cnUtil = function(currencyConfig)
 			tx_hash: ret.tx_hash,
 			tx_key: ret.tx_key
 		};
-	};
-
-	function assert(stmt, val) {
-		if (!stmt) {
-			throw "assert failed" + (val !== undefined ? ": " + val : "");
-		}
 	}
-
-	return this;
+}
+//
+module.exports = function(options)
+{
+	options = options || {}
+	//
+	return new Promise(function(resolve) {
+		const ENVIRONMENT_IS_WEB = typeof window==="object";
+		const ENVIRONMENT_IS_WORKER = typeof importScripts==="function";
+		const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
+		const ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
+		var _Module_template =
+		{
+			locateFile: function(filename, scriptDirectory)
+			{
+				// if (options["locateFile"]) {
+				// 	return options["locateFile"](filename, scriptDirectory)
+				// }
+				var this_scriptDirectory = scriptDirectory
+				const lastChar = this_scriptDirectory.charAt(this_scriptDirectory.length - 1)
+				if (lastChar == "/") { 
+					this_scriptDirectory = this_scriptDirectory.substring(0, this_scriptDirectory.length - 1) // remove trailing "/"
+				}
+				const scriptDirectory_pathComponents = this_scriptDirectory.split("/")
+				const lastPathComponent = scriptDirectory_pathComponents[scriptDirectory_pathComponents.length - 1]
+				var pathTo_cryptonoteUtilsDir; // add trailing slash to this
+				if (lastPathComponent == "monero_utils") { // typical node or electron-main process
+					pathTo_cryptonoteUtilsDir = scriptDirectory_pathComponents.join("/") + "/"
+				} else if (ENVIRONMENT_IS_WEB) { // this will still match on electron-renderer, so the path must be patched up…
+					if (typeof __dirname !== undefined && __dirname !== "/") { // looks like node running in browser.. assuming Electron-renderer
+						// have to check != "/" b/c webpack (I think) replaces __dirname
+						pathTo_cryptonoteUtilsDir = "file://" + __dirname + "/" // prepending "file://" because it's going to try to stream it
+					} else { // actual web browser
+						pathTo_cryptonoteUtilsDir = this_scriptDirectory + "/mymonero_core_js/monero_utils/" // this works for the MyMonero browser build, and is quite general, at least
+					}
+				} else {
+					throw "Undefined pathTo_cryptonoteUtilsDir. Please pass locateFile() to cryptonote_utils init."
+				}
+				const fullPath = pathTo_cryptonoteUtilsDir + filename
+				//
+				return fullPath
+			}
+		}
+		// if (ENVIRONMENT_IS_WEB && ENVIRONMENT_IS_NODE) { // that means it's probably electron-renderer
+		// 	const fs = require("fs");
+		// 	const path = require("path");
+		// 	const filepath = path.normalize(path.join(__dirname, "MyMoneroCoreCpp.wasm"));
+		// 	const wasmBinary = fs.readFileSync(filepath)
+		// 	console.log("wasmBinary", wasmBinary)
+		// 	_Module_template["wasmBinary"] = wasmBinary
+		// }
+		require("./MyMoneroCoreCpp")(_Module_template).ready.then(function(thisModule) 
+		{
+			const instance = new MyMoneroCoreBridge(thisModule);
+			resolve(instance);
+		});
+	});
 };
-exports.cnUtil = cnUtil;

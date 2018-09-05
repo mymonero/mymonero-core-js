@@ -40,31 +40,37 @@ var nettype = mymonero.nettype_utils.network_type.MAINNET;
 describe("cryptonote_utils tests", function() {
 
 	it("decode mainnet primary address", function() {
-		var decoded = mymonero.monero_utils.decode_address(
-			"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
-			nettype,
-		);
-		var expected = {
-			spend:
-				"d8f1e81ecbe25ce8b596d426fb02fe7b1d4bb8d14c06b3d3e371a60eeea99534",
-			view:
-				"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
-		};
-		assert.deepEqual(decoded, expected);
+		async function test() {
+			var decoded = (await mymonero.monero_utils_promise).decode_address(
+				"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
+				nettype,
+			);
+			var expected = {
+				spend:
+					"d8f1e81ecbe25ce8b596d426fb02fe7b1d4bb8d14c06b3d3e371a60eeea99534",
+				view:
+					"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
+			};
+			assert.deepEqual(decoded, expected);
+		}
+		test()
 	});
 
 	it("decode mainnet integrated address", function() {
-		var decoded = mymonero.monero_utils.decode_address(
-			"4KYcX9yTizXfvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNd3mZpgrjXBKMx9ee7c",
-			nettype,
-		);
-		var expected = {
-			spend:
-				"d8f1e81ecbe25ce8b596d426fb02fe7b1d4bb8d14c06b3d3e371a60eeea99534",
-			view:
-				"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
-			intPaymentId: "83eab71fbee84eb9",
-		};
-		assert.deepEqual(decoded, expected);
+		async function test() {
+			var decoded = (await mymonero.monero_utils_promise).decode_address(
+				"4KYcX9yTizXfvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNd3mZpgrjXBKMx9ee7c",
+				nettype,
+			);
+			var expected = {
+				spend:
+					"d8f1e81ecbe25ce8b596d426fb02fe7b1d4bb8d14c06b3d3e371a60eeea99534",
+				view:
+					"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
+				intPaymentId: "83eab71fbee84eb9",
+			};
+			assert.deepEqual(decoded, expected);
+		}
+		test()
 	});
 });

@@ -29,10 +29,10 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 ### Contents 
 
-* `monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations.
+* `monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations, and the MyMonero JS and wasm implementations for the underlying cryptography behind Monero. 
+	* `monero_utils/MyMoneroCoreCpp.(js,wasm)` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `monero_utils/MyMoneroCoreBridge.js`.
+	* A ready-made entrypoint for interacting with `MyMoneroCoreBridge` is located at `monero_utils/monero_utils.js` with usage `require("./monero_utils/monero_utils").then(function(monero_utils) { })`
 
-* `cryptonote_utils` contains the MyMonero JS implementations for the underlying cryptography behind Monero. 
-	* `cryptonote_utils/MyMoneroCoreCpp.(js,wasm)` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `cryptonote_utils/cryptonote_utils.js`.
 
 * This readme is located at `README.md`, and the license is located at `LICENSE.txt`.
 
@@ -44,7 +44,7 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 ## Building MyMoneroCoreCpp from Scratch
 
-There's no need to build cryptonote_utils/MyMoneroCoreCpp as a build is provided, but if you were for example interested in adding a C++ function, you could use the information in this section to transpile it to JS.
+There's no need to build monero_utils/MyMoneroCoreCpp as a build is provided, but if you were for example interested in adding a C++ function, you could use the information in this section to transpile it to JS.
 
 ### Repository Setup
 

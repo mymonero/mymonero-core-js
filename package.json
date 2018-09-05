@@ -42,7 +42,7 @@
     "verbose": true,
     "coveragePathIgnorePatterns": [
       "node_modules", 
-      "cryptonote_utils/MyMoneroCoreCpp.js",
+      "monero_utils/MyMoneroCoreCpp.js",
       "tests/emjs/*"
     ]
   }
