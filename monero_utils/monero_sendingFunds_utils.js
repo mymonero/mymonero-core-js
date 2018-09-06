@@ -28,8 +28,6 @@
 //
 "use strict";
 //
-const async = require("async");
-//
 const monero_config = require("./monero_config");
 const monero_utils_promise = require('./monero_utils')
 const monero_amount_format_utils = require("./monero_amount_format_utils");
@@ -259,6 +257,7 @@ function SendFunds(
 			[targetDescription], // requires a list of descriptions - but SendFunds was
 			// not written with multiple target support as MyMonero does not yet support it
 			nettype,
+			monero_utils,
 			function(err, moneroReady_targetDescriptions) {
 				if (err) {
 					__trampolineFor_err_withErr(err);
@@ -737,69 +736,69 @@ function new_moneroReadyTargetDescriptions_fromTargetDescriptions(
 	monero_openalias_utils,
 	targetDescriptions,
 	nettype,
+	monero_utils,
 	fn, // fn: (err, moneroReady_targetDescriptions) -> Void
+	// TODO: remove this fn - this is a sync method now
 ) {
 	// parse & normalize the target descriptions by mapping them to currency (Monero)-ready addresses & amounts
 	// some pure function declarations for the map we'll do on targetDescriptions
-	async.mapSeries(
-		targetDescriptions,
-		function(targetDescription, cb) {
-			if (!targetDescription.address && !targetDescription.amount) {
-				// PSNote: is this check rigorous enough?
-				const errStr =
-					"Please supply a target address and a target amount.";
-				const err = new Error(errStr);
-				cb(err);
-				return;
-			}
-			const targetDescription_address = targetDescription.address;
-			const targetDescription_amount = "" + targetDescription.amount; // we are converting it to a string here because parseMoney expects a string
-			// now verify/parse address and amount
-			if (
-				monero_openalias_utils.DoesStringContainPeriodChar_excludingAsXMRAddress_qualifyingAsPossibleOAAddress(
-					targetDescription_address,
-				) == true
-			) {
-				throw "You must resolve this OA address to a Monero address before calling SendFunds";
-			}
-			// otherwise this should be a normal, single Monero public address
-			try {
-				monero_utils.decode_address(targetDescription_address, nettype); // verify that the address is valid
-			} catch (e) {
-				const errStr =
-					"Couldn't decode address " +
-					targetDescription_address +
-					": " +
-					e;
-				const err = new Error(errStr);
-				cb(err);
-				return;
-			}
-			// amount:
-			var moneroReady_amountToSend; // possibly need this ; here for the JS parser
-			try {
-				moneroReady_amountToSend = monero_amount_format_utils.parseMoney(
-					targetDescription_amount,
-				);
-			} catch (e) {
-				const errStr =
-					"Couldn't parse amount " +
-					targetDescription_amount +
-					": " +
-					e;
-				const err = new Error(errStr);
-				cb(err);
-				return;
-			}
-			cb(null, {
-				address: targetDescription_address,
-				amount: moneroReady_amountToSend,
-			});
-		},
-		function(err, moneroReady_targetDescriptions) {
-			fn(err, moneroReady_targetDescriptions);
-		},
-	);
+	//
+	const moneroReady_targetDescriptions = [];
+	for (var i = 0 ; i < targetDescriptions.length ; i++) {
+		const targetDescription = targetDescriptions[i];
+		if (!targetDescription.address && !targetDescription.amount) {
+			// PSNote: is this check rigorous enough?
+			const errStr =
+				"Please supply a target address and a target amount.";
+			const err = new Error(errStr);
+			fn(err);
+			return;
+		}
+		const targetDescription_address = targetDescription.address;
+		const targetDescription_amount = "" + targetDescription.amount; // we are converting it to a string here because parseMoney expects a string
+		// now verify/parse address and amount
+		if (
+			monero_openalias_utils.DoesStringContainPeriodChar_excludingAsXMRAddress_qualifyingAsPossibleOAAddress(
+				targetDescription_address,
+			) == true
+		) {
+			throw "You must resolve this OA address to a Monero address before calling SendFunds";
+		}
+		// otherwise this should be a normal, single Monero public address
+		try {
+			monero_utils.decode_address(targetDescription_address, nettype); // verify that the address is valid
+		} catch (e) {
+			const errStr =
+				"Couldn't decode address " +
+				targetDescription_address +
+				": " +
+				e;
+			const err = new Error(errStr);
+			fn(err);
+			return;
+		}
+		// amount:
+		var moneroReady_amountToSend; // possibly need this ; here for the JS parser
+		try {
+			moneroReady_amountToSend = monero_amount_format_utils.parseMoney(
+				targetDescription_amount,
+			);
+		} catch (e) {
+			const errStr =
+				"Couldn't parse amount " +
+				targetDescription_amount +
+				": " +
+				e;
+			const err = new Error(errStr);
+			fn(err);
+			return;
+		}
+		moneroReady_targetDescriptions.push({
+			address: targetDescription_address,
+			amount: moneroReady_amountToSend,
+		});
+	}
+	fn(null, moneroReady_targetDescriptions);
 }
 function __randomIndex(list) {
 	return Math.floor(Math.random() * list.length);

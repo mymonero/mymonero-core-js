@@ -497,6 +497,9 @@ module.exports = function(options)
 		{
 			const instance = new MyMoneroCoreBridge(thisModule);
 			resolve(instance);
+		}).catch(function(e) {
+			console.error("Error loading MyMoneroCoreCpp:", e);
+			reject(e);
 		});
 	});
 };
