@@ -309,6 +309,56 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
+	estimate_rct_tx_size(n_inputs, mixin, n_outputs, optl__extra_size, optl__bulletproof)
+	{
+		const args =
+		{
+			n_inputs: "" + n_inputs, 
+			mixin: "" + mixin, 
+			n_outputs: "" + n_outputs, 
+			extra_size: "" + (typeof optl__extra_size !== 'undefined' && optl__extra_size ? optl__extra_size : 0), 
+			bulletproof: "" + (optl__bulletproof == true ? true : false) /* if undefined, false */,
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.estimate_rct_tx_size(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
+		}
+		return parseInt(ret.retVal); // small enough to parse
+	}
+	calculate_fee(fee_per_kb__string, num_bytes, fee_multiplier)
+	{
+		const args =
+		{
+			fee_per_kb: fee_per_kb__string,
+			num_bytes: "" + num_bytes,
+			fee_multiplier: "" + fee_multiplier
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.calculate_fee(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
+		}
+		return ret.retVal; // this is a string - pass it to new JSBigInt(…)
+	}
+	estimated_tx_network_fee(fee_per_kb__string, priority)
+	{
+		const args =
+		{
+			fee_per_kb: fee_per_kb__string, 
+			priority: "" + priority,
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.estimated_tx_network_fee(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
+		}
+		return ret.retVal; // this is a string - pass it to new JSBigInt(…)
+	}
+
 	create_signed_transaction(
 		from_address_string,
 		sec_keys,

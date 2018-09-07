@@ -42,6 +42,9 @@ exports.bridgedFn_names =
 	"seed_and_keys_from_mnemonic",
 	"validate_components_for_login",
 	"generate_key_image",
+	"estimate_rct_tx_size",
+	"calculate_fee",
+	"estimated_tx_network_fee",
 	"create_signed_transaction",
 	"create_signed_transaction__nonIPCsafe"
 ];

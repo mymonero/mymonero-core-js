@@ -32,6 +32,7 @@ console.time("Load module")
 async function tests()
 {
 	const monero_utils = await require("../monero_utils/monero_utils")
+
 	const Module = monero_utils.Module;
 
 	console.timeEnd("Load module")

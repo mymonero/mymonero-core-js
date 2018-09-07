@@ -38,6 +38,7 @@ mymonero_core_js.monero_sendingFunds_utils = require("./monero_utils/monero_send
 mymonero_core_js.monero_requestURI_utils = require("./monero_utils/monero_requestURI_utils");
 mymonero_core_js.monero_keyImage_cache_utils = require("./monero_utils/monero_keyImage_cache_utils");
 mymonero_core_js.monero_paymentID_utils = require("./monero_utils/monero_paymentID_utils");
+mymonero_core_js.monero_amount_format_utils = require("./monero_utils/monero_amount_format_utils");
 mymonero_core_js.api_response_parser_utils = require("./hostAPI/response_parser_utils");
 //
 mymonero_core_js.nettype_utils = require("./cryptonote_utils/nettype");
