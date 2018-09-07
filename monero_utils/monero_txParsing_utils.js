@@ -30,7 +30,12 @@
 //
 const monero_config = require("./monero_config");
 //
-function IsTransactionConfirmed(tx, blockchain_height) {
+function IsTransactionConfirmed(tx, blockchain_height) 
+{
+	// TODO: check tx.mempool here?
+	if (tx.height === null || typeof tx.height == 'undefined') {
+		return false // supposing it hasn't made it into a block yet
+	}
 	return blockchain_height - tx.height > monero_config.txMinConfirms;
 }
 exports.IsTransactionConfirmed = IsTransactionConfirmed;
