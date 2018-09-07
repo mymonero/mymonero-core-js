@@ -58,6 +58,7 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 				return retVal;
 			}
 		}
+		local_fns.Module = coreBridge_instance.Module;
 		resolve(local_fns);
 	}
 	if (wants_electronRemote) {

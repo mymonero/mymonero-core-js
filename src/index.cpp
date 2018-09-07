@@ -53,10 +53,9 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("seed_and_keys_from_mnemonic", &serial_bridge::seed_and_keys_from_mnemonic);
     emscripten::function("validate_components_for_login", &serial_bridge::validate_components_for_login);
     //
-    // keeping these in JS for now -- much more practical; don't have to async wait for the module to load
-    // emscripten::function("estimate_rct_tx_size", &serial_bridge::estimate_rct_tx_size);
-    // emscripten::function("calculate_fee", &serial_bridge::calculate_fee);
-    // emscripten::function("estimated_tx_network_fee", &serial_bridge::estimated_tx_network_fee);
+    emscripten::function("estimate_rct_tx_size", &serial_bridge::estimate_rct_tx_size);
+    emscripten::function("calculate_fee", &serial_bridge::calculate_fee);
+    emscripten::function("estimated_tx_network_fee", &serial_bridge::estimated_tx_network_fee);
     //
     emscripten::function("generate_key_image", &serial_bridge::generate_key_image);
 }
