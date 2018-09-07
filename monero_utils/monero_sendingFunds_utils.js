@@ -141,30 +141,6 @@ function fee_multiplier_for_priority(priority__or0ForDefault) {
 	const priority_as_idx = final_priorityInt - 1;
 	return newer_multipliers[priority_as_idx];
 }
-function EstimatedTransaction_networkFee(
-	nonZero_mixin_int,
-	feePerKB_JSBigInt,
-	simple_priority,
-) {
-	const numberOf_inputs = 2; // this might change -- might select inputs
-	const numberOf_outputs =
-		1 /*dest*/ + 1 /*change*/ + 0; /*no mymonero fee presently*/
-	// TODO: update est tx size for bulletproofs
-	// TODO: normalize est tx size fn naming
-	const estimated_txSize = estimateRctSize(
-		numberOf_inputs,
-		nonZero_mixin_int,
-		numberOf_outputs,
-	);
-	const estimated_fee = calculate_fee(
-		feePerKB_JSBigInt,
-		estimated_txSize,
-		fee_multiplier_for_priority(simple_priority),
-	);
-	//
-	return estimated_fee;
-}
-exports.EstimatedTransaction_networkFee = EstimatedTransaction_networkFee;
 //
 const SendFunds_ProcessStep_Code = {
 	fetchingLatestBalance: 1,
