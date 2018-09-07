@@ -23,6 +23,27 @@ async function t1()
 		console.log(e)
 	}
 
+	try {
+		var created = (await mymonero.monero_utils_promise).newly_created_wallet(
+			"ja",
+			nettype,
+		);
+		console.log("newly_created_wallet", created)
+		//
+		try {
+			var unpacked = (await mymonero.monero_utils_promise).seed_and_keys_from_mnemonic(
+				created.mnemonic_string,
+				nettype,
+			);
+			console.log("seed_and_keys_from_mnemonic", created)
+		} catch (e) {
+			console.log(e)
+		}
+	} catch (e) {
+		console.log(e)
+	}
+
+
 
 	try {
 		var tx_size = (await mymonero.monero_utils_promise).estimate_rct_tx_size(
