@@ -124,11 +124,25 @@ async function tests()
 		console.log("seed_and_keys_from_mnemonic ret", ret_string)
 	})
 	setTimeout(function() {
-		console.time("validate_components_for_login")
+		console.time("validate_components_for_login w seed")
 		const args_str = '{"address_string":"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg","sec_viewKey_string":"7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104","sec_spendKey_string":"4e6d43cd03812b803c6f3206689f5fcc910005fc7e91d50d79b0776dbefcd803","seed_string":"9c973aa296b79bbf452781dd3d32ad7f","nettype_string":"MAINNET"}'
 		const ret_string = Module.validate_components_for_login(args_str)
-		console.timeEnd("validate_components_for_login")
-		console.log("validate_components_for_login ret", ret_string)
+		console.timeEnd("validate_components_for_login w seed")
+		console.log("validate_components_for_login w seed ret", ret_string)
+	})
+	setTimeout(function() {
+		console.time("validate_components_for_login w both keys")
+		const args_str = '{"address_string":"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg","sec_viewKey_string":"7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104","sec_spendKey_string":"4e6d43cd03812b803c6f3206689f5fcc910005fc7e91d50d79b0776dbefcd803","nettype_string":"MAINNET"}'
+		const ret_string = Module.validate_components_for_login(args_str)
+		console.timeEnd("validate_components_for_login w both keys")
+		console.log("validate_components_for_login w both keys ret", ret_string)
+	})
+	setTimeout(function() {
+		console.time("validate_components_for_login view only")
+		const args_str = '{"address_string":"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg","sec_viewKey_string":"7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104","nettype_string":"MAINNET"}'
+		const ret_string = Module.validate_components_for_login(args_str)
+		console.timeEnd("validate_components_for_login view only")
+		console.log("validate_components_for_login view only ret", ret_string)
 	})
 	//
 	setTimeout(function() {
