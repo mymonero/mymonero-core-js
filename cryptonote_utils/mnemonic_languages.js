@@ -25,15 +25,48 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-const monero_utils = require("../../").monero_utils;
-const { generate_parameters } = require("./test_parameters");
-const { indi, P1v, P2v, xv, N } = generate_parameters();
-
-it("borromean_2", () => {
-	//#false one
-	indi[3] = `${(+indi[3] + 1) % 2}`;
-	const bb = monero_utils.genBorromean(xv, [P1v, P2v], indi, 2, N); /*?.*/
-	const valid = monero_utils.verifyBorromean(bb, P1v, P2v); /*?.*/
-	expect(valid).toBe(false);
-});
+//
+"use strict";
+//
+const supported_short_codes = exports.supported_short_codes = 
+[
+	"en",
+	"nl", 
+	"fr",
+	"es",
+	"pt",
+	"ja",
+	"it",
+	"de", 
+	"ru",
+	"zh", // chinese (simplified)
+	"eo", 
+	"jbo" // Lojban
+];
+exports.mnemonic_languages =
+[
+	"English",
+	"Netherlands",
+	"Français",
+	"Español",
+	"Português",
+	"日本語",
+	"Italiano",
+	"Deutsch", 
+	"русский язык",
+	"简体中文 (中国)",
+	"Esperanto",
+	"Lojban"
+];
+exports.compatible_code_from_locale = function(locale_string)
+{
+	const supported_short_codes__length = supported_short_codes.length
+	for (var i = 0 ; i < supported_short_codes__length ; i++) {
+		const short_code = supported_short_codes[i]
+		if (locale_string.indexOf(short_code) == 0) {
+			return short_code
+		}
+	}
+	throw "Didn't find a code"
+	// return undefined
+}

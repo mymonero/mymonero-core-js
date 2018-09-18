@@ -26,58 +26,51 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-const mnemonic = require("../../cryptonote_utils/mnemonic");
-const monero_utils = require("../../").monero_utils;
+"use strict";
+const mymonero = require("../");
+// const assert = require("assert");
 
-function randomBit() {
-	// get random 32 bits in hex
-	const rand32bits = mnemonic.mn_random(32);
-	// take 4 bits "nibble" and convert to binary
-	// then take last index
-	return monero_utils.padLeft(
-		parseInt(rand32bits[0], 16).toString(2),
-		4,
-		0,
-	)[3];
-}
+var public_key =
+	"904e49462268d771cc1649084c35aa1296bfb214880fe2e7f373620a3e2ba597";
+var private_key =
+	"52aa4c69b93b780885c9d7f51e6fd5795904962c61a2e07437e130784846f70d";
 
-//Tests for Borromean signatures
-//#boro true one, false one, C != sum Ci, and one out of the range..
-const N = 64;
-let xv = [], // vector of secret keys, 1 per ring (nrings)
-	P1v = [], //key64, arr of commitments Ci
-	P2v = [], //key64
-	indi = []; // vector of secret indexes, 1 per ring (nrings), can be a string
+var nettype = mymonero.nettype_utils.network_type.MAINNET;
 
-let indi_2 = [];
-let indi_3 = [];
-let indi_4 = [];
+describe("cryptonote_utils tests", function() {
 
-let generated = false;
-
-function generate_parameters() {
-	if (generated) {
-		const indiCopy = [...indi];
-
-		return { xv, P1v, P2v, indi: indiCopy, N };
-	} else {
-		for (let j = 0; j < N; j++) {
-			indi[j] = randomBit(); /*?.*/
-
-			xv[j] = monero_utils.skGen(); /*?.*/
-
-			if (+indi[j] === 0) {
-				P1v[j] = monero_utils.ge_scalarmult_base(xv[j]); /*?.*/
-			} else {
-				P1v[j] = monero_utils.ge_scalarmult_base(xv[j]); // calculate aG = xv[j].G /*?.*/
-				P1v[j] = monero_utils.ge_add(P1v[j], monero_utils.H2[j]); // calculate aG + H2 /*?.*/
-			}
-
-			P2v[j] = monero_utils.ge_sub(P1v[j], monero_utils.H2[j]); /*?.*/
+	it("decode mainnet primary address", function() {
+		async function test() {
+			var decoded = (await mymonero.monero_utils_promise).decode_address(
+				"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
+				nettype,
+			);
+			var expected = {
+				spend:
+					"d8f1e81ecbe25ce8b596d426fb02fe7b1d4bb8d14c06b3d3e371a60eeea99534",
+				view:
+					"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
+			};
+			assert.deepEqual(decoded, expected);
 		}
-		generated = true;
-		return { xv, P1v, P2v, indi, N };
-	}
-}
+		test()
+	});
 
-module.exports = { generate_parameters };
+	it("decode mainnet integrated address", function() {
+		async function test() {
+			var decoded = (await mymonero.monero_utils_promise).decode_address(
+				"4KYcX9yTizXfvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNd3mZpgrjXBKMx9ee7c",
+				nettype,
+			);
+			var expected = {
+				spend:
+					"d8f1e81ecbe25ce8b596d426fb02fe7b1d4bb8d14c06b3d3e371a60eeea99534",
+				view:
+					"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
+				intPaymentId: "83eab71fbee84eb9",
+			};
+			assert.deepEqual(decoded, expected);
+		}
+		test()
+	});
+});

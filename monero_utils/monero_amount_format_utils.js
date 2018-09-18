@@ -25,17 +25,11 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-const monero_utils = require("../../").monero_utils;
-const { generate_parameters } = require("./test_parameters");
-const { indi, P1v, P2v, xv, N } = generate_parameters();
-
-it("borromean_3", () => {
-	//#true one again
-	indi[3] = `${(+indi[3] + 1) % 2}`;
-	indi[3] = `${(+indi[3] + 1) % 2}`;
-
-	const bb = monero_utils.genBorromean(xv, [P1v, P2v], indi, 2, N); /*?.*/
-	const valid = monero_utils.verifyBorromean(bb, P1v, P2v); /*?.*/
-	expect(valid).toBe(true);
-});
+//
+"use strict";
+//
+const monero_config = require("./monero_config")
+const money_format_utils = require("../cryptonote_utils/money_format_utils")
+const instance = money_format_utils(monero_config)
+//
+module.exports = instance;

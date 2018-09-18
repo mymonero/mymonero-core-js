@@ -25,42 +25,26 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
-const monero_utils = require("../").monero_utils;
-
-it("ecdh_roundtrip", () => {
-	const test_amounts = [
-		new JSBigInt(1),
-		new JSBigInt(1),
-		new JSBigInt(2),
-		new JSBigInt(3),
-		new JSBigInt(4),
-		new JSBigInt(5),
-		new JSBigInt(10000),
-
-		new JSBigInt("10000000000000000000"),
-		new JSBigInt("10203040506070809000"),
-
-		new JSBigInt("123456789123456789"),
-	];
-
-	for (const amount of test_amounts) {
-		const k = monero_utils.skGen();
-		const scalar = monero_utils.skGen(); /*?*/
-		const amt = monero_utils.d2s(amount.toString());
-		const t0 = {
-			mask: scalar,
-			amount: amt,
-		};
-
-		// both are strings so we can shallow copy
-		let t1 = { ...t0 };
-
-		t1 = monero_utils.encode_rct_ecdh(t1, k);
-
-		t1 = monero_utils.decode_rct_ecdh(t1, k);
-		expect(t1.mask).toEqual(t0.mask);
-		expect(t1.amount).toEqual(t0.amount);
-	}
-});
+//
+// This file is here merely to share configuration
+//
+exports.bridgedFn_names =
+[
+	"is_subaddress",
+	"is_integrated_address",
+	"new_payment_id",
+	"new__int_addr_from_addr_and_short_pid",
+	"new_fake_address_for_rct_tx",
+	"decode_address",
+	"newly_created_wallet",
+	"are_equal_mnemonics",
+	"mnemonic_from_seed",
+	"seed_and_keys_from_mnemonic",
+	"validate_components_for_login",
+	"generate_key_image",
+	"estimate_rct_tx_size",
+	"calculate_fee",
+	"estimated_tx_network_fee",
+	"create_signed_transaction",
+	"create_signed_transaction__nonIPCsafe"
+];
