@@ -9,8 +9,7 @@
   },
   "scripts": {
     "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
-    "test": "jest --verbose",
-    "test:coverage": "jest --coverage --verbose"
+    "test": "mocha"
   },
   "keywords": [
     "monero",
@@ -31,16 +30,15 @@
     "url": "https://github.com/mymonero/mymonero-core-js/issues"
   },
   "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
-    "jest": "^23.1.0"
+    "mocha": "^5.2.0"
   },
-  "jest" : {
-    "testEnvironment":"node",
+  "jest": {
+    "testEnvironment": "node",
     "verbose": true,
     "coveragePathIgnorePatterns": [
-      "node_modules", 
+      "node_modules",
       "monero_utils/MyMoneroCoreCpp.js",
       "tests/emjs/*"
     ]

@@ -309,6 +309,54 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
+	decodeRct(rv, sk, i)
+	{
+		// where RCTTypeFull is 0x01 and  RCTTypeFullBulletproof is 0x03
+		// TODO declare as shared constants
+		if (rv.type !== 0x01 && rv.type !== 0x03) {
+			return { err_msg: "verRct called on non-full rctSig" };
+		}
+		if (i >= rv.ecdhInfo.length) {
+			return { err_msg: "Bad index" };
+		}
+		if (rv.outPk.length !== rv.ecdhInfo.length) {
+			return { err_msg: "Mismatched sizes of rv.outPk and rv.ecdhInfo" };
+		}
+
+	}
+	generate_key_derivation(pub, sec) 
+	{
+		if (pub.length !== 64 || sec.length !== 64) {
+			return { err_msg: "Invalid input length" };
+		}
+
+	}
+	derive_public_key(derivation, out_index, pub)
+	{
+		if (derivation.length !== 64 || pub.length !== 64) {
+			return { err_msg: "Invalid input length!" };
+		}
+		
+	}
+	derive_subaddress_public_key(
+		output_key,
+		derivation,
+		out_index
+	) {
+		if (output_key.length !== 64 || derivation.length !== 64) {
+			return { err_msg: "Invalid input length!" };
+		}
+		
+	}
+	hash_to_scalar(buf/*String*/)
+	{
+		
+	}
+	create_address(seed, nettype)
+	{
+		
+	}
+
 	estimate_rct_tx_size(n_inputs, mixin, n_outputs, optl__extra_size, optl__bulletproof)
 	{
 		const args =

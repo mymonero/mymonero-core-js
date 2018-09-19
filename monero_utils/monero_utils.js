@@ -34,6 +34,7 @@ const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== tru
 const wants_electronRemote = (ENVIRONMENT_IS_NODE&&ENVIRONMENT_IS_WEB)/*this may become insufficient*/
 	|| (typeof window !== 'undefined' && window.IsElectronRendererProcess == true);
 //
+const fn_names = require('./__bridged_fns_spec').bridgedFn_names;
 const moneroUtils_promise = new Promise(function(resolve, reject)
 {
 	function _didLoad(coreBridge_instance)
@@ -42,7 +43,6 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 			throw "Unable to make coreBridge_instance"
 		}
 		const local_fns = {};
-		const fn_names = require('./__bridged_fns_spec').bridgedFn_names;
 		for (const i in fn_names) {
 			const name = fn_names[i]
 			local_fns[name] = function()
