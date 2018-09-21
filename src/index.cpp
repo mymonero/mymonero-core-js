@@ -52,12 +52,18 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("mnemonic_from_seed", &serial_bridge::mnemonic_from_seed);
     emscripten::function("seed_and_keys_from_mnemonic", &serial_bridge::seed_and_keys_from_mnemonic);
     emscripten::function("validate_components_for_login", &serial_bridge::validate_components_for_login);
+    emscripten::function("address_and_keys_from_seed", &serial_bridge::address_and_keys_from_seed);
     //
     emscripten::function("estimate_rct_tx_size", &serial_bridge::estimate_rct_tx_size);
     emscripten::function("calculate_fee", &serial_bridge::calculate_fee);
     emscripten::function("estimated_tx_network_fee", &serial_bridge::estimated_tx_network_fee);
     //
     emscripten::function("generate_key_image", &serial_bridge::generate_key_image);
+    emscripten::function("generate_key_derivation", &serial_bridge::generate_key_derivation);
+    emscripten::function("derive_public_key", &serial_bridge::derive_public_key);
+    emscripten::function("derive_subaddress_public_key", &serial_bridge::derive_subaddress_public_key);
+    emscripten::function("decodeRct", &serial_bridge::decodeRct);
+    //
 }
 extern "C"
 { // C -> JS

@@ -273,6 +273,30 @@ class MyMoneroCoreBridge
 		};
 	}
 
+	address_and_keys_from_seed(
+		seed_string,
+		nettype
+	) {
+		const args =
+		{
+			seed_string: seed_string,
+			nettype_string: nettype_utils.nettype_to_API_string(nettype)
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.address_and_keys_from_seed(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg }
+		}
+		return { // calling these out so as to provide a stable ret val interface
+			address_string: ret.address_string,
+			pub_viewKey_string: ret.pub_viewKey_string,
+			sec_viewKey_string: ret.sec_viewKey_string,
+			pub_spendKey_string: ret.pub_spendKey_string,
+			sec_spendKey_string: ret.sec_spendKey_string
+		};
+	}
+
 	generate_key_image(
 		tx_pub,
 		view_sec,
@@ -309,54 +333,105 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
-	decodeRct(rv, sk, i)
-	{
-		// where RCTTypeFull is 0x01 and  RCTTypeFullBulletproof is 0x03
-		// TODO declare as shared constants
-		if (rv.type !== 0x01 && rv.type !== 0x03) {
-			return { err_msg: "verRct called on non-full rctSig" };
+	generate_key_derivation(
+		pub,
+		sec,
+	) {
+		const args =
+		{
+			pub: pub,
+			sec: sec,
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.generate_key_derivation(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
 		}
-		if (i >= rv.ecdhInfo.length) {
-			return { err_msg: "Bad index" };
-		}
-		if (rv.outPk.length !== rv.ecdhInfo.length) {
-			return { err_msg: "Mismatched sizes of rv.outPk and rv.ecdhInfo" };
-		}
-
-	}
-	generate_key_derivation(pub, sec) 
-	{
-		if (pub.length !== 64 || sec.length !== 64) {
-			return { err_msg: "Invalid input length" };
-		}
-
+		return ret.retVal;
 	}
 	derive_public_key(derivation, out_index, pub)
 	{
-		if (derivation.length !== 64 || pub.length !== 64) {
-			return { err_msg: "Invalid input length!" };
+		const args =
+		{
+			pub: pub,
+			derivation: derivation, 
+			out_index: out_index,
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.derive_public_key(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
 		}
-		
+		return ret.retVal;
 	}
 	derive_subaddress_public_key(
 		output_key,
 		derivation,
 		out_index
 	) {
-		if (output_key.length !== 64 || derivation.length !== 64) {
-			return { err_msg: "Invalid input length!" };
+		const args =
+		{
+			output_key: output_key,
+			derivation: derivation,
+			out_index: "" + out_index, // must be passed as string
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.derive_subaddress_public_key(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
 		}
-		
+		return ret.retVal;		
 	}
-	hash_to_scalar(buf/*String*/)
+	decodeRct(rv, sk, i)
 	{
-		
+		const ecdhInfo = []; // should obvs be plural but just keeping exact names in-tact
+		for (var j = 0 ; j < rv.outPk.length ; j++) {
+			var this_ecdhInfo = rv.ecdhInfo[j];
+  			ecdhInfo.push({
+				mask: this_ecdhInfo.mask,
+				amount: this_ecdhInfo.amount
+			})
+		}
+		const outPk = [];
+		for (var j = 0 ; j < rv.outPk.length ; j++) {
+			var this_outPk_mask = null;
+			var this_outPk = rv.outPk[j];
+			if (typeof this_outPk === 'string') {
+				this_outPk_mask = this_outPk;
+			} else if (typeof this_outPk === "object") {
+				this_outPk_mask = this_outPk.mask; 
+			}
+			if (this_outPk_mask == null) {
+				return { err_msg: "Couldn't locate outPk mask value" }
+			}
+  			outPk.push({
+				mask: this_outPk_mask
+			})
+		}
+		const args =
+		{
+			i: "" + i,  // must be passed as string
+			sk: sk,
+			rv: {
+				type: "" + rv.type/*must be string*/, // e.g. 1, 3 ... corresponding to rct::RCTType* in rctSigs.cpp
+				ecdhInfo: ecdhInfo,
+				outPk: outPk
+			}
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.decodeRct(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg }
+		}
+		return { // calling these out so as to provide a stable ret val interface
+			amount: ret.amount, // string
+			mask: ret.mask,
+		};
 	}
-	create_address(seed, nettype)
-	{
-		
-	}
-
 	estimate_rct_tx_size(n_inputs, mixin, n_outputs, optl__extra_size, optl__bulletproof)
 	{
 		const args =
