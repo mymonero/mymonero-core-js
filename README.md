@@ -222,6 +222,9 @@ validate_components_for_login
 ```
 address_and_keys_from_seed
 ```
+* This function was known as `create_address` in the previous mymonero-core-js API.
+
+
 ```
 generate_key_image
 ```
