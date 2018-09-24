@@ -67,65 +67,6 @@ function default_priority() {
 } // aka .low
 exports.default_priority = default_priority;
 //
-function estimateRctSize(inputs, mixin, outputs, extra_size, bulletproof) 
-{
-	// keeping this in JS instead of C++ for now b/c it's much faster to access, and we don't have to make it asynchronous by waiting for the module to load
-	bulletproof = bulletproof == true ? true : false
-	extra_size = extra_size || 40
-	//
-	var size = 0;
-	// tx prefix
-	// first few bytes
-	size += 1 + 6;
-	size += inputs * (1 + 6 + (mixin + 1) * 2 + 32); 
-	// vout
-	size += outputs * (6 + 32);
-	// extra
-	size += extra_size;
-	// rct signatures
-	// type
-	size += 1;
-	// rangeSigs
-	if (bulletproof)
-		size += ((2*6 + 4 + 5)*32 + 3) * outputs;
-	else
-		size += (2*64*32+32+64*32) * outputs;
-	// MGs
-	size += inputs * (64 * (mixin + 1) + 32);
-	// mixRing - not serialized, can be reconstructed
-	/* size += 2 * 32 * (mixin+1) * inputs; */
-	// pseudoOuts
-	size += 32 * inputs;
-	// ecdhInfo
-	size += 2 * 32 * outputs;
-	// outPk - only commitment is saved
-	size += 32 * outputs;
-	// txnFee
-	size += 4;
-	// const logStr = `estimated rct tx size for ${inputs} at mixin ${mixin} and ${outputs} : ${size}  (${((32 * inputs/*+1*/) + 2 * 32 * (mixin+1) * inputs + 32 * outputs)}) saved)`
-	// console.log(logStr)
-
-	return size;
-};
-function calculate_fee(fee_per_kb_JSBigInt, numberOf_bytes, fee_multiplier) {
-	const numberOf_kB_JSBigInt = new JSBigInt(
-		(numberOf_bytes + 1023.0) / 1024.0,
-	); // i.e. ceil
-	//
-	return calculate_fee__kb(
-		fee_per_kb_JSBigInt,
-		numberOf_kB_JSBigInt,
-		fee_multiplier,
-	);
-}
-function calculate_fee__kb(fee_per_kb_JSBigInt, numberOf_kb, fee_multiplier) {
-	const numberOf_kB_JSBigInt = new JSBigInt(numberOf_kb);
-	const fee = fee_per_kb_JSBigInt
-		.multiply(fee_multiplier)
-		.multiply(numberOf_kB_JSBigInt);
-	//
-	return fee;
-}
 const newer_multipliers = [1, 4, 20, 166];
 function fee_multiplier_for_priority(priority__or0ForDefault) {
 	const final_priorityInt =
@@ -182,7 +123,7 @@ function SendFunds(
 	//		tx_key?,
 	//		mixin?,
 	// )
-	failWithErr_fn,
+	failWithErr_fn
 	// failWithErr_fn: (
 	//		err
 	// )
@@ -382,11 +323,14 @@ function SendFunds(
 			const feePerKB_JSBigInt = dynamic_feePerKB_JSBigInt;
 			// Transaction will need at least 1KB fee (or 13KB for RingCT)
 			const network_minimumTXSize_kb = /*isRingCT ? */ 13; /* : 1*/
-			const network_minimumFee = calculate_fee__kb(
-				feePerKB_JSBigInt,
-				network_minimumTXSize_kb,
-				fee_multiplier_for_priority(simple_priority),
-			);
+			const network_minimumTXSize_bytes = network_minimumTXSize_kb * 1000 // B -> kB
+			const network_minimumFee = new JSBigInt(
+				monero_utils.calculate_fee(
+					"" + feePerKB_JSBigInt,
+					network_minimumTXSize_bytes,
+					fee_multiplier_for_priority(simple_priority)
+				)
+			)
 			// ^-- now we're going to try using this minimum fee but the codepath has to be able to be re-entered if we find after constructing the whole tx that it is larger in kb than the minimum fee we're attempting to send it off with
 			__reenterable_constructFundTransferListAndSendFunds_findingLowestNetworkFee(
 				moneroReady_targetDescription_address,
@@ -438,10 +382,14 @@ function SendFunds(
 			var usingOutsAmount = usableOutputsAndAmounts.usingOutsAmount;
 			var remaining_unusedOuts = usableOutputsAndAmounts.remaining_unusedOuts; // this is a copy of the pre-mutation usingOuts
 			if (/*usingOuts.length > 1 &&*/ isRingCT) {
-				var newNeededFee = calculate_fee(
-					feePerKB_JSBigInt,
-					estimateRctSize(usingOuts.length, mixin, 2),
-					fee_multiplier_for_priority(simple_priority),
+				var newNeededFee = new JSBigInt(
+					monero_utils.calculate_fee(
+						"" + feePerKB_JSBigInt,
+						monero_utils.estimate_rct_tx_size(
+							usingOuts.length, mixin, 2
+						),
+						fee_multiplier_for_priority(simple_priority)
+					)
 				);
 				// if newNeededFee < neededFee, use neededFee instead (should only happen on the 2nd or later times through (due to estimated fee being too low))
 				if (newNeededFee.compare(attemptAt_network_minimumFee) < 0) {
@@ -491,14 +439,14 @@ function SendFunds(
 								JSON.stringify(out),
 						);
 						// and recalculate invalidated values
-						newNeededFee = calculate_fee(
-							feePerKB_JSBigInt,
-							estimateRctSize(
-								usingOuts.length,
-								mixin,
-								2,
-							),
-							fee_multiplier_for_priority(simple_priority),
+						newNeededFee = new JSBigInt(
+							monero_utils.calculate_fee(
+								"" + feePerKB_JSBigInt,
+								monero_utils.estimate_rct_tx_size(
+									usingOuts.length, mixin, 2
+								),
+								fee_multiplier_for_priority(simple_priority)
+							)
 						);
 						totalAmountIncludingFees = totalAmountWithoutFee_JSBigInt.add(
 							newNeededFee,
@@ -621,17 +569,17 @@ function SendFunds(
 				}
 				console.log(
 					txBlobBytes +
-						" bytes <= " +
-						numKB +
-						" KB (current fee: " +
+						" bytes; current fee: " +
 						monero_amount_format_utils.formatMoneyFull(attemptAt_network_minimumFee) +
-						")",
+						"",
 				);
-				const feeActuallyNeededByNetwork = calculate_fee__kb(
-					feePerKB_JSBigInt,
-					numKB,
-					fee_multiplier_for_priority(simple_priority),
-				);
+				const feeActuallyNeededByNetwork = new JSBigInt(
+					monero_utils.calculate_fee(
+						"" + feePerKB_JSBigInt,
+						txBlobBytes,
+						fee_multiplier_for_priority(simple_priority)
+					)
+				)
 				// if we need a higher fee
 				if (
 					feeActuallyNeededByNetwork.compare(
