@@ -159,21 +159,21 @@ One of the arguments to `SendFunds`, `preSuccess_nonTerminal_statusUpdate_fn`, s
 #### Examples
 
 ```
-	const mymonero = require("mymonero_core_js/index");
-	// or just "mymonero_core_js/monero_utils/monero_utils"
-	async function foo()
-	{
-		const monero_utils = await mymonero.monero_utils;
-		const nettype = mymonero.nettype_utils.network_type.MAINNET;
-		const decoded = monero_utils.address_and_keys_from_seed("…", nettype);
-		// read decoded.address_string
-		//
-	}
-	foo()
+const mymonero = require("mymonero_core_js/index");
+// or just "mymonero_core_js/monero_utils/monero_utils"
+async function foo()
+{
+	const monero_utils = await mymonero.monero_utils;
+	const nettype = mymonero.nettype_utils.network_type.MAINNET;
+	const decoded = monero_utils.address_and_keys_from_seed("…", nettype);
+	// read decoded.address_string
+	//
+}
+foo()
 ```
 
 ```
-	var decoded = monero_utils.decode_address("…", nettype);
+var decoded = monero_utils.decode_address("…", nettype);
 ```
 
 #### Available functions
