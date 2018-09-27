@@ -50,7 +50,17 @@ function ret_val_boolstring_to_bool(boolstring)
 }
 function api_safe_wordset_name(wordset_name)
 {
-	return wordset_name.charAt(0).toUpperCase() + wordset_name.substr(1) // capitalizes first letter
+	// convert all lowercase, legacy values to core-cpp compatible
+	if (wordset_name == "english") {
+		return "English"
+	} else if (wordset_name == "spanish") {
+		return "Español"
+	} else if (wordset_name == "portuguese") {
+		return "Português"
+	} else if (wordset_name == "japanese") {
+		return "日本語"
+	}
+	return wordset_name // must be a value returned by core-cpp
 }
 //
 class MyMoneroCoreBridge
