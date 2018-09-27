@@ -536,7 +536,6 @@ function SendFunds(
 						isRingCT,
 						nettype,
 					);
-					console.log("got back", create_transaction__retVals)
 				} catch (e) {
 					var errStr;
 					if (e) {
