@@ -634,13 +634,7 @@ function SendFunds(
 						const tx_fee = final_networkFee; /*.add(hostingService_chargeAmount) NOTE: Service charge removed to reduce bloat for now */
 						__trampolineFor_success(
 							moneroReady_targetDescription_address,
-							sweeping
-								? parseFloat(
-										monero_amount_format_utils.formatMoneyFull(
-											totalAmountWithoutFee_JSBigInt,
-										),
-								  )
-								: amount,
+							totalAmountWithoutFee_JSBigInt,
 							final__payment_id,
 							tx_hash,
 							tx_fee,
