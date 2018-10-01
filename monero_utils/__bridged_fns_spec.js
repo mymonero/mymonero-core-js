@@ -34,7 +34,6 @@ exports.bridgedFn_names =
 	"is_integrated_address",
 	"new_payment_id",
 	"new__int_addr_from_addr_and_short_pid",
-	"new_fake_address_for_rct_tx",
 	"decode_address",
 	"newly_created_wallet",
 	"are_equal_mnemonics",

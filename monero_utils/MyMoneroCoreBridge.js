@@ -135,18 +135,6 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
-	new_fake_address_for_rct_tx(nettype)
-	{
-		const args = { nettype_string: nettype_utils.nettype_to_API_string(nettype) };
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.new_fake_address_for_rct_tx(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
-		}
-		return ret.retVal;
-	}
-
 	decode_address(address, nettype)
 	{
 		const args =
