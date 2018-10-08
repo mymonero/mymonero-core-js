@@ -11,7 +11,10 @@
 */
 /*
 
-This file has been modified by Paul Shapiro to bring in the function lowVal which was written by Lucas Jones
+This file has been modified by Paul Shapiro:
+
+1. to bring in the function lowVal which was written by Lucas Jones
+2. to expose CONSTRUCT
 
 */
 /*
@@ -99,6 +102,7 @@ function BigInteger(n, s, token) {
 	this._d = n;
 	this._s = n.length ? (s || 1) : 0;
 }
+BigInteger.CONSTRUCT = CONSTRUCT; // added by PS to actually use the constructor
 
 BigInteger._construct = function(n, s) {
 	return new BigInteger(n, s, CONSTRUCT);
@@ -1576,7 +1580,6 @@ BigInteger.prototype.toJSValue = function() {
 BigInteger.prototype.lowVal = function () {
 	return this._d[0] || 0;
 };
-
 
 var MAX_EXP = BigInteger(0x7FFFFFFF);
 // Constant: MAX_EXP
