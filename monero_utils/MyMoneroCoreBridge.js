@@ -633,25 +633,36 @@ module.exports = function(options)
 				// }
 				var this_scriptDirectory = scriptDirectory
 				const lastChar = this_scriptDirectory.charAt(this_scriptDirectory.length - 1)
-				if (lastChar == "/") { 
+				if (lastChar == "/" || lastChar == "\\") { 
+					// ^-- this is not a '\\' on Windows because emscripten actually appends a '/'
 					this_scriptDirectory = this_scriptDirectory.substring(0, this_scriptDirectory.length - 1) // remove trailing "/"
 				}
-				const scriptDirectory_pathComponents = this_scriptDirectory.split("/")
-				const lastPathComponent = scriptDirectory_pathComponents[scriptDirectory_pathComponents.length - 1]
-				var pathTo_cryptonoteUtilsDir; // add trailing slash to this
-				if (lastPathComponent == "monero_utils") { // typical node or electron-main process
-					pathTo_cryptonoteUtilsDir = scriptDirectory_pathComponents.join("/") + "/"
-				} else if (ENVIRONMENT_IS_WEB) { // this will still match on electron-renderer, so the path must be patched up…
-					if (typeof __dirname !== undefined && __dirname !== "/") { // looks like node running in browser.. assuming Electron-renderer
+				var fullPath = null; // add trailing slash to this
+				if (ENVIRONMENT_IS_NODE) {
+					const path = require('path')
+					const lastPathComponent = path.basename(this_scriptDirectory)
+					if (lastPathComponent == "monero_utils") { // typical node or electron-main process
+						fullPath = path.format({
+							dir: this_scriptDirectory,
+							base: filename
+						})
+					} else {
+						console.warn("MyMoneroCoreBridge/locateFile() on node.js didn't find \"monero_utils\" (or possibly MyMoneroCoreBridge.js) itself in the expected location in the following path. The function may need to be expanded but it might in normal situations be likely to be another bug." ,  pathTo_cryptonoteUtilsDir)
+					}
+				} else if (ENVIRONMENT_IS_WEB) {
+					var pathTo_cryptonoteUtilsDir;
+					if (typeof __dirname !== undefined && __dirname !== "/") { // looks like node running in browser.. (but not going to assume it's electron-renderer since that should be taken care of by monero_utils.js itself)
+						// but just in case it is... here's an attempt to support it
 						// have to check != "/" b/c webpack (I think) replaces __dirname
 						pathTo_cryptonoteUtilsDir = "file://" + __dirname + "/" // prepending "file://" because it's going to try to stream it
 					} else { // actual web browser
 						pathTo_cryptonoteUtilsDir = this_scriptDirectory + "/mymonero_core_js/monero_utils/" // this works for the MyMonero browser build, and is quite general, at least
 					}
-				} else {
-					throw "Undefined pathTo_cryptonoteUtilsDir. Please pass locateFile() to cryptonote_utils init."
+					fullPath = pathTo_cryptonoteUtilsDir + filename
 				}
-				const fullPath = pathTo_cryptonoteUtilsDir + filename
+				if (fullPath == null) {
+					throw "Unable to derive fullPath. Please pass locateFile() to cryptonote_utils init."
+				}
 				//
 				return fullPath
 			}
