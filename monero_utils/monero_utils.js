@@ -81,7 +81,7 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 			setTimeout(function()
 			{
 				_try(attemptN + 1)
-			}, 10)
+			}, 30)
 		}
 		_try = function(attemptN)
 		{
