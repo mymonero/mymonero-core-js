@@ -44,7 +44,6 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("is_integrated_address", &serial_bridge::is_integrated_address);
     //
     emscripten::function("new_integrated_address", &serial_bridge::new_integrated_address);
-    emscripten::function("new_fake_address_for_rct_tx", &serial_bridge::new_fake_address_for_rct_tx);
     emscripten::function("new_payment_id", &serial_bridge::new_payment_id);
     //
     emscripten::function("newly_created_wallet", &serial_bridge::newly_created_wallet);

@@ -79,13 +79,6 @@ async function tests()
 		console.log("new_integrated_address ret", ret_string)
 	}
 	{
-		console.time("new_fake_address_for_rct_tx")
-		const args_str = '{"nettype_string":"MAINNET"}'
-		const ret_string = Module.new_fake_address_for_rct_tx(args_str)
-		console.timeEnd("new_fake_address_for_rct_tx")
-		console.log("new_fake_address_for_rct_tx ret", ret_string)
-	}
-	{
 		console.time("new_payment_id")
 		const args_str = '{}'
 		const ret_string = Module.new_payment_id(args_str)
