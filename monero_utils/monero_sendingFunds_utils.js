@@ -36,15 +36,12 @@ const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 //
 const hostAPI_net_service_utils = require("../hostAPI/net_service_utils");
 //
-function _forkv7_minimumMixin() {
-	return 6;
-}
 function _mixinToRingsize(mixin) {
 	return mixin + 1;
 }
 //
 function thisFork_minMixin() {
-	return _forkv7_minimumMixin();
+	return 10;
 }
 function thisFork_minRingSize() {
 	return _mixinToRingsize(thisFork_minMixin());
