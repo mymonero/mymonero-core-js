@@ -26,6 +26,8 @@ include_directories("${MONERO_SRC}/cryptonote_protocol")
 include_directories("${MONERO_SRC}/wallet")
 include_directories("${MONERO_SRC}/rpc")
 include_directories("${MONERO_SRC}/mnemonics")
+include_directories("${MONERO_SRC}/contrib/libsodium/include") # support sodium/… paths
+include_directories("${MONERO_SRC}/contrib/libsodium/include/sodium")
 #
 # keeping test files in a separate source directory 
 # file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/test_*.cpp)
@@ -62,6 +64,7 @@ set(
     ${MONERO_SRC}/crypto/crypto-ops.c
     ${MONERO_SRC}/crypto/crypto-ops-data.c
     ${MONERO_SRC}/crypto/keccak.c
+    ${MONERO_SRC}/crypto/chacha.c
     ${MONERO_SRC}/crypto/random.c
     ${MONERO_SRC}/crypto/aesb.c
     ${MONERO_SRC}/crypto/tree-hash.c
@@ -76,9 +79,12 @@ set(
     ${MONERO_SRC}/cryptonote_core/cryptonote_tx_utils.cpp
     ${MONERO_SRC}/common/base58.cpp
     ${MONERO_SRC}/common/threadpool.cpp
+    ${MONERO_SRC}/common/aligned.c
+    ${MONERO_SRC}/common/util.cpp
     ${MONERO_SRC}/epee/src/hex.cpp
     ${MONERO_SRC}/epee/src/string_tools.cpp
     ${MONERO_SRC}/epee/src/memwipe.c
+    ${MONERO_SRC}/epee/src/mlocker.cpp
     ${MONERO_SRC}/epee/src/wipeable_string.cpp
     ${MONERO_SRC}/device/device.cpp
     ${MONERO_SRC}/device/device_default.cpp
@@ -87,8 +93,10 @@ set(
     ${MONERO_SRC}/ringct/rctCryptoOps.c
     ${MONERO_SRC}/ringct/rctSigs.cpp
     ${MONERO_SRC}/ringct/bulletproofs.cc
+    ${MONERO_SRC}/ringct/multiexp.cc
     ${MONERO_SRC}/mnemonics/electrum-words.cpp
     ${MONERO_SRC}/vtlogger/logger.cpp
+    ${MONERO_SRC}/contrib/libsodium/src/crypto_verify/verify.c
 )
 
 set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
@@ -99,11 +107,11 @@ set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
 #     ${boost_DIR}/lib/libboost_atomic.a
 # )
 # #
-# add_library(boost_chrono STATIC IMPORTED)
-# set_target_properties(
-#     boost_chrono PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_chrono.a
-# )
+add_library(boost_chrono STATIC IMPORTED)
+set_target_properties(
+    boost_chrono PROPERTIES IMPORTED_LOCATION
+    ${boost_DIR}/lib/libboost_chrono.a
+)
 # #
 # add_library(boost_date_time STATIC IMPORTED)
 # set_target_properties(
@@ -181,6 +189,8 @@ set(
     -Oz \
     --llvm-lto 1 \
     -s WASM=1 \
+    -s ASSERTIONS=0 \
+    -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
     --post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
     -s \"BINARYEN_METHOD='native-wasm'\" \
     -s NO_DYNAMIC_EXECUTION=1 \
@@ -189,8 +199,19 @@ set(
     -s PRECISE_F32=1 \
     -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
     "
+
+    #
+    # -O0 \
+    # -g \
+    # --llvm-lto 0 \
+    # -s WASM=1 \
+    # -s ASSERTIONS=1 \
+    # -s DEMANGLE_SUPPORT=1 \
+    # -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+
+    #
+    #
     # --closure 1 \
-    # -s ASSERTIONS=1 \ 
     # -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]' \
     # -s DISABLE_EXCEPTION_CATCHING=0 \
     #    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
@@ -211,7 +232,7 @@ target_link_libraries(
     MyMoneroCoreCpp
     #
     # boost_atomic
-    # boost_chrono
+    boost_chrono
     # boost_date_time
     # boost_filesystem
     # boost_locale
