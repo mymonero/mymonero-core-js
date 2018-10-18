@@ -51,7 +51,7 @@ async function t1()
 			6, 
 			2, // outputs
 			0, //optl__extra_size, 
-			false // optl__bulletproof
+			true // optl__bulletproof
 		);
 		console.log("estimate_rct_tx_size", tx_size)
 	} catch (e) {

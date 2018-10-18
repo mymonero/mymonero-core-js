@@ -143,7 +143,7 @@ async function tests()
 	}
 	{
 		console.time("estimate_rct_tx_size")
-		const args_str = '{"n_inputs":"2","mixin":"6","n_outputs":"2","extra_size":"0","bulletproof":"false"}'
+		const args_str = '{"n_inputs":"2","mixin":"6","n_outputs":"2","extra_size":"0","bulletproof":"true"}'
 		const ret_string = Module.estimate_rct_tx_size(args_str)
 		console.timeEnd("estimate_rct_tx_size")
 		console.log("estimate_rct_tx_size ret", ret_string)

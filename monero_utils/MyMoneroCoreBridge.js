@@ -438,7 +438,7 @@ class MyMoneroCoreBridge
 			mixin: "" + mixin, 
 			n_outputs: "" + n_outputs, 
 			extra_size: "" + (typeof optl__extra_size !== 'undefined' && optl__extra_size ? optl__extra_size : 0), 
-			bulletproof: "" + (optl__bulletproof == true ? true : false) /* if undefined, false */,
+			bulletproof: "" + (optl__bulletproof == false ? false : true) /* default true */,
 		};
 		const args_str = JSON.stringify(args);
 		const ret_string = this.Module.estimate_rct_tx_size(args_str);
