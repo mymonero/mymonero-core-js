@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+echo "🔁  mkdir -p ./build";
+mkdir -p ./build;
+
+echo "🔁  node --max_old_space_size=8192 node_modules/.bin/webpack --config webpack.browser.prod.config.js --display-modules ";
+node --max_old_space_size=8192 node_modules/.bin/webpack --config webpack.browser.prod.config.js --display-modules;
+
+echo "🔁   rm -rf ./build/mymonero_core_js/";
+rm -rf ./build/mymonero_core_js/;
+
+echo "🔁   mkdir -p ./build/mymonero_core_js/monero_utils/";
+mkdir -p ./build/mymonero_core_js/monero_utils/;
+
+echo "🔁   cp monero_utils/MyMoneroCoreCpp.wasm ./build/mymonero_core_js/monero_utils/";
+cp monero_utils/MyMoneroCoreCpp.wasm ./build/mymonero_core_js/monero_utils/;

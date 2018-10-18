@@ -32,7 +32,14 @@
   "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
   "dependencies": {},
   "devDependencies": {
-    "mocha": "^5.2.0"
+    "babel-core": "6.26.3",
+    "babel-loader": "8.0.2",
+    "babel-minify": "0.4.3",
+    "html5-fs": "0.1.1",
+    "mocha": "5.2.0",
+    "webpack": "4.19.1",
+    "webpack-cli": "3.1.0",
+    "webpack-merge": "4.1.4"
   },
   "jest": {
     "testEnvironment": "node",
