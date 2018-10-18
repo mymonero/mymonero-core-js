@@ -106,7 +106,6 @@ function SendFunds(
 	wallet__private_keys,
 	wallet__public_keys,
 	hostedMoneroAPIClient, // TODO: possibly factor this dependency
-	monero_openalias_utils,
 	payment_id,
 	simple_priority,
 	preSuccess_nonTerminal_statusUpdate_fn, // (_ stepCode: SendFunds_ProcessStep_Code) -> Void
@@ -167,7 +166,6 @@ function SendFunds(
 			amount: amount,
 		};
 		new_moneroReadyTargetDescriptions_fromTargetDescriptions(
-			monero_openalias_utils,
 			[targetDescription], // requires a list of descriptions - but SendFunds was
 			// not written with multiple target support as MyMonero does not yet support it
 			nettype,
@@ -646,8 +644,8 @@ function SendFunds(
 }
 exports.SendFunds = SendFunds;
 //
+
 function new_moneroReadyTargetDescriptions_fromTargetDescriptions(
-	monero_openalias_utils,
 	targetDescriptions,
 	nettype,
 	monero_utils,
@@ -671,11 +669,7 @@ function new_moneroReadyTargetDescriptions_fromTargetDescriptions(
 		const targetDescription_address = targetDescription.address;
 		const targetDescription_amount = "" + targetDescription.amount; // we are converting it to a string here because parseMoney expects a string
 		// now verify/parse address and amount
-		if (
-			monero_openalias_utils.DoesStringContainPeriodChar_excludingAsXMRAddress_qualifyingAsPossibleOAAddress(
-				targetDescription_address,
-			) == true
-		) {
+	    if (targetDescription_address.indexOf('.') !== -1) { // assumed to be an OA address asXMR addresses do not have periods and OA addrs must
 			throw "You must resolve this OA address to a Monero address before calling SendFunds";
 		}
 		// otherwise this should be a normal, single Monero public address
