@@ -60,7 +60,7 @@ local_fns.isReady = false;
 module.exports = local_fns;
 //
 //
-const coreBridgeLoading_promise = require("./MyMoneroCoreBridge")({});
+const coreBridgeLoading_promise = require("./MyMoneroCoreBridge")({asmjs: false});
 coreBridgeLoading_promise.then(function(this__coreBridge_instance)
 {
 	coreBridge_instance = this__coreBridge_instance;

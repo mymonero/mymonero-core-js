@@ -96,7 +96,7 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 		}
 		_try(0)
 	} else {
-		const coreBridgeLoading_promise = require('./MyMoneroCoreBridge')({}); // this returns a promise
+		const coreBridgeLoading_promise = require('./MyMoneroCoreBridge')({ asmjs: false }); // this returns a promise
 		coreBridgeLoading_promise.catch(function(e)
 		{
 			console.error("Error: ", e);

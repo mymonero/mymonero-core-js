@@ -624,9 +624,9 @@ module.exports = function(options)
 		const ENVIRONMENT_IS_WORKER = typeof importScripts==="function";
 		const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
 		const ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
-		var Module_template =
-		{
-			locateFile: function(filename, scriptDirectory)
+		var Module_template = {}
+		if (options.asmjs != true || options.wasm == true) { // wasm
+			Module_template["locateFile"] = function(filename, scriptDirectory)
 			{
 				// if (options["locateFile"]) {
 				// 	return options["locateFile"](filename, scriptDirectory)
@@ -666,22 +666,18 @@ module.exports = function(options)
 				//
 				return fullPath
 			}
+			//
+			// NOTE: This requires src/module-post.js to be included as post-js in CMakeLists.txt under a wasm build
+			require("./MyMoneroCoreCpp")(Module_template).ready.then(function(thisModule) 
+			{
+				const instance = new MyMoneroCoreBridge(thisModule);
+				resolve(instance);
+			}).catch(function(e) {
+				console.error("Error loading MyMoneroCoreCpp:", e);
+				reject(e);
+			});
+		} else { // this is synchronous so we can resolve immediately
+			resolve(new MyMoneroCoreBridge(require("./MyMoneroCoreCpp")(Module_template)))
 		}
-		// if (ENVIRONMENT_IS_WEB && ENVIRONMENT_IS_NODE) { // that means it's probably electron-renderer
-		// 	const fs = require("fs");
-		// 	const path = require("path");
-		// 	const filepath = path.normalize(path.join(__dirname, "MyMoneroCoreCpp.wasm"));
-		// 	const wasmBinary = fs.readFileSync(filepath)
-		// 	console.log("wasmBinary", wasmBinary)
-		// 	Module_template["wasmBinary"] = wasmBinary
-		// }
-		require("./MyMoneroCoreCpp")(Module_template).ready.then(function(thisModule) 
-		{
-			const instance = new MyMoneroCoreBridge(thisModule);
-			resolve(instance);
-		}).catch(function(e) {
-			console.error("Error loading MyMoneroCoreCpp:", e);
-			reject(e);
-		});
 	});
 };

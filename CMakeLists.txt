@@ -1,9 +1,9 @@
-
 cmake_minimum_required(VERSION 3.4.1)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 project(MyMoneroCoreCpp)
+option(MM_EM_ASMJS "Build for asmjs instead of wasm" OFF)
 #
 include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
 #
@@ -181,44 +181,53 @@ set_target_properties(
 #
 #
 #
-set(
-	EMCC_LINKER_FLAGS 
+set (
+    EMCC_LINKED_FLAGS___MM_BASE
     #unsure if the -I...boost..include is necessary here due to include above
-	"-Wall -std=c++11 \
+    "-Wall -std=c++11 \
     --bind -s MODULARIZE=1 \
+    -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
     -Oz \
     --llvm-lto 1 \
-    -s WASM=1 \
-    -s ASSERTIONS=0 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
-    --post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
-    -s \"BINARYEN_METHOD='native-wasm'\" \
+    -s ASSERTIONS=0 \
     -s NO_DYNAMIC_EXECUTION=1 \
     -s \"BINARYEN_TRAP_MODE='clamp'\" \
-    -s ALLOW_MEMORY_GROWTH=1 \
     -s PRECISE_F32=1 \
-    -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
     "
-
-    #
-    # -O0 \
-    # -g \
-    # --llvm-lto 0 \
-    # -s WASM=1 \
-    # -s ASSERTIONS=1 \
     # -s DEMANGLE_SUPPORT=1 \
     # -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
-
-    #
-    #
-    # --closure 1 \
-    # -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]' \
-    # -s DISABLE_EXCEPTION_CATCHING=0 \
-    #    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
     # -s SAFE_HEAP=1
-
+    # -s DISABLE_EXCEPTION_CATCHING=0 \
 )
+if (MM_EM_ASMJS) 
+    message(STATUS "> Building asmjs")
+    set(
+        EMCC_LINKER_FLAGS 
+        "${EMCC_LINKED_FLAGS___MM_BASE} \
+        -s WASM=0 \
+        -s \"BINARYEN_METHOD='asmjs'\" \
+        -s ALLOW_MEMORY_GROWTH=0 \
+        "
+        # --closure 1 \
+    )
+else () 
+    message(STATUS "> Building wasm")
+    set(
+        EMCC_LINKER_FLAGS 
+        "${EMCC_LINKED_FLAGS___MM_BASE} \
+        -s WASM=1 \
+        -s \"BINARYEN_METHOD='native-wasm'\" \
+        -s ALLOW_MEMORY_GROWTH=1 \
+        --post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
+        "
+        # -g \
+    )
+endif ()
 
+#    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
+
+message(STATUS "EMCC_LINKER_FLAGS ${EMCC_LINKER_FLAGS}")
 
 # extract the filename without an extension (NAME_WE)
 add_executable(
@@ -226,7 +235,7 @@ add_executable(
 	${SRC_FILES}
 )
 set_target_properties(MyMoneroCoreCpp PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS}")
-#set_target_properties(MyMoneroCoreCpp PROPERTIES SUFFIX ".html")
+# set_target_properties(MyMoneroCoreCpp PROPERTIES SUFFIX ".html")
 
 target_link_libraries(
     MyMoneroCoreCpp

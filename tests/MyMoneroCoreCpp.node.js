@@ -28,15 +28,8 @@
 
 "use strict";
 //
-console.time("Load module")
-async function tests()
+function tests(Module)
 {
-	const monero_utils = await require("../monero_utils/monero_utils")
-
-	const Module = monero_utils.Module;
-
-	console.timeEnd("Load module")
-
 	console.log("Module", Module)
 	//
 	{
@@ -198,4 +191,13 @@ async function tests()
 		console.log("decodeRct ret", ret_string)
 	}
 }
-tests()
+console.time("Load module")
+require('../monero_utils/MyMoneroCoreBridge')({asmjs: false}).then(function(instance)
+{	
+	console.timeEnd("Load module")
+	console.log("Loaded instance:", instance)
+	tests(instance.Module)
+}).catch(function(e)
+{
+	console.error("Exception while loading module:", e)
+})

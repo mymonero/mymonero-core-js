@@ -34,7 +34,7 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 `monero_utils/MyMoneroCoreCpp.(js,wasm)` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `monero_utils/MyMoneroCoreBridge.js`.
 
-A ready-made entrypoint for interacting with `MyMoneroCoreBridge` is located at `monero_utils/monero_utils.js` with usage `require("./monero_utils/monero_utils").then(function(monero_utils) { })` or `
+A ready-made entrypoint for interacting with `MyMoneroCoreBridge` is located at `monero_utils/monero_utils.js` with usage `require("./monero_utils/monero_utils").then(function(monero_utils) { })`.
 
 Many related utility functions and data structures are located throughout `monero_utils/`, `cryptonote_utils`, and `hostAPI`. Usage below.
 
@@ -180,7 +180,7 @@ var decoded = monero_utils.decode_address("…", nettype);
 
 Each of these functions is implemented<sup>*</sup> in `monero_utils/MyMoneroCoreBridge.js`, which you access through `monero_utils/monero_utils.js`<sup>\*\*</sup>.
 
-The arguments and return values for these functions are very explicitly called out by [MyMoneroCoreBridge.js](https://github.com/mymonero/mymonero-core-js/blob/develop/monero_utils/MyMoneroCoreBridge.js), so that will be the most complete documentation for the moment. Return values are all embedded within a JS dictionary unless they're singular values. Errors are thrown when functions are called via `monero_utils`.
+The arguments and return values for these functions are explicitly called out by [MyMoneroCoreBridge.js](https://github.com/mymonero/mymonero-core-js/blob/develop/monero_utils/MyMoneroCoreBridge.js), so that will be the most complete documentation for the moment. Return values are all embedded within a JS dictionary unless they're singular values. Errors are thrown when functions are called via `monero_utils`.
 
 <sup>* The functions' actual implementations are in WebAssembly which is produced via emscripten from exactly matching C++ functions in [mymonero-core-cpp](https://github.com/mymonero/mymonero-core-cpp). This allows core implementation to be shared across all platforms.</sup>
 
@@ -319,6 +319,7 @@ Or if you want to copy the build products to their distribution locations,
 
 * Execute `bin/archive-emcpp.sh`
 
+**NOTE** If you want to build for asmjs instead of wasm, edit `CMakeLists.txt` to turn the `MM_EM_ASMJS` option to `ON` before you run either the `build` or `archive` script. Finally, at every place you instantiate a `MyMoneroCoreBridge` instance, ensure that the `asmjs` flag passed as an init argument is set to `true` (If not, loading will not work). 
 
 
 ## Contributors
