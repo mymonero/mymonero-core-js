@@ -208,7 +208,9 @@ if (MM_EM_ASMJS)
         -s WASM=0 \
         -s \"BINARYEN_METHOD='asmjs'\" \
         -s ALLOW_MEMORY_GROWTH=0 \
+        --memory-init-file 0 \
         "
+        # --memory-init-file is explicitly set to 0 because optimization level is Oz, and some clients like React Native have trouble loading .mem files
         # --closure 1 \
     )
 else () 
