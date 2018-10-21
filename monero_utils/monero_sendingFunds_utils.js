@@ -219,7 +219,6 @@ function SendFunds(
 			//
 			// Derive/finalize some values…
 			var final__payment_id = payment_id;
-			var final__pid_encrypt = false; // we don't want to encrypt payment ID unless we find an integrated one
 			var address__decode_result;
 			try {
 				address__decode_result = monero_utils.decode_address(
@@ -252,7 +251,6 @@ function SendFunds(
 			}
 			if (address__decode_result.intPaymentId) {
 				final__payment_id = address__decode_result.intPaymentId;
-				final__pid_encrypt = true; // we do want to encrypt if using an integrated address
 			} else if (
 				monero_paymentID_utils.IsValidPaymentIDOrNoPaymentID(
 					final__payment_id,
@@ -267,14 +265,12 @@ function SendFunds(
 				moneroReady_targetDescription_address,
 				totalAmountWithoutFee_JSBigInt,
 				final__payment_id,
-				final__pid_encrypt,
 			);
 		}
 		function _proceedTo_getUnspentOutsUsableForMixin(
 			moneroReady_targetDescription_address,
 			totalAmountWithoutFee_JSBigInt,
 			final__payment_id, // non-existent or valid
-			final__pid_encrypt, // true or false
 		) {
 			preSuccess_nonTerminal_statusUpdate_fn(
 				SendFunds_ProcessStep_Code.fetchingLatestBalance,
@@ -299,7 +295,6 @@ function SendFunds(
 						moneroReady_targetDescription_address,
 						totalAmountWithoutFee_JSBigInt,
 						final__payment_id,
-						final__pid_encrypt,
 						unusedOuts,
 						dynamic_feePerKB_JSBigInt,
 					);
@@ -310,7 +305,6 @@ function SendFunds(
 			moneroReady_targetDescription_address,
 			totalAmountWithoutFee_JSBigInt,
 			final__payment_id,
-			final__pid_encrypt,
 			unusedOuts,
 			dynamic_feePerKB_JSBigInt,
 		) {
@@ -331,7 +325,6 @@ function SendFunds(
 				moneroReady_targetDescription_address,
 				totalAmountWithoutFee_JSBigInt,
 				final__payment_id,
-				final__pid_encrypt,
 				unusedOuts,
 				feePerKB_JSBigInt, // obtained from server, so passed in
 				network_minimumFee,
@@ -341,7 +334,6 @@ function SendFunds(
 			moneroReady_targetDescription_address,
 			totalAmountWithoutFee_JSBigInt,
 			final__payment_id,
-			final__pid_encrypt,
 			unusedOuts,
 			feePerKB_JSBigInt,
 			passedIn_attemptAt_network_minimumFee,
@@ -595,7 +587,6 @@ function SendFunds(
 						moneroReady_targetDescription_address,
 						totalAmountWithoutFee_JSBigInt,
 						final__payment_id,
-						final__pid_encrypt,
 						unusedOuts,
 						feePerKB_JSBigInt,
 						feeActuallyNeededByNetwork, // we are re-entering this codepath after changing this feeActuallyNeededByNetwork
