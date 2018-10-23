@@ -43,35 +43,10 @@ async function t1()
 		console.log(e)
 	}
 
-
-
-	try {
-		var tx_size = (await mymonero.monero_utils_promise).estimate_rct_tx_size(
-			2, // inputs 
-			6, 
-			2, // outputs
-			0, //optl__extra_size, 
-			true // optl__bulletproof
-		);
-		console.log("estimate_rct_tx_size", tx_size)
-	} catch (e) {
-		console.log(e)
-	}
-
-	try {
-		var fee = new mymonero.JSBigInt((await mymonero.monero_utils_promise).calculate_fee(
-			"9000000", 13762, 4
-			// fee_per_kb__string, num_bytes, fee_multiplier
-		));
-		console.log("calculate_fee", mymonero.monero_amount_format_utils.formatMoneyFull(fee), "XMR")
-	} catch (e) {
-		console.log(e)
-	}
-
 	try {
 		var fee = new mymonero.JSBigInt((await mymonero.monero_utils_promise).estimated_tx_network_fee(
-			"9000000", 2
-			// fee_per_kb__string, priority
+			"0", 1, "24658"
+			// fee_per_kb__string, priority, fee_per_b__string
 		));
 		console.log("estimated_tx_network_fee", mymonero.monero_amount_format_utils.formatMoneyFull(fee), "XMR")
 	} catch (e) {

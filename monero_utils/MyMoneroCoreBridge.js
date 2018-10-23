@@ -34,7 +34,7 @@
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 const nettype_utils = require("../cryptonote_utils/nettype");
 const monero_config = require('./monero_config');
-const currency_amount_format_utils = require("../cryptonote_utils/money_format_utils")(monero_config);
+const monero_amount_format_utils = require("../cryptonote_utils/money_format_utils")(monero_config);
 //
 function ret_val_boolstring_to_bool(boolstring)
 {
@@ -61,6 +61,21 @@ function api_safe_wordset_name(wordset_name)
 		return "日本語"
 	}
 	return wordset_name // must be a value returned by core-cpp
+}
+function bridge_sanitized__spendable_out(raw__out)
+{
+	const sanitary__output = 
+	{
+		amount: raw__out.amount.toString(),
+		public_key: raw__out.public_key,
+		global_index: "" + raw__out.global_index,
+		index: "" + raw__out.index,
+		tx_pub_key: raw__out.tx_pub_key
+	};
+	if (raw__out.rct && typeof raw__out.rct !== 'undefined') {
+		sanitary__output.rct = raw__out.rct;
+	}
+	return sanitary__output;
 }
 //
 class MyMoneroCoreBridge
@@ -430,45 +445,13 @@ class MyMoneroCoreBridge
 			mask: ret.mask,
 		};
 	}
-	estimate_rct_tx_size(n_inputs, mixin, n_outputs, optl__extra_size, optl__bulletproof)
-	{
+	estimated_tx_network_fee(fee_per_kb__string, priority, optl__fee_per_b_string) // this is until we switch the server over to fee per b
+	{ // TODO update this API to take object rather than arg list
 		const args =
 		{
-			n_inputs: "" + n_inputs, 
-			mixin: "" + mixin, 
-			n_outputs: "" + n_outputs, 
-			extra_size: "" + (typeof optl__extra_size !== 'undefined' && optl__extra_size ? optl__extra_size : 0), 
-			bulletproof: "" + (optl__bulletproof == false ? false : true) /* default true */,
-		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.estimate_rct_tx_size(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
-		}
-		return parseInt(ret.retVal); // small enough to parse
-	}
-	calculate_fee(fee_per_kb__string, num_bytes, fee_multiplier)
-	{
-		const args =
-		{
-			fee_per_kb: fee_per_kb__string,
-			num_bytes: "" + num_bytes,
-			fee_multiplier: "" + fee_multiplier
-		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.calculate_fee(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
-		}
-		return ret.retVal; // this is a string - pass it to new JSBigInt(…)
-	}
-	estimated_tx_network_fee(fee_per_kb__string, priority)
-	{
-		const args =
-		{
-			fee_per_kb: fee_per_kb__string, 
+			fee_per_b: typeof optl__fee_per_b_string !== undefined && optl__fee_per_b_string != null 
+				? optl__fee_per_b_string 
+				: (new JSBigInt(fee_per_kb__string)).divide(1024).toString()/*kib -> b*/, 
 			priority: "" + priority,
 		};
 		const args_str = JSON.stringify(args);
@@ -479,65 +462,85 @@ class MyMoneroCoreBridge
 		}
 		return ret.retVal; // this is a string - pass it to new JSBigInt(…)
 	}
-
-	create_signed_transaction(
-		from_address_string,
-		sec_keys,
-		to_address_string,
-		outputs,
-		mix_outs,
-		fake_outputs_count,
-		serialized__sending_amount,
-		serialized__change_amount,
-		serialized__fee_amount, // string amount
-		payment_id,
-		unlock_time,
-		rct,
-		nettype
+	send_step1__prepare_params_for_get_decoys(
+		is_sweeping,
+		sending_amount, // this may be 0 if sweeping
+		fee_per_b,
+		priority,
+		unspent_outputs,
+		optl__payment_id_string, // this may be nil
+		optl__passedIn_attemptAt_fee
 	) {
-		return this.create_signed_transaction__nonIPCsafe(
-			from_address_string,
-			sec_keys,
-			to_address_string,
-			outputs,
-			mix_outs,
-			fake_outputs_count,
-			new JSBigInt(serialized__sending_amount),
-			new JSBigInt(serialized__change_amount),
-			new JSBigInt(serialized__fee_amount), // only to be deserialized again is a bit silly but this at least exposes a JSBigInt API for others
-			payment_id,
-			unlock_time,
-			rct,
-			nettype
-		);
+		var sanitary__unspent_outputs = [];
+		for (let i in unspent_outputs) {
+			const sanitary__output = bridge_sanitized__spendable_out(unspent_outputs[i])
+			sanitary__unspent_outputs.push(sanitary__output);
+		}
+		const args =
+		{
+			sending_amount: sending_amount.toString(),
+			is_sweeping: "" + is_sweeping, // bool -> string
+			priority: "" + priority,
+			fee_per_b: fee_per_b.toString(),
+			unspent_outs: sanitary__unspent_outputs // outs, not outputs
+		};
+		if (typeof optl__payment_id_string !== "undefined" && optl__payment_id_string && optl__payment_id_string != "") {
+			args.payment_id_string = optl__payment_id_string;
+		}
+		if (typeof optl__passedIn_attemptAt_fee !== "undefined" && optl__passedIn_attemptAt_fee && optl__passedIn_attemptAt_fee != "") {
+			args.passedIn_attemptAt_fee = optl__passedIn_attemptAt_fee.toString(); // ought to be a string but in case it's a JSBigInt…
+		}
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.send_step1__prepare_params_for_get_decoys(args_str);
+		const ret = JSON.parse(ret_string);
+		// special case: err_code of needMoreMoneyThanFound; rewrite err_msg
+		if (ret.err_code == "90" || ret.err_code == 90) { // declared in mymonero-core-cpp/src/monero_transfer_utils.hpp
+			return { 
+				required_balance: ret.required_balance,
+				spendable_balance: ret.spendable_balance,
+				err_msg: `Spendable balance too low. Have ${
+					monero_amount_format_utils.formatMoney(new JSBigInt(ret.spendable_balance))
+				} ${monero_config.coinSymbol}; need ${
+					monero_amount_format_utils.formatMoney(new JSBigInt(ret.required_balance))
+				} ${monero_config.coinSymbol}.` 
+			};
+		}
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
+		}
+		return { // calling these out to set an interface
+			mixin: parseInt(ret.mixin), // for the server API request to RandomOuts
+			using_fee: ret.using_fee, // string; can be passed to step2
+			change_amount: ret.change_amount, // string for step2
+			using_outs: ret.using_outs, // this can be passed straight to step2
+			final_total_wo_fee: ret.final_total_wo_fee // aka sending_amount for step2
+		};
 	}
-
-	create_signed_transaction__nonIPCsafe( // you can use this function to pass JSBigInts
+	send_step2__try_create_transaction( // send only IPC-safe vals - no JSBigInts
 		from_address_string,
 		sec_keys,
 		to_address_string,
-		outputs,
+		using_outs,
 		mix_outs,
 		fake_outputs_count,
-		sending_amount,
+		final_total_wo_fee,
 		change_amount,
 		fee_amount,
 		payment_id,
+		priority,
+		fee_per_b, // not kib - if fee_per_kb, /= 1024
 		unlock_time,
-		rct,
 		nettype
 	) {
 		unlock_time = unlock_time || 0;
 		mix_outs = mix_outs || [];
-		if (rct != true) {
-			return { err_msg: "Expected rct=true" }
-		}
-		if (mix_outs.length !== outputs.length && fake_outputs_count !== 0) {
-			return { err_msg: "Wrong number of mix outs provided (" +
-				outputs.length +
-				" outputs, " +
-				mix_outs.length +
-				" mix outs)" };
+		// NOTE: we also do this check in the C++... may as well remove it from here
+		if (mix_outs.length !== using_outs.length && fake_outputs_count !== 0) {
+			return { 
+				err_msg: "Wrong number of mix outs provided (" +
+					using_outs.length + " using_outs, " +
+					mix_outs.length + " mix outs)"
+			};
 		}
 		for (var i = 0; i < mix_outs.length; i++) {
 			if ((mix_outs[i].outputs || []).length < fake_outputs_count) {
@@ -545,34 +548,25 @@ class MyMoneroCoreBridge
 			}
 		}
 		//
-		// Now we need to convert all non-JSON-serializable objects such as JSBigInts to strings etc
-		var sanitary__outputs = [];
-		for (let i in outputs) {
-			const sanitary__output = 
-			{
-				amount: outputs[i].amount.toString(),
-				public_key: outputs[i].public_key,
-				global_index: "" + outputs[i].global_index,
-				index: "" + outputs[i].index,
-				tx_pub_key: outputs[i].tx_pub_key
-			};
-			if (outputs[i].rct && typeof outputs[i].rct !== 'undefined') {
-				sanitary__output.rct = outputs[i].rct;
-			}
-			sanitary__outputs.push(sanitary__output);
+		// Now we need to convert all non-JSON-serializable objects such as JSBigInts to strings etc - not that there should be any!
+		// - and all numbers to strings - especially those which may be uint64_t on the receiving side
+		var sanitary__using_outs = [];
+		for (let i in using_outs) {
+			const sanitary__output = bridge_sanitized__spendable_out(using_outs[i])
+			sanitary__using_outs.push(sanitary__output);
 		}
 		var sanitary__mix_outs = [];
 		for (let i in mix_outs) {
 			const sanitary__mix_outs_and_amount =
 			{
-				amount: "" + mix_outs[i].amount,
+				amount: mix_outs[i].amount.toString(), // it should be a string, but in case it's not
 				outputs: [] 
 			};
 			if (mix_outs[i].outputs && typeof mix_outs[i].outputs !== 'undefined') {
 				for (let j in mix_outs[i].outputs) {
 					const sanitary__mix_out =
 					{
-						global_index: "" + mix_outs[i].outputs[j].global_index,
+						global_index: "" + mix_outs[i].outputs[j].global_index, // number to string
 						public_key: mix_outs[i].outputs[j].public_key
 					};
 					if (mix_outs[i].outputs[j].rct && typeof mix_outs[i].outputs[j].rct !== 'undefined') {
@@ -589,10 +583,12 @@ class MyMoneroCoreBridge
 			sec_viewKey_string: sec_keys.view,
 			sec_spendKey_string: sec_keys.spend,
 			to_address_string: to_address_string,
-			sending_amount: sending_amount.toString(),
+			final_total_wo_fee: final_total_wo_fee.toString(),
 			change_amount: change_amount.toString(),
 			fee_amount: fee_amount.toString(),
-			outputs: sanitary__outputs,
+			priority: "" + priority,
+			fee_per_b: fee_per_b.toString(),
+			using_outs: sanitary__using_outs,
 			mix_outs: sanitary__mix_outs,
 			unlock_time: "" + unlock_time, // bridge is expecting a string
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
@@ -601,18 +597,29 @@ class MyMoneroCoreBridge
 			args.payment_id_string = payment_id;
 		}
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.create_transaction(args_str);
+		const ret_string = this.Module.send_step2__try_create_transaction(args_str);
 		const ret = JSON.parse(ret_string);
 		//
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg };
+			return { err_msg: ret.err_msg, tx_must_be_reconstructed: false };
+		}
+		if (ret.tx_must_be_reconstructed == "true" || ret.tx_must_be_reconstructed == true) {
+			if (typeof ret.fee_actually_needed == 'undefined' || !ret.fee_actually_needed) {
+				throw "tx_must_be_reconstructed; expected non-nil fee_actually_needed"
+			}
+			return {
+				tx_must_be_reconstructed: ret.tx_must_be_reconstructed, // if true, re-do procedure from step1 except for requesting UnspentOuts (that can be done oncet)
+				fee_actually_needed: ret.fee_actually_needed // can be passed back to step1
+			}
 		}
 		return { // calling these out to set an interface
+			tx_must_be_reconstructed: false, // in case caller is not checking for nil
 			signed_serialized_tx: ret.serialized_signed_tx,
 			tx_hash: ret.tx_hash,
 			tx_key: ret.tx_key
 		};
 	}
+
 }
 //
 module.exports = function(options)

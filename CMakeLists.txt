@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.4.1)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 project(MyMoneroCoreCpp)
-option(MM_EM_ASMJS "Build for asmjs instead of wasm" OFF)
+option(MM_EM_ASMJS "Build for asmjs instead of wasm" OFF) # NOTE: if you change this, you should delete your cmake build cache
 #
 include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
 #
@@ -43,6 +43,8 @@ set(
     ${MYMONERO_CORE_CPP_SRC}/monero_paymentID_utils.cpp
     ${MYMONERO_CORE_CPP_SRC}/monero_key_image_utils.hpp
     ${MYMONERO_CORE_CPP_SRC}/monero_key_image_utils.cpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_fee_utils.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_fee_utils.cpp
     ${MYMONERO_CORE_CPP_SRC}/monero_transfer_utils.hpp
     ${MYMONERO_CORE_CPP_SRC}/monero_transfer_utils.cpp
     ${MYMONERO_CORE_CPP_SRC}/monero_fork_rules.hpp
@@ -190,7 +192,7 @@ set (
     -Oz \
     --llvm-lto 1 \
     -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
-    -s ASSERTIONS=0 \
+    -s ASSERTIONS=1 \
     -s NO_DYNAMIC_EXECUTION=1 \
     -s \"BINARYEN_TRAP_MODE='clamp'\" \
     -s PRECISE_F32=1 \

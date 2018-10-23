@@ -49,6 +49,6 @@ exports.bridgedFn_names =
 	"estimate_rct_tx_size",
 	"calculate_fee",
 	"estimated_tx_network_fee",
-	"create_signed_transaction",
-	"create_signed_transaction__nonIPCsafe"
+	"send_step1__prepare_params_for_get_decoys",
+	"send_step2__try_create_transaction"
 ];

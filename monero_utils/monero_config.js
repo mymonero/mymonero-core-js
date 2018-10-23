@@ -49,11 +49,6 @@ module.exports = {
 	// Payment URI Prefix
 	coinUriPrefix: "monero:",
 
-	// Prefix code for addresses
-	addressPrefix: 18, // 18 => addresses start with "4"
-	integratedAddressPrefix: 19,
-	subaddressPrefix: 42,
-
 	// Dust threshold in atomic units
 	// 2*10^9 used for choosing outputs/change - we decompose all the way down if the receiver wants now regardless of threshold
 	dustThreshold: new JSBigInt("2000000000"),

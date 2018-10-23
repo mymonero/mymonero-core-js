@@ -445,10 +445,8 @@ function Parsed_UnspentOuts__sync(
 		}
 	}
 	// console.log("Unspent outs: " + JSON.stringify(finalized_unspentOutputs));
-	const unusedOuts = finalized_unspentOutputs.slice(0);
 	const returnValuesByKey = {
 		unspentOutputs: finalized_unspentOutputs,
-		unusedOuts: unusedOuts,
 		per_kb_fee: data.per_kb_fee, // String
 	};
 	return returnValuesByKey;
