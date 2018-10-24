@@ -165,16 +165,16 @@ function SendFunds( // TODO: migrate this to take a map of args
 			wallet__private_keys.spend,
 			mixin,
 			sweeping,
-			function(err, returned_unspentOuts, returned_unusedOuts, dynamic_feePerKB_JSBigInt)
+			function(err, returned_unusedOuts, per_byte_fee__string)
 			{
 				if (err) {
 					__trampolineFor_err_withErr(err);
 					return;
 				}
-				console.log("Received dynamic per kb fee", monero_amount_format_utils.formatMoneySymbol(dynamic_feePerKB_JSBigInt));
+				console.log("Received dynamic per kb fee", monero_amount_format_utils.formatMoneySymbol(new JSBigInt(per_byte_fee__string)));
 				{ // save some values for re-enterable function
 					unspent_outs = returned_unusedOuts; // TODO: which one should be used? delete the other
-					fee_per_b__string = dynamic_feePerKB_JSBigInt.divide(1024).toString() // TODO: soon deprecate per kib fee
+					fee_per_b__string = per_byte_fee__string; 
 				}
 				__reenterable_constructAndSendTx(
 					null, // for the first try - passedIn_attemptAt_network_minimumFee

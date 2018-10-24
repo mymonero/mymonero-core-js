@@ -86,15 +86,14 @@ class APIClient
 							fn(err)
 							return
 						}
-						const per_kb_fee__String = returnValuesByKey.per_kb_fee
-						if (per_kb_fee__String == null || per_kb_fee__String == "" || typeof per_kb_fee__String === 'undefined') {
-							throw "Unexpected / missing per_kb_fee"
+						const per_byte_fee__string = returnValuesByKey.per_byte_fee__string
+						if (per_byte_fee__string == null || per_byte_fee__string == "" || typeof per_byte_fee__string === 'undefined') {
+							throw "Unexpected / missing per_byte_fee__string"
 						}
 						fn(
 							err, // no error
 							returnValuesByKey.unspentOutputs,
-							returnValuesByKey.unspentOutputs, // TODO: remove this - it was the unused 'unusedOutputs'
-							new JSBigInt(per_kb_fee__String)
+							returnValuesByKey.per_byte_fee__string
 						)
 					}
 				)
@@ -221,7 +220,8 @@ class Fetch
 							]
 						} // NOTE: we'd have more in the real reply - and even the api response parser doesn't care about those values right now
 					],
-					per_kb_fee: parseInt("24658"/*for str search*/) * 1024 // scale the per b we know up to per kib (so it can be scaled back down - interrim until all clients are ready for per b fee)
+					per_byte_fee: "24658"
+					/*deprecated*/// per_kb_fee: parseInt("24658"/*for str search*/) * 1024 // scale the per b we know up to per kib (so it can be scaled back down - interrim until all clients are ready for per b fee)
 				})
 			} else if (url.indexOf("get_random_outs") !== -1) {
 				resolve({
@@ -286,16 +286,7 @@ describe("sendingFunds tests", function()
 			},
 			function(err)
 			{
-				console.error("SendFunds err:", err)
-				assert.notEqual(
-					err,
-					null
-				);
-				assert.notEqual(
-					err,
-					undefined
-				);
-				// ^-- I'm not confident these are tripping
+				throw "SendFunds err:" + err // TODO: how to assert err msg not nil? didn't works
 			}
 		)
 	});

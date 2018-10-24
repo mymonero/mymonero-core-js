@@ -445,9 +445,21 @@ function Parsed_UnspentOuts__sync(
 		}
 	}
 	// console.log("Unspent outs: " + JSON.stringify(finalized_unspentOutputs));
+	var final__per_byte_fee__string;
+	if (typeof data.per_byte_fee !== 'undefined' && data.per_byte_fee) {
+		final__per_byte_fee__string = data.per_byte_fee // (is already string)
+	} else { // per_byte_fee not yet deployed - fall back to per_kb_fee
+		if (typeof data.per_kb_fee == 'undefined' || !data.per_kb_fee) {
+			throw "Expected data.per_kb_fee or data.per_byte_fee"
+		}
+		final__per_byte_fee__string = (new JSBigInt(data.per_kb_fee)).divide(1024).toString() // scale from kib to b and convert back to string
+	}
+	if (typeof final__per_byte_fee__string == 'undefined' || !final__per_byte_fee__string) {
+		throw "Unable to derive per_byte_fee string"
+	}
 	const returnValuesByKey = {
 		unspentOutputs: finalized_unspentOutputs,
-		per_kb_fee: data.per_kb_fee, // String
+		per_byte_fee__string: final__per_byte_fee__string, // String
 	};
 	return returnValuesByKey;
 }
