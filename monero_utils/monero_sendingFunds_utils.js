@@ -139,15 +139,15 @@ function SendFunds( // TODO: migrate this to take a map of args
 		}
 		//
 		var sweeping = isSweep_orZeroWhenAmount === true; // rather than, say, undefined
-		var amount = sweeping ? 0 : amount_orZeroWhenSweep;
+		var amount = "" + (sweeping ? 0 : amount_orZeroWhenSweep); //TODO just send string
 		var sending_amount; // possibly need this ; here for the JS parser
 		if (sweeping) {
 			sending_amount = 0
 		} else {
 			try {
-				sending_amount = monero_amount_format_utils.parseMoney(amount_orZeroWhenSweep);
+				sending_amount = monero_amount_format_utils.parseMoney(amount);
 			} catch (e) {
-				__trampolineFor_err_withStr(`Couldn't parse amount ${amount_orZeroWhenSweep}: ${e}`);
+				__trampolineFor_err_withStr(`Couldn't parse amount ${amount}: ${e}`);
 				return;
 			}
 		}
