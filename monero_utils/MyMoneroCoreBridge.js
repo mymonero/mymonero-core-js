@@ -614,7 +614,7 @@ class MyMoneroCoreBridge
 		}
 		return { // calling these out to set an interface
 			tx_must_be_reconstructed: false, // in case caller is not checking for nil
-			signed_serialized_tx: ret.serialized_signed_tx,
+			signed_serialized_tx: ret.serialized_signed_tx, // this name change should be fixed to serialized_signed_tx
 			tx_hash: ret.tx_hash,
 			tx_key: ret.tx_key
 		};
