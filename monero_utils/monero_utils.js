@@ -116,7 +116,7 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 				hasWebAssembly = false // to be clear
 			}
 			use_asmjs = hasWebAssembly != true
-		}	
+		}
 		console.log("Using wasm: ", !use_asmjs)
 		const coreBridgeLoading_promise = require('./MyMoneroCoreBridge')({ asmjs: use_asmjs });
 		coreBridgeLoading_promise.catch(function(e)

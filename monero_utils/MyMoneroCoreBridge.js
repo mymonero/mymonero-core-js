@@ -727,7 +727,7 @@ module.exports = function(options)
 			// TODO: verify content - for now, relying on same-origin and tls/ssl
 			var Module = {}
 			try {
-				eval(content) // emscripten also does an eval
+				eval(content) // I do not believe this is a safety concern, because content is server-controlled; https://humanwhocodes.com/blog/2013/06/25/eval-isnt-evil-just-misunderstood/
 			} catch (e) {
 				reject(e)
 				return
