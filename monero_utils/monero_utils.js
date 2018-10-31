@@ -123,7 +123,11 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 		{
 			console.error("Error: ", e);
 			// this may be insufficient… being able to throw would be nice
-			reject(e);
+			if (reject) {
+				reject(e)
+			} else {
+				throw "Promise passed no reject function to monero_utils load fn"
+			}
 		});
 		coreBridgeLoading_promise.then(_didLoad);
 	}
