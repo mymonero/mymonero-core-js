@@ -187,31 +187,37 @@ set (
     EMCC_LINKED_FLAGS___MM_BASE
     #unsure if the -I...boost..include is necessary here due to include above
     "-Wall -std=c++11 \
-    --bind -s MODULARIZE=1 \
-    -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
-    -Oz \
-    --llvm-lto 1 \
-    -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
-    -s ASSERTIONS=1 \
-    -s NO_DYNAMIC_EXECUTION=1 \
-    -s \"BINARYEN_TRAP_MODE='clamp'\" \
-    -s PRECISE_F32=1 \
-    "
-    # -s DEMANGLE_SUPPORT=1 \
-    # -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+--bind -s MODULARIZE=1 \
+-s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
+--llvm-lto 1 \
+-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+-s ASSERTIONS=1 \
+-s EXIT_RUNTIME=0 \
+-s \"BINARYEN_TRAP_MODE='clamp'\" \
+-s PRECISE_F32=1 \
+-s DISABLE_EXCEPTION_CATCHING=1 \
+-s EXCEPTION_DEBUG=1 \
+-s DEMANGLE_SUPPORT=1 \
+-s NO_DYNAMIC_EXECUTION=1 \
+"
+    # • Disabling exception catching does not introduce silent failures 
+    # • Probably don't need PRECISE_F32 but wouldn't want to not use it
+    #
+    #
     # -s SAFE_HEAP=1
-    # -s DISABLE_EXCEPTION_CATCHING=0 \
 )
 if (MM_EM_ASMJS) 
     message(STATUS "> Building asmjs")
     set(
         EMCC_LINKER_FLAGS 
         "${EMCC_LINKED_FLAGS___MM_BASE} \
-        -s WASM=0 \
-        -s \"BINARYEN_METHOD='asmjs'\" \
-        -s ALLOW_MEMORY_GROWTH=0 \
-        --memory-init-file 0 \
-        "
+-s WASM=0 \
+-Os \
+-s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
+-s \"BINARYEN_METHOD='asmjs'\" \
+-s ALLOW_MEMORY_GROWTH=0 \
+--memory-init-file 0 \
+"
         # --memory-init-file is explicitly set to 0 because optimization level is Oz, and some clients like React Native have trouble loading .mem files
         # --closure 1 \
     )
@@ -220,11 +226,12 @@ else ()
     set(
         EMCC_LINKER_FLAGS 
         "${EMCC_LINKED_FLAGS___MM_BASE} \
-        -s WASM=1 \
-        -s \"BINARYEN_METHOD='native-wasm'\" \
-        -s ALLOW_MEMORY_GROWTH=1 \
-        --post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
-        "
+-s WASM=1 \
+-Oz \
+-s \"BINARYEN_METHOD='native-wasm'\" \
+-s ALLOW_MEMORY_GROWTH=1 \
+--post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
+"
         # -g \
     )
 endif ()

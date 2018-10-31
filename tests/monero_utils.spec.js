@@ -83,6 +83,8 @@ describe("cryptonote_utils tests", function() {
 	});
 
 	it("create tx: non-sweep single-output", async function() {
+		this.timeout(5000) // asmjs slower
+
 		const monero_utils = await require("../monero_utils/monero_utils")
 		const unspent_outputs = [
 			{

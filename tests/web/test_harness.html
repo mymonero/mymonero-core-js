@@ -1,0 +1,140 @@
+<html>
+	<head>
+		<script src="mymonero-core.js"></script>
+		<script>
+
+			var assert = {}
+			assert.equal = function(a, b) {
+				return a === b
+			}
+			assert.notEqual = function(a, b) {
+				return a != b
+			}
+
+			const mymonero_core_js = window.mymonero_core_js
+			var nettype = mymonero_core_js.nettype_utils.network_type.MAINNET;
+
+			mymonero_core_js.monero_utils_promise.catch(function(e)
+			{
+				console.log("err", e)
+			}).then(function(monero_utils)
+			{
+				var decoded = monero_utils.decode_address(
+					"4KYcX9yTizXfvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNd3mZpgrjXBKMx9ee7c",
+					nettype
+				);
+				console.log("decoded", decoded)
+
+				const unspent_outputs = [
+					{
+						"amount":"3000000000",
+						"public_key":"41be1978f58cabf69a9bed5b6cb3c8d588621ef9b67602328da42a213ee42271",
+						"index":1,
+						"global_index":7611174,
+						"rct":"86a2c9f1f8e66848cd99bfda7a14d4ac6c3525d06947e21e4e55fe42a368507eb5b234ccdd70beca8b1fc8de4f2ceb1374e0f1fd8810849e7f11316c2cc063060008ffa5ac9827b776993468df21af8c963d12148622354f950cbe1369a92a0c",
+						"tx_id":5334971,
+						"tx_hash":"9d37c7fdeab91abfd1e7e120f5c49eac17b7ac04a97a0c93b51c172115df21ea",
+						"tx_pub_key":"bd703d7f37995cc7071fb4d2929594b5e2a4c27d2b7c68a9064500ca7bc638b8"
+					}
+				]
+				const fee_per_b = "24658"
+				const step1_retVals = monero_utils.send_step1__prepare_params_for_get_decoys(
+					false, // sweeping
+					"200000000", // sending_amount
+					fee_per_b, // fee_per_b,
+					1, // priority,
+					unspent_outputs,
+					null,// optl__payment_id_string, // this may be nil
+					null // optl__passedIn_attemptAt_fee
+				)
+				console.log("step1_retVals", JSON.stringify(step1_retVals, null, '  '))
+				assert.equal(
+					step1_retVals.mixin,
+					10
+				);
+				assert.equal(
+					step1_retVals.using_outs.length,
+					1
+				);
+				assert.equal(
+					step1_retVals.change_amount,
+					"2733990534"
+				);
+				assert.equal(
+					step1_retVals.final_total_wo_fee,
+					"200000000"
+				);
+				assert.equal(
+					step1_retVals.using_fee,
+					"66009466"
+				);
+				const mix_outs = [
+					{
+						"amount":"0",
+						"outputs":[
+							{"global_index":"7453099","public_key":"31f3a7fec0f6f09067e826b6c2904fd4b1684d7893dcf08c5b5d22e317e148bb","rct":"ea6bcb193a25ce2787dd6abaaeef1ee0c924b323c6a5873db1406261e86145fc"},
+							{"global_index":"7500097","public_key":"f9d923500671da05a1bf44b932b872f0c4a3c88e6b3d4bf774c8be915e25f42b","rct":"dcae4267a6c382bcd71fd1af4d2cbceb3749d576d7a3acc473dd579ea9231a52"},
+							{"global_index":"7548483","public_key":"839cbbb73685654b93e824c4843e745e8d5f7742e83494932307bf300641c480","rct":"aa99d492f1d6f1b20dcd95b8fff8f67a219043d0d94b4551759016b4888573e7"},
+							{"global_index":"7554755","public_key":"b8860f0697988c8cefd7b4285fbb8bec463f136c2b9a9cadb3e57cebee10717f","rct":"327f9b07bee9c4c25b5a990123cd2444228e5704ebe32016cd632866710279b5"},
+							{"global_index":"7561477","public_key":"561d734cb90bc4a64d49d37f85ea85575243e2ed749a3d6dcb4d27aa6bec6e88","rct":"b5393e038df95b94bfda62b44a29141cac9e356127270af97193460d51949841"},
+							{"global_index":"7567062","public_key":"db1024ef67e7e73608ef8afab62f49e2402c8da3dc3197008e3ba720ad3c94a8","rct":"1fedf95621881b77f823a70aa83ece26aef62974976d2b8cd87ed4862a4ec92c"},
+							{"global_index":"7567508","public_key":"6283f3cd2f050bba90276443fe04f6076ad2ad46a515bf07b84d424a3ba43d27","rct":"10e16bb8a8b7b0c8a4b193467b010976b962809c9f3e6c047335dba09daa351f"},
+							{"global_index":"7568716","public_key":"7a7deb4eef81c1f5ce9cbd0552891cb19f1014a03a5863d549630824c7c7c0d3","rct":"735d059dc3526334ac705ddc44c4316bb8805d2426dcea9544cde50cf6c7a850"},
+							{"global_index":"7571196","public_key":"535208e354cae530ed7ce752935e555d630cf2edd7f91525024ed9c332b2a347","rct":"c3cf838faa14e993536c5581ca582fb0d96b70f713cf88f7f15c89336e5853ec"},
+							{"global_index":"7571333","public_key":"e73f27b7eb001aa7eac13df82814cda65b42ceeb6ef36227c25d5cbf82f6a5e4","rct":"5f45f33c6800cdae202b37abe6d87b53d6873e7b30f3527161f44fa8db3104b6"},
+							{"global_index":"7571335","public_key":"fce982db8e7a6b71a1e632c7de8c5cbf54e8bacdfbf250f1ffc2a8d2f7055ce3","rct":"407bdcc48e70eb3ef2cc22cefee6c6b5a3c59fd17bde12fda5f1a44a0fb39d14"}
+						]
+					}
+				]
+				assert.equal(
+					mix_outs.length, 
+					step1_retVals.using_outs.length
+				)
+				assert.equal(
+					mix_outs[0].outputs.length, 
+					step1_retVals.mixin + 1 
+				)
+				console.log("calling step2:")
+				setTimeout(function()
+				{ // allow logs to finish
+ 					const step2_retVals = monero_utils.send_step2__try_create_transaction(
+						"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg", // from_address_string,
+						{ // sec keys
+							view: "7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104", 
+							spend: "4e6d43cd03812b803c6f3206689f5fcc910005fc7e91d50d79b0776dbefcd803" 
+						},
+						"4APbcAKxZ2KPVPMnqa5cPtJK25tr7maE7LrJe67vzumiCtWwjDBvYnHZr18wFexJpih71Mxsjv8b7EpQftpB9NjPPXmZxHN", // to_address_string,
+						step1_retVals.using_outs, // using_outs,
+						mix_outs, // mix_outs,
+						step1_retVals.mixin, // fake_outputs_count,
+						step1_retVals.final_total_wo_fee, // final sending_amount
+						step1_retVals.change_amount, // change_amount,
+						step1_retVals.using_fee, // fee_amount,
+						null, // payment_id,
+						1, // priority,
+						fee_per_b, // fee_per_b,
+						0, // unlock_time,
+						nettype // nettype
+					)
+					console.log("step2_retVals", JSON.stringify(step2_retVals, null, '  '))
+					assert.equal(
+						step2_retVals.tx_must_be_reconstructed,
+						false
+					);
+					assert.notEqual(
+						step2_retVals.signed_serialized_tx,
+						null
+					);
+					assert.notEqual(
+						step2_retVals.signed_serialized_tx,
+						undefined
+					);
+				}, 5000)
+
+			})
+		</script>
+	</head>
+	<body>
+		
+	</body>
+</html>
