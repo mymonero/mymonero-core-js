@@ -670,7 +670,7 @@ module.exports = function(options)
 		//
 		return fullPath
 	}
-	return new Promise(function(resolve) {
+	return new Promise(function(resolve, reject) {
 		var Module_template = {}
 		if (options.asmjs != true || options.wasm == true) { // wasm
 			Module_template["locateFile"] = locateFile
