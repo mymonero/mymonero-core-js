@@ -14,3 +14,4 @@ contrib/boost-sdk/bin.v2
 
 tests/web/mymonero-core.js
 tests/web/mymonero_core_js
+tests/web/mymonero-core.js.map

@@ -46,7 +46,9 @@
     "verbose": true,
     "coveragePathIgnorePatterns": [
       "node_modules",
-      "monero_utils/MyMoneroCoreCpp.js",
+      "monero_utils/MyMoneroCoreCpp_WASM.js",
+      "monero_utils/MyMoneroCoreCpp_ASMJS.js",
+      "monero_utils/MyMoneroCoreCpp_ASMJS.asm.js",
       "tests/emjs/*"
     ]
   }

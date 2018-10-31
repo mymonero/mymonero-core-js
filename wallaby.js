@@ -40,7 +40,9 @@ module.exports = function(wallaby) {
 		],
 
 		filesWithNoCoverageCalculated: [
-			"monero_utils/MyMoneroCoreCpp.js",
+			"monero_utils/MyMoneroCoreCpp_WASM.js",
+			"monero_utils/MyMoneroCoreCpp_ASMJS.js",
+			"monero_utils/MyMoneroCoreCpp_ASMJS.asm.js"
 		],
 
 		tests: ["./tests/**/*spec.js"],

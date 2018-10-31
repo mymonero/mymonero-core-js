@@ -32,7 +32,7 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 `monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations, and the MyMonero JS and wasm implementations for the underlying cryptography behind Monero. 
 
-`monero_utils/MyMoneroCoreCpp.(js,wasm)` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `monero_utils/MyMoneroCoreBridge.js`.
+`monero_utils/MyMoneroCoreCpp*` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `monero_utils/MyMoneroCoreBridge.js`.
 
 A ready-made entrypoint for interacting with `MyMoneroCoreBridge` is located at `monero_utils/monero_utils.js` with usage `require("./monero_utils/monero_utils").then(function(monero_utils) { })`.
 

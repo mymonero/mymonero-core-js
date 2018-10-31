@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.4.1)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 project(MyMoneroCoreCpp)
-option(MM_EM_ASMJS "Build for asmjs instead of wasm" OFF) # NOTE: if you change this, you should delete your cmake build cache
 #
 include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
 #
@@ -184,8 +183,10 @@ set_target_properties(
 #
 #
 set (
-    EMCC_LINKED_FLAGS___MM_BASE
+    EMCC_LINKER_FLAGS___BASE
     #unsure if the -I...boost..include is necessary here due to include above
+    #
+    # TODO? does EXPORT_NAME need to be the same for both targets? (or should it be set per-target with …_WASM, …_ASMJS?)
     "-Wall -std=c++11 \
 --bind -s MODULARIZE=1 \
 -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
@@ -206,64 +207,75 @@ set (
     #
     # -s SAFE_HEAP=1
 )
-if (MM_EM_ASMJS) 
-    message(STATUS "> Building asmjs")
-    set(
-        EMCC_LINKER_FLAGS 
-        "${EMCC_LINKED_FLAGS___MM_BASE} \
+set(
+    EMCC_LINKER_FLAGS__ASMJS
+    "${EMCC_LINKER_FLAGS___BASE} \
 -s WASM=0 \
 -Os \
+--separate-asm \
 -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
 -s \"BINARYEN_METHOD='asmjs'\" \
 -s ALLOW_MEMORY_GROWTH=0 \
 --memory-init-file 0 \
 "
-        # --memory-init-file is explicitly set to 0 because optimization level is Oz, and some clients like React Native have trouble loading .mem files
-        # --closure 1 \
-    )
-else () 
-    message(STATUS "> Building wasm")
-    set(
-        EMCC_LINKER_FLAGS 
-        "${EMCC_LINKED_FLAGS___MM_BASE} \
+    # --memory-init-file is explicitly set to 0 because optimization level is Oz, and some clients like React Native have trouble loading .mem files
+    # .... it also didn't seem to have a giant impact on perf. but this should be tested again
+    #
+    # --closure 1 \
+)
+set(
+    EMCC_LINKER_FLAGS__WASM
+    "${EMCC_LINKER_FLAGS___BASE} \
 -s WASM=1 \
 -Oz \
 -s \"BINARYEN_METHOD='native-wasm'\" \
 -s ALLOW_MEMORY_GROWTH=1 \
 --post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
 "
-        # -g \
-    )
-endif ()
-
-#    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
-
-message(STATUS "EMCC_LINKER_FLAGS ${EMCC_LINKER_FLAGS}")
-
-# extract the filename without an extension (NAME_WE)
-add_executable(
-	MyMoneroCoreCpp 
-	${SRC_FILES}
+    # -g \
 )
-set_target_properties(MyMoneroCoreCpp PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS}")
-# set_target_properties(MyMoneroCoreCpp PROPERTIES SUFFIX ".html")
-
+#
+#    -s EXPORTED_FUNCTIONS='[\"_sc_reduce\", \"_sc_reduce32\", \"_sc_check\", \"_sc_add\", \"_ge_fromfe_frombytes_vartime\", \"_ge_mul8\", \"_ge_p1p1_to_p3\", \"_ge_p3_tobytes\", \"_ge_scalarmult\", \"_ge_tobytes\", \"_sc_sub\", \"_sc_mulsub\", \"_ge_scalarmult_base\", \"_sc_0\", \"_ge_double_scalarmult_base_vartime\", \"_ge_double_scalarmult_precomp_vartime\", \"_ge_frombytes_vartime\", \"_ge_dsm_precomp\"]' \
+#
+#
+message(STATUS "EMCC_LINKER_FLAGS__WASM ${EMCC_LINKER_FLAGS__WASM}")
+message(STATUS "EMCC_LINKER_FLAGS__ASMJS ${EMCC_LINKER_FLAGS__ASMJS}")
+#
+add_executable(MyMoneroCoreCpp_WASM ${SRC_FILES})
+add_executable(MyMoneroCoreCpp_ASMJS ${SRC_FILES})
+#
+set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS__WASM}")
+set_target_properties(MyMoneroCoreCpp_ASMJS PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS__ASMJS}")
+#
+# set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES SUFFIX ".html")
+# set_target_properties(MyMoneroCoreCpp_ASMJS PROPERTIES SUFFIX ".html")
+#
+# boost_atomic
+# boost_date_time
+# boost_filesystem
+# boost_locale
+# boost_program_options
+# boost_regex
+# boost_serialization
+# boost_signals
+# boost_timer
+# boost_wserialization
+#
 target_link_libraries(
-    MyMoneroCoreCpp
+    MyMoneroCoreCpp_WASM
     #
-    # boost_atomic
     boost_chrono
-    # boost_date_time
-    # boost_filesystem
-    # boost_locale
-    # boost_program_options
-    # boost_regex
-    # boost_serialization
-    # boost_signals
     boost_system
     boost_thread
-    # boost_timer
-    # boost_wserialization
+    #
+    ${log-lib}
+)
+target_link_libraries(
+    MyMoneroCoreCpp_ASMJS
+    #
+    boost_chrono
+    boost_system
+    boost_thread
     #
     ${log-lib}
 )
