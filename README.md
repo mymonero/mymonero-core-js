@@ -34,7 +34,7 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 `monero_utils/MyMoneroCoreCpp*` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `monero_utils/MyMoneroCoreBridge.js`.
 
-A ready-made entrypoint for interacting with `MyMoneroCoreBridge` is located at `monero_utils/monero_utils.js` with usage `require("./monero_utils/monero_utils").then(function(monero_utils) { })`.
+A ready-made entrypoint for interacting with `MyMoneroCoreBridge` is located at `monero_utils/monero_utils.js` with usage `require("./monero_utils/monero_utils")({}).then(function(monero_utils) { })`.
 
 Many related utility functions and data structures are located throughout `monero_utils/`, `cryptonote_utils`, and `hostAPI`. Usage below.
 

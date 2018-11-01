@@ -40,7 +40,7 @@ var nettype = mymonero.nettype_utils.network_type.MAINNET;
 describe("cryptonote_utils tests", function() {
 
 	it("create_address aka address_and_keys_from_seed", async function() {
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		var decoded = monero_utils.address_and_keys_from_seed("9c973aa296b79bbf452781dd3d32ad7f", nettype);
 		assert.equal(
 			decoded.address_string,
@@ -49,7 +49,7 @@ describe("cryptonote_utils tests", function() {
 	});
 
 	it("decode mainnet primary address", async function() {
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		var decoded = monero_utils.decode_address(
 			"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
 			nettype,
@@ -66,7 +66,7 @@ describe("cryptonote_utils tests", function() {
 	});
 
 	it("decode mainnet integrated address", async function() {
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		var decoded = monero_utils.decode_address(
 			"4KYcX9yTizXfvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNd3mZpgrjXBKMx9ee7c",
 			nettype,
@@ -85,7 +85,7 @@ describe("cryptonote_utils tests", function() {
 	it("create tx: non-sweep single-output", async function() {
 		this.timeout(5000) // asmjs slower
 
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		const unspent_outputs = [
 			{
 				"amount":"3000000000",
@@ -189,7 +189,7 @@ describe("cryptonote_utils tests", function() {
 
 	// not implemented
 	// it("hash_to_scalar", async function() {
-	// 	const monero_utils = await require("../monero_utils/monero_utils")
+	// 	const monero_utils = await require("../monero_utils/monero_utils")({})
 	// 	var scalar = monero_utils.hash_to_scalar(private_key);
 	// 	assert.equal(
 	// 		scalar,
@@ -198,7 +198,7 @@ describe("cryptonote_utils tests", function() {
 	// });
 
 	it("generate key derivation", async function() {
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		var derivation = monero_utils.generate_key_derivation(
 			public_key,
 			private_key,
@@ -210,7 +210,7 @@ describe("cryptonote_utils tests", function() {
 	});
 
 	it("derive public key", async function() {
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		var derivation = monero_utils.generate_key_derivation(
 			public_key,
 			private_key,
@@ -227,7 +227,7 @@ describe("cryptonote_utils tests", function() {
 	});
 
 	it("derive subaddress public key", async function() {
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		var derivation = monero_utils.generate_key_derivation(
 			public_key,
 			private_key,
@@ -244,7 +244,7 @@ describe("cryptonote_utils tests", function() {
 	});
 
 	it("decodeRct", async function() {
-		const monero_utils = await require("../monero_utils/monero_utils")
+		const monero_utils = await require("../monero_utils/monero_utils")({})
 		const i = 1;
 		const sk = "9b1529acb638f497d05677d7505d354b4ba6bc95484008f6362f93160ef3e503";
 		const rv = 

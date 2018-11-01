@@ -35,103 +35,108 @@ const wants_electronRemote = (ENVIRONMENT_IS_NODE&&ENVIRONMENT_IS_WEB)/*this may
 	|| (typeof window !== 'undefined' && window.IsElectronRendererProcess == true);
 //
 const fn_names = require('./__bridged_fns_spec').bridgedFn_names;
-const moneroUtils_promise = new Promise(function(resolve, reject)
+const moneroUtils_promise_fn = function(options)
 {
-	function _didLoad(coreBridge_instance)
+	options = options || {}
+	//
+	return new Promise(function(resolve, reject)
 	{
-		if (coreBridge_instance == null) {
-			throw "Unable to make coreBridge_instance"
-		}
-		const local_fns = {};
-		for (const i in fn_names) {
-			const name = fn_names[i]
-			local_fns[name] = function()
-			{
-				const retVal = coreBridge_instance[name].apply(coreBridge_instance, arguments); // called on the cached value
-				if (typeof retVal === "object") {
-					const err_msg = retVal.err_msg
-					if (typeof err_msg !== 'undefined' && err_msg) {
-						throw err_msg; // because we can't throw from electron remote w/o killing fn call
-						// ... and because parsing out this err_msg everywhere is sorta inefficient
-					}
-				}
-				return retVal;
-			}
-		}
-		local_fns.Module = coreBridge_instance.Module;
-		resolve(local_fns);
-	}
-	if (wants_electronRemote) {
-		// Require file again except on the main process ...
-		// this avoids a host of issues running wasm on the renderer side, 
-		// for right now until we can load such files raw w/o unsafe-eval
-		// script-src CSP. makes calls synchronous. if that is a perf problem 
-		// we can make API async.
-		// 
-		// Resolves relative to the entrypoint of the main process.
-		const remoteModule = require('electron').remote.require(
-			"../mymonero_core_js/monero_utils/__IPCSafe_remote_monero_utils"
-		);
-		// Oftentimes this will be ready right away.. somehow.. but just in case.. the readiness
-		// state promise behavior should be preserved by the following codepath...
-		var _try;
-		function __retryAfter(attemptN)
+		function _didLoad(coreBridge_instance)
 		{
-			console.warn("Checking remote module readiness again after a few ms...")
-			setTimeout(function()
-			{
-				_try(attemptN + 1)
-			}, 30)
-		}
-		_try = function(attemptN)
-		{
-			if (attemptN > 10000) {
-				throw "Expected remote module to be ready"
+			if (coreBridge_instance == null) {
+				throw "Unable to make coreBridge_instance"
 			}
-			if (remoteModule.isReady) {
-				_didLoad(remoteModule);
-			} else {
-				__retryAfter(attemptN)
-			}
-		}
-		_try(0)
-	} else {
-		var use_asmjs = false;
-		if (ENVIRONMENT_IS_WEB) {
-			var hasWebAssembly = false
-			try {
-				if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
-					const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-					if (module instanceof WebAssembly.Module) {
-						var isInstance = new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
-						if (isInstance) {
-							// TODO: add ios 11 mobile safari bug check to hasWebAssembly
+			const local_fns = {};
+			for (const i in fn_names) {
+				const name = fn_names[i]
+				local_fns[name] = function()
+				{
+					const retVal = coreBridge_instance[name].apply(coreBridge_instance, arguments); // called on the cached value
+					if (typeof retVal === "object") {
+						const err_msg = retVal.err_msg
+						if (typeof err_msg !== 'undefined' && err_msg) {
+							throw err_msg; // because we can't throw from electron remote w/o killing fn call
+							// ... and because parsing out this err_msg everywhere is sorta inefficient
 						}
-						// until then…
-						hasWebAssembly = isInstance
 					}
+					return retVal;
 				}
-			} catch (e) {
-				// avoiding empty block statement warning..
-				hasWebAssembly = false // to be clear
 			}
-			use_asmjs = hasWebAssembly != true
+			local_fns.Module = coreBridge_instance.Module;
+			resolve(local_fns);
 		}
-		console.log("Using wasm: ", !use_asmjs)
-		const coreBridgeLoading_promise = require('./MyMoneroCoreBridge')({ asmjs: use_asmjs });
-		coreBridgeLoading_promise.catch(function(e)
-		{
-			console.error("Error: ", e);
-			// this may be insufficient… being able to throw would be nice
-			if (reject) {
-				reject(e)
-			} else {
-				throw "Promise passed no reject function to monero_utils load fn"
+		if (wants_electronRemote) {
+			// Require file again except on the main process ...
+			// this avoids a host of issues running wasm on the renderer side, 
+			// for right now until we can load such files raw w/o unsafe-eval
+			// script-src CSP. makes calls synchronous. if that is a perf problem 
+			// we can make API async.
+			// 
+			// Resolves relative to the entrypoint of the main process.
+			const remoteModule = require('electron').remote.require(
+				"../mymonero_core_js/monero_utils/__IPCSafe_remote_monero_utils"
+			);
+			// Oftentimes this will be ready right away.. somehow.. but just in case.. the readiness
+			// state promise behavior should be preserved by the following codepath...
+			var _try;
+			function __retryAfter(attemptN)
+			{
+				console.warn("Checking remote module readiness again after a few ms...")
+				setTimeout(function()
+				{
+					_try(attemptN + 1)
+				}, 30)
 			}
-		});
-		coreBridgeLoading_promise.then(_didLoad);
-	}
-});
+			_try = function(attemptN)
+			{
+				if (attemptN > 10000) {
+					throw "Expected remote module to be ready"
+				}
+				if (remoteModule.isReady) {
+					_didLoad(remoteModule);
+				} else {
+					__retryAfter(attemptN)
+				}
+			}
+			_try(0)
+		} else {
+			var use_asmjs = false;
+			if (ENVIRONMENT_IS_WEB) {
+				var hasWebAssembly = false
+				try {
+					if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+						const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+						if (module instanceof WebAssembly.Module) {
+							var isInstance = new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
+							if (isInstance) {
+								// TODO: add ios 11 mobile safari bug check to hasWebAssembly
+							}
+							// until then…
+							hasWebAssembly = isInstance
+						}
+					}
+				} catch (e) {
+					// avoiding empty block statement warning..
+					hasWebAssembly = false // to be clear
+				}
+				use_asmjs = hasWebAssembly != true
+			}
+			console.log("Using wasm: ", !use_asmjs)
+			const coreBridgeLoading_promise = require('./MyMoneroCoreBridge')({ asmjs: use_asmjs });
+			coreBridgeLoading_promise.catch(function(e)
+			{
+				console.error("Error: ", e);
+				// this may be insufficient… being able to throw would be nice
+				if (reject) {
+					reject(e)
+				} else {
+					throw "Promise passed no reject function to monero_utils load fn"
+				}
+			});
+			coreBridgeLoading_promise.then(_didLoad);
+		}
+	});
+}
 //
 //
 // Since we actually are constructing bridge functions we technically have the export ready 
@@ -139,4 +144,4 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 //
 // TODO: in future, possibly return function which takes options instead to support better env.
 //
-module.exports = moneroUtils_promise;
+module.exports = moneroUtils_promise_fn;

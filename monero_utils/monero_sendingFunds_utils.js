@@ -29,7 +29,7 @@
 "use strict";
 //
 const monero_config = require("./monero_config");
-const monero_utils_promise = require('./monero_utils')
+const monero_utils_promise = require('./monero_utils')({})
 const monero_amount_format_utils = require("./monero_amount_format_utils");
 const monero_paymentID_utils = require("./monero_paymentID_utils");
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
