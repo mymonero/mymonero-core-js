@@ -34,6 +34,29 @@ const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== tru
 const wants_electronRemote = (ENVIRONMENT_IS_NODE&&ENVIRONMENT_IS_WEB)/*this may become insufficient*/
 	|| (typeof window !== 'undefined' && window.IsElectronRendererProcess == true);
 //
+var use_asmjs = false;
+if (ENVIRONMENT_IS_WEB) {
+	var hasWebAssembly = false
+	try {
+		if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+			const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+			if (module instanceof WebAssembly.Module) {
+				var isInstance = new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
+				if (isInstance) {
+					// TODO: add ios 11 mobile safari bug check to hasWebAssembly
+				}
+				// until then…
+				hasWebAssembly = isInstance
+			}
+		}
+	} catch (e) {
+		// avoiding empty block statement warning..
+		hasWebAssembly = false // to be clear
+	}
+	use_asmjs = hasWebAssembly != true
+}
+console.log("Using wasm: ", !use_asmjs)
+//
 const fn_names = require('./__bridged_fns_spec').bridgedFn_names;
 const moneroUtils_promise_fn = function(options)
 {
@@ -100,28 +123,6 @@ const moneroUtils_promise_fn = function(options)
 			}
 			_try(0)
 		} else {
-			var use_asmjs = false;
-			if (ENVIRONMENT_IS_WEB) {
-				var hasWebAssembly = false
-				try {
-					if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
-						const module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-						if (module instanceof WebAssembly.Module) {
-							var isInstance = new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
-							if (isInstance) {
-								// TODO: add ios 11 mobile safari bug check to hasWebAssembly
-							}
-							// until then…
-							hasWebAssembly = isInstance
-						}
-					}
-				} catch (e) {
-					// avoiding empty block statement warning..
-					hasWebAssembly = false // to be clear
-				}
-				use_asmjs = hasWebAssembly != true
-			}
-			console.log("Using wasm: ", !use_asmjs)
 			const coreBridgeLoading_promise = require('./MyMoneroCoreBridge')({ asmjs: use_asmjs });
 			coreBridgeLoading_promise.catch(function(e)
 			{
