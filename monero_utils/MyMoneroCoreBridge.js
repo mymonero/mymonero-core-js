@@ -712,7 +712,7 @@ module.exports = function(options)
 				};
 			} else if (ENVIRONMENT_IS_WEB||ENVIRONMENT_IS_WORKER) {
 				read_fn = function(url)
-				{ // it's an option to move this over to fetch, but, fetch requires a polyfill for these older browsers anyway - making fetch an automatic dep just for asmjs fallback - probably not worth it yet - but it would be if fetch were to become a dep for another reason, such as a networked SendFunds() implementation
+				{ // it's an option to move this over to fetch, but, fetch requires a polyfill for these older browsers anyway - making fetch an automatic dep just for asmjs fallback - and the github/fetch polyfill does not appear to actually support mode (for 'same-origin' policy) anyway - probably not worth it yet 
 					var xhr = new XMLHttpRequest()
 					xhr.open("GET", url, false)
 					xhr.send(null)
