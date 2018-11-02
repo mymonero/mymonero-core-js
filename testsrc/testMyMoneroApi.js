@@ -1,12 +1,14 @@
 // @flow
 
 import type { QueryParams, SendFundsParams } from '../lib/myMoneroApi.js' 
-const { MyMoneroApi } = require('../lib/myMoneroApi.js')
+const { initMonero } = require('../')
+
 const { randomBytes } = require('crypto')
 const fetch = require('node-fetch')
 const request = require('request')
 
 const mainAsync = async () => {
+    const { MyMoneroApi } = await initMonero()
     const options = {
         appUserAgentProduct: 'tester',
         appUserAgentVersion: '0.0.1',
@@ -16,7 +18,6 @@ const mainAsync = async () => {
         randomBytes
     }
     const myMoneroApi = new MyMoneroApi(options)
-    await myMoneroApi.init()
     let result = await myMoneroApi.createWallet()
     console.log('createWallet\n', result)
 

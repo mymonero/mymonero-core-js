@@ -29,13 +29,14 @@
 "use strict";
 //
 const monero_config = require("./monero_config");
-const monero_utils_promise = require('./monero_utils')
 const monero_amount_format_utils = require("./monero_amount_format_utils");
 const monero_paymentID_utils = require("./monero_paymentID_utils");
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 //
 const hostAPI_net_service_utils = require("../hostAPI/net_service_utils");
 //
+let monero_utils
+
 function _mixinToRingsize(mixin) {
 	return mixin + 1;
 }
@@ -46,6 +47,10 @@ function thisFork_minMixin() {
 function thisFork_minRingSize() {
 	return _mixinToRingsize(thisFork_minMixin());
 }
+function initMoneroUtils (moneroUtils) {
+	monero_utils = moneroUtils
+}
+exports.initMoneroUtils = initMoneroUtils
 exports.thisFork_minMixin = thisFork_minMixin;
 exports.thisFork_minRingSize = thisFork_minRingSize;
 //
@@ -124,7 +129,7 @@ function SendFunds( // TODO: migrate this to take a map of args
 	//		err
 	// )
 ) {
-	monero_utils_promise.then(async function(monero_utils)
+	// monero_utils_promise.then(async function(monero_utils)
 	{
 		const mixin = fixedMixin(); // would be nice to eliminate this dependency or grab it from C++
 		//
@@ -310,6 +315,6 @@ function SendFunds( // TODO: migrate this to take a map of args
 				);
 			}
 		}
-	});
+	}
 }
 exports.SendFunds = SendFunds;

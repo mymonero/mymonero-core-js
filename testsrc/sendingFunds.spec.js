@@ -27,11 +27,12 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 "use strict";
-const { mymonero_core_js } = require("../");
+const { initMonero } = require("../");
 const net_service_utils = require('../hostAPI/net_service_utils')
 const monero_config = require('../monero_utils/monero_config') 
-const JSBigInt = mymonero_core_js.JSBigInt;
 const assert = require("assert");
+
+let mymonero_core_js
 
 class APIClient
 {
@@ -71,36 +72,30 @@ class APIClient
 		});
 		function __proceedTo_parseAndCallBack(data)
 		{
-			mymonero_core_js.monero_utils_promise.then(function(monero_utils)
-			{
-				mymonero_core_js.api_response_parser_utils.Parsed_UnspentOuts__keyImageManaged(
-					data,
-					address,
-					view_key__private,
-					spend_key__public,
-					spend_key__private,
-					monero_utils,
-					function(err, returnValuesByKey)
-					{
-						if (err) {
-							fn(err)
-							return
-						}
-						const per_byte_fee__string = returnValuesByKey.per_byte_fee__string
-						if (per_byte_fee__string == null || per_byte_fee__string == "" || typeof per_byte_fee__string === 'undefined') {
-							throw "Unexpected / missing per_byte_fee__string"
-						}
-						fn(
-							err, // no error
-							returnValuesByKey.unspentOutputs,
-							returnValuesByKey.per_byte_fee__string
-						)
+			mymonero_core_js.api_response_parser_utils.Parsed_UnspentOuts__keyImageManaged(
+				data,
+				address,
+				view_key__private,
+				spend_key__public,
+				spend_key__private,
+				mymonero_core_js.monero_utils,
+				function(err, returnValuesByKey)
+				{
+					if (err) {
+						fn(err)
+						return
 					}
-				)
-			}).catch(function(err)
-			{
-				fn(err)
-			})
+					const per_byte_fee__string = returnValuesByKey.per_byte_fee__string
+					if (per_byte_fee__string == null || per_byte_fee__string == "" || typeof per_byte_fee__string === 'undefined') {
+						throw "Unexpected / missing per_byte_fee__string"
+					}
+					fn(
+						err, // no error
+						returnValuesByKey.unspentOutputs,
+						returnValuesByKey.per_byte_fee__string
+					)
+				}
+			)
 		}
 		const requestHandle = 
 		{
@@ -255,6 +250,10 @@ class Fetch
 
 describe("sendingFunds tests", function()
 {
+	before('initMonero', async () => {
+		const result = await initMonero()
+		mymonero_core_js = result.mymonero_core_js
+	})
 	it("can send", async function()
 	{
 		mymonero_core_js.monero_sendingFunds_utils.SendFunds(

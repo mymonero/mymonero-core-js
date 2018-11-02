@@ -1,12 +1,12 @@
 // @flow
 
-const moneroUtilsPromise = require('../monero_utils/monero_utils.js')
 const nettypeUtils = require('../cryptonote_utils/nettype.js')
 const parserUtils = require('../hostAPI/response_parser_utils.js')
 const sendingFundsUtils = require('../monero_utils/monero_sendingFunds_utils.js')
 const HostedMoneroAPIClient = require('../HostedMoneroAPIClient/HostedMoneroAPIClient.Lite.js')
-const BackgroundResponseParser = require('../HostedMoneroAPIClient/BackgroundResponseParser.web.js')
+const { BackgroundResponseParser } = require('../HostedMoneroAPIClient/BackgroundResponseParser.web.js')
 
+let _moneroUtils
 const MAINNET = nettypeUtils.network_type.MAINNET
 
 export type MyMoneroApiOptions = {
@@ -63,6 +63,7 @@ class MyMoneroApi {
     constructor (options: MyMoneroApiOptions) {
         this.options = options
         this.keyImageCache = {}
+        this.moneroUtils = _moneroUtils
         if (options.randomBytes) {
             if (!global) {
                 global = {}
@@ -74,7 +75,7 @@ class MyMoneroApi {
                 global.crypto.randomBytes = options.randomBytes
             }    
         }
-        const backgroundAPIResponseParser = new BackgroundResponseParser(null, null)
+        const backgroundAPIResponseParser = new BackgroundResponseParser(_moneroUtils)
         this.hostedMoneroAPIClientContext = {
             backgroundAPIResponseParser,
             HostedMoneroAPIClient_DEBUGONLY_mockSendTransactionSuccess: false,
@@ -82,22 +83,19 @@ class MyMoneroApi {
         }
         this.hostedMoneroAPIClient = new HostedMoneroAPIClient({
             fetch: options.fetch,
-            request_conformant_module: options.request,
+            // request_conformant_module: options.request,
             appUserAgent_product: 'agent-product',
             appUserAgent_version: '0.0.1',
         }, this.hostedMoneroAPIClientContext)      
-    }
-
-    async init () {
-        this.moneroUtils = await moneroUtilsPromise
     }
 
     async decodeAddress (address: string): Object {
         return await this.moneroUtils.decode_address(address, MAINNET)
     }
     async createWallet (nettype: any = MAINNET, language: string = 'english'): Promise<MyMoneroWallet> {
+        console.log('createWallet')
         const result = await this.moneroUtils.newly_created_wallet(language, nettype)
-        return {
+        const out = {
             mnemonic: result.mnemonic_string,
             moneroAddress: result.address_string,
             moneroSpendKeyPrivate: result.sec_spendKey_string,
@@ -105,11 +103,13 @@ class MyMoneroApi {
             moneroViewKeyPrivate: result.sec_viewKey_string,
             moneroViewKeyPublic: result.pub_viewKey_string        
         }
+        return out
     }
 
     async createWalletFromMnemonic (mnemonic: string, nettype: any = MAINNET, language: string = 'english'): Promise<MyMoneroWallet> {
+        console.log('createWalletFromMnemonic')
         const result = await this.moneroUtils.seed_and_keys_from_mnemonic(mnemonic, nettype)
-        return {
+        const out = {
             mnemonic,
             moneroAddress: result.address_string,
             moneroSpendKeyPrivate: result.sec_spendKey_string,
@@ -117,6 +117,7 @@ class MyMoneroApi {
             moneroViewKeyPrivate: result.sec_viewKey_string,
             moneroViewKeyPublic: result.pub_viewKey_string        
         }
+        return out
     }
 
     async getTransactions (queryParams: QueryParams): Promise<Array<Object>> {
@@ -282,4 +283,8 @@ class MyMoneroApi {
     }
 }
 
-module.exports = { MyMoneroApi }
+const myMoneroApiFactory = (moneroUtils: Object) => {
+    _moneroUtils = moneroUtils
+    return MyMoneroApi
+}
+module.exports = { myMoneroApiFactory }

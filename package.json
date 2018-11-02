@@ -21,7 +21,6 @@
   },
   "files": [
     "bin/*",
-    "build/*",
     "configs/*",
     "cryptonote_utils/*",
     "hostAPI/*",

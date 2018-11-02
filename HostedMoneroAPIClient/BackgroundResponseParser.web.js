@@ -31,12 +31,12 @@
 // In the future this could implement web workers
 const response_parser_utils = require('../hostAPI/response_parser_utils')
 const monero_keyImage_cache_utils = require('../monero_utils/monero_keyImage_cache_utils')
-const monero_utils_promise = require('../monero_utils/monero_utils')
 //
 class BackgroundResponseParser
 {
-	constructor(options, context)
+	constructor(moneroUtils)
 	{
+		this.moneroUtils = moneroUtils
 	}
 	//
 	// Runtime - Accessors - Interface
@@ -49,21 +49,18 @@ class BackgroundResponseParser
 		spend_key__private,
 		fn //: (err?, returnValuesByKey?) -> Void
 	) {
-		monero_utils_promise.then(async function(monero_utils)
-		{
-			await response_parser_utils.Parsed_AddressInfo__keyImageManaged(
-				data,
-				address,
-				view_key__private,
-				spend_key__public,
-				spend_key__private,
-				monero_utils,
-				function(err, returnValuesByKey)
-				{
-					fn(err, returnValuesByKey)
-				}
-			)
-		})
+		response_parser_utils.Parsed_AddressInfo__keyImageManaged(
+			data,
+			address,
+			view_key__private,
+			spend_key__public,
+			spend_key__private,
+			this.moneroUtils,
+			function(err, returnValuesByKey)
+			{
+				fn(err, returnValuesByKey)
+			}
+		)
 	}
 	Parsed_AddressTransactions(
 		data,
@@ -73,21 +70,18 @@ class BackgroundResponseParser
 		spend_key__private,
 		fn //: (err?, returnValuesByKey?) -> Void
 	) {
-		monero_utils_promise.then(function(monero_utils)
-		{
-			response_parser_utils.Parsed_AddressTransactions__keyImageManaged(
-				data,
-				address,
-				view_key__private,
-				spend_key__public,
-				spend_key__private,
-				monero_utils,
-				function(err, returnValuesByKey)
-				{
-					fn(err, returnValuesByKey)
-				}
-			)
-		})
+		response_parser_utils.Parsed_AddressTransactions__keyImageManaged(
+			data,
+			address,
+			view_key__private,
+			spend_key__public,
+			spend_key__private,
+			this.moneroUtils,
+			function(err, returnValuesByKey)
+			{
+				fn(err, returnValuesByKey)
+			}
+		)
 	}
 	Parsed_UnspentOuts(
 		data,
@@ -97,21 +91,18 @@ class BackgroundResponseParser
 		spend_key__private,
 		fn //: (err?, returnValuesByKey?) -> Void
 	) {
-		monero_utils_promise.then(function(monero_utils)
-		{
-			response_parser_utils.Parsed_UnspentOuts__keyImageManaged(
-				data,
-				address,
-				view_key__private,
-				spend_key__public,
-				spend_key__private,
-				monero_utils,
-				function(err, returnValuesByKey)
-				{
-					fn(err, returnValuesByKey)
-				}
-			)
-		})
+		response_parser_utils.Parsed_UnspentOuts__keyImageManaged(
+			data,
+			address,
+			view_key__private,
+			spend_key__public,
+			spend_key__private,
+			this.moneroUtils,
+			function(err, returnValuesByKey)
+			{
+				fn(err, returnValuesByKey)
+			}
+		)
 	}
 	//
 	DeleteManagedKeyImagesForWalletWith(
@@ -124,4 +115,5 @@ class BackgroundResponseParser
 		}
 	}
 }
-module.exports = BackgroundResponseParser
+
+module.exports = { BackgroundResponseParser }

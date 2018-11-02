@@ -35,7 +35,8 @@ const wants_electronRemote = (ENVIRONMENT_IS_NODE&&ENVIRONMENT_IS_WEB)/*this may
 	|| (typeof window !== 'undefined' && window.IsElectronRendererProcess == true);
 //
 const fn_names = require('./__bridged_fns_spec').bridgedFn_names;
-const moneroUtils_promise = new Promise(function(resolve, reject)
+
+const moneroUtils_promise = function(resolve, reject)
 {
 	function _didLoad(coreBridge_instance)
 	{
@@ -96,7 +97,7 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 		}
 		_try(0)
 	} else {
-		const coreBridgeLoading_promise = require('./MyMoneroCoreBridge')({ asmjs: false }); // this returns a promise
+		const coreBridgeLoading_promise = require('./MyMoneroCoreBridgeNodeWeb.js')({ asmjs: false }); // this returns a promise
 		coreBridgeLoading_promise.catch(function(e)
 		{
 			console.error("Error: ", e);
@@ -105,7 +106,15 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 		});
 		coreBridgeLoading_promise.then(_didLoad);
 	}
-});
+}
+let _moneroUtils
+const moneroUtilsFactory = async () => {
+	if (!_moneroUtils) {
+		_moneroUtils = new Promise(moneroUtils_promise)
+	}
+	return _moneroUtils
+}
+
 //
 //
 // Since we actually are constructing bridge functions we technically have the export ready 
@@ -113,4 +122,4 @@ const moneroUtils_promise = new Promise(function(resolve, reject)
 //
 // TODO: in future, possibly return function which takes options instead to support better env.
 //
-module.exports = moneroUtils_promise;
+module.exports = { moneroUtilsFactory };
