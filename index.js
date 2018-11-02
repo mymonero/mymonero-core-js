@@ -44,4 +44,5 @@ mymonero_core_js.api_response_parser_utils = require("./hostAPI/response_parser_
 mymonero_core_js.nettype_utils = require("./cryptonote_utils/nettype");
 mymonero_core_js.JSBigInt = require("./cryptonote_utils/biginteger").BigInteger; // so that it is available to a hypothetical consumer's language-bridging web context for constructing string arguments to the above modules
 //
-module.exports = mymonero_core_js;
+const { MyMoneroApi } = require('./lib/myMoneroApi.js')
+module.exports = { mymonero_core_js, MyMoneroApi };

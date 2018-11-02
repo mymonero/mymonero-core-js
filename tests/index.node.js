@@ -14,7 +14,7 @@ var monero_utils;
 async function t1()
 {
 	try {
-		var decoded = (await mymonero.monero_utils_promise).decode_address(
+		var decoded = await (await mymonero.monero_utils_promise).decode_address(
 			"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
 			nettype,
 		);
@@ -24,14 +24,14 @@ async function t1()
 	}
 
 	try {
-		var created = (await mymonero.monero_utils_promise).newly_created_wallet(
+		var created = await (await mymonero.monero_utils_promise).newly_created_wallet(
 			"ja",
 			nettype,
 		);
 		console.log("newly_created_wallet", created)
 		//
 		try {
-			var unpacked = (await mymonero.monero_utils_promise).seed_and_keys_from_mnemonic(
+			var unpacked = await (await mymonero.monero_utils_promise).seed_and_keys_from_mnemonic(
 				created.mnemonic_string,
 				nettype,
 			);
@@ -44,7 +44,7 @@ async function t1()
 	}
 
 	try {
-		var fee = new mymonero.JSBigInt((await mymonero.monero_utils_promise).estimated_tx_network_fee(
+		var fee = new mymonero.JSBigInt(await (await mymonero.monero_utils_promise).estimated_tx_network_fee(
 			"0", 1, "24658"
 			// fee_per_kb__string, priority, fee_per_b__string
 		));

@@ -35,7 +35,7 @@ const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 const nettype_utils = require("../cryptonote_utils/nettype");
 const monero_config = require('./monero_config');
 const monero_amount_format_utils = require("../cryptonote_utils/money_format_utils")(monero_config);
-//
+
 function ret_val_boolstring_to_bool(boolstring)
 {
 	if (typeof boolstring !== "string") {
@@ -86,14 +86,14 @@ class MyMoneroCoreBridge
 	}
 	//
 	//
-	is_subaddress(addr, nettype) {
+	async is_subaddress(addr, nettype) {
 		const args =
 		{
 			address: addr,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.is_subaddress(args_str);
+		const ret_string = await this.Module.is_subaddress(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -101,14 +101,14 @@ class MyMoneroCoreBridge
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
 
-	is_integrated_address(addr, nettype) {
+	async is_integrated_address(addr, nettype) {
 		const args =
 		{
 			address: addr,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.is_integrated_address(args_str);
+		const ret_string = await this.Module.is_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -116,10 +116,10 @@ class MyMoneroCoreBridge
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
 
-	new_payment_id() {
+	async new_payment_id() {
 		const args = {};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.new_payment_id(args_str);
+		const ret_string = await this.Module.new_payment_id(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -127,7 +127,7 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
-	new__int_addr_from_addr_and_short_pid(
+	async new__int_addr_from_addr_and_short_pid(
 		address,
 		short_pid,
 		nettype
@@ -142,7 +142,7 @@ class MyMoneroCoreBridge
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.new_integrated_address(args_str);
+		const ret_string = await this.Module.new_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -150,7 +150,7 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
-	decode_address(address, nettype)
+	async decode_address(address, nettype)
 	{
 		const args =
 		{
@@ -158,7 +158,7 @@ class MyMoneroCoreBridge
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.decode_address(args_str);
+		const ret_string = await this.Module.decode_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -171,7 +171,7 @@ class MyMoneroCoreBridge
 		}
 	}
 
-	newly_created_wallet(
+	async newly_created_wallet(
 		locale_language_code,
 		nettype
 	) {
@@ -181,7 +181,7 @@ class MyMoneroCoreBridge
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.newly_created_wallet(args_str);
+		const ret_string = await this.Module.newly_created_wallet(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -198,14 +198,14 @@ class MyMoneroCoreBridge
 		};
 	}
 
-	are_equal_mnemonics(a, b) {
+	async are_equal_mnemonics(a, b) {
 		const args =
 		{
 			a: a,
 			b: b
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.are_equal_mnemonics(args_str);
+		const ret_string = await this.Module.are_equal_mnemonics(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -213,7 +213,7 @@ class MyMoneroCoreBridge
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
 
-	mnemonic_from_seed(
+	async mnemonic_from_seed(
 		seed_string,
 		wordset_name
 	) {
@@ -223,7 +223,7 @@ class MyMoneroCoreBridge
 			wordset_name: api_safe_wordset_name(wordset_name)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.mnemonic_from_seed(args_str);
+		const ret_string = await this.Module.mnemonic_from_seed(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
@@ -231,7 +231,7 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
-	seed_and_keys_from_mnemonic(
+	async seed_and_keys_from_mnemonic(
 		mnemonic_string,
 		nettype
 	) {
@@ -241,7 +241,7 @@ class MyMoneroCoreBridge
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.seed_and_keys_from_mnemonic(args_str);
+		const ret_string = await this.Module.seed_and_keys_from_mnemonic(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -257,7 +257,7 @@ class MyMoneroCoreBridge
 		};
 	}
 
-	validate_components_for_login(
+	async validate_components_for_login(
 		address_string,
 		sec_viewKey_string,
 		sec_spendKey_string,
@@ -273,7 +273,7 @@ class MyMoneroCoreBridge
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.validate_components_for_login(args_str);
+		const ret_string = await this.Module.validate_components_for_login(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -286,7 +286,7 @@ class MyMoneroCoreBridge
 		};
 	}
 
-	address_and_keys_from_seed(
+	async address_and_keys_from_seed(
 		seed_string,
 		nettype
 	) {
@@ -296,7 +296,7 @@ class MyMoneroCoreBridge
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.address_and_keys_from_seed(args_str);
+		const ret_string = await this.Module.address_and_keys_from_seed(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -310,7 +310,7 @@ class MyMoneroCoreBridge
 		};
 	}
 
-	generate_key_image(
+	async generate_key_image(
 		tx_pub,
 		view_sec,
 		spend_pub,
@@ -338,7 +338,7 @@ class MyMoneroCoreBridge
 			out_index: "" + output_index
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.generate_key_image(args_str);
+		const ret_string = await this.Module.generate_key_image(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg };
@@ -346,7 +346,7 @@ class MyMoneroCoreBridge
 		return ret.retVal;
 	}
 
-	generate_key_derivation(
+	async generate_key_derivation(
 		pub,
 		sec,
 	) {
@@ -356,14 +356,14 @@ class MyMoneroCoreBridge
 			sec: sec,
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.generate_key_derivation(args_str);
+		const ret_string = await this.Module.generate_key_derivation(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg };
 		}
 		return ret.retVal;
 	}
-	derive_public_key(derivation, out_index, pub)
+	async derive_public_key(derivation, out_index, pub)
 	{
 		const args =
 		{
@@ -372,14 +372,14 @@ class MyMoneroCoreBridge
 			out_index: out_index,
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.derive_public_key(args_str);
+		const ret_string = await this.Module.derive_public_key(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg };
 		}
 		return ret.retVal;
 	}
-	derive_subaddress_public_key(
+	async derive_subaddress_public_key(
 		output_key,
 		derivation,
 		out_index
@@ -391,14 +391,14 @@ class MyMoneroCoreBridge
 			out_index: "" + out_index, // must be passed as string
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.derive_subaddress_public_key(args_str);
+		const ret_string = await this.Module.derive_subaddress_public_key(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg };
 		}
 		return ret.retVal;		
 	}
-	decodeRct(rv, sk, i)
+	async decodeRct(rv, sk, i)
 	{
 		const ecdhInfo = []; // should obvs be plural but just keeping exact names in-tact
 		for (var j = 0 ; j < rv.outPk.length ; j++) {
@@ -435,7 +435,7 @@ class MyMoneroCoreBridge
 			}
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.decodeRct(args_str);
+		const ret_string = await this.Module.decodeRct(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg }
@@ -445,7 +445,7 @@ class MyMoneroCoreBridge
 			mask: ret.mask,
 		};
 	}
-	estimated_tx_network_fee(fee_per_kb__string, priority, optl__fee_per_b_string) // this is until we switch the server over to fee per b
+	async estimated_tx_network_fee(fee_per_kb__string, priority, optl__fee_per_b_string) // this is until we switch the server over to fee per b
 	{ // TODO update this API to take object rather than arg list
 		const args =
 		{
@@ -455,14 +455,14 @@ class MyMoneroCoreBridge
 			priority: "" + priority,
 		};
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.estimated_tx_network_fee(args_str);
+		const ret_string = await this.Module.estimated_tx_network_fee(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
 		}
 		return ret.retVal; // this is a string - pass it to new JSBigInt(…)
 	}
-	send_step1__prepare_params_for_get_decoys(
+	async send_step1__prepare_params_for_get_decoys(
 		is_sweeping,
 		sending_amount, // this may be 0 if sweeping
 		fee_per_b,
@@ -491,7 +491,7 @@ class MyMoneroCoreBridge
 			args.passedIn_attemptAt_fee = optl__passedIn_attemptAt_fee.toString(); // ought to be a string but in case it's a JSBigInt…
 		}
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.send_step1__prepare_params_for_get_decoys(args_str);
+		const ret_string = await this.Module.send_step1__prepare_params_for_get_decoys(args_str);
 		const ret = JSON.parse(ret_string);
 		// special case: err_code of needMoreMoneyThanFound; rewrite err_msg
 		if (ret.err_code == "90" || ret.err_code == 90) { // declared in mymonero-core-cpp/src/monero_transfer_utils.hpp
@@ -516,7 +516,7 @@ class MyMoneroCoreBridge
 			final_total_wo_fee: ret.final_total_wo_fee // aka sending_amount for step2
 		};
 	}
-	send_step2__try_create_transaction( // send only IPC-safe vals - no JSBigInts
+	async send_step2__try_create_transaction( // send only IPC-safe vals - no JSBigInts
 		from_address_string,
 		sec_keys,
 		to_address_string,
@@ -597,7 +597,7 @@ class MyMoneroCoreBridge
 			args.payment_id_string = payment_id;
 		}
 		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.send_step2__try_create_transaction(args_str);
+		const ret_string = await this.Module.send_step2__try_create_transaction(args_str);
 		const ret = JSON.parse(ret_string);
 		//
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
@@ -632,7 +632,10 @@ module.exports = function(options)
 		const ENVIRONMENT_IS_NODE = typeof process==="object" && process.browser !== true && typeof require==="function" && ENVIRONMENT_IS_WORKER == false; // we want this to be true for Electron but not for a WebView
 		const ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 		var Module_template = {}
-		if (options.asmjs != true || options.wasm == true) { // wasm
+		if (global.moneroRNBridge) {
+			const coreBridge = new MyMoneroCoreBridge(myMoneroCoreRN)
+			resolve(coreBridge)
+		} else if (options.asmjs != true || options.wasm == true) { // wasm
 			Module_template["locateFile"] = function(filename, scriptDirectory)
 			{
 				// if (options["locateFile"]) {

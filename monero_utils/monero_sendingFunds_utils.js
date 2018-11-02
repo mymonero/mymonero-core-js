@@ -124,7 +124,7 @@ function SendFunds( // TODO: migrate this to take a map of args
 	//		err
 	// )
 ) {
-	monero_utils_promise.then(function(monero_utils)
+	monero_utils_promise.then(async function(monero_utils)
 	{
 		const mixin = fixedMixin(); // would be nice to eliminate this dependency or grab it from C++
 		//
@@ -153,7 +153,7 @@ function SendFunds( // TODO: migrate this to take a map of args
 		}
 		//
 		// TODO:
-		// const wallet__public_keys = decode_address(from_address, nettype);
+		// const wallet__public_keys = await decode_address(from_address, nettype);
 		//
 		preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.fetchingLatestBalance);
 		var fee_per_b__string;
@@ -165,7 +165,7 @@ function SendFunds( // TODO: migrate this to take a map of args
 			wallet__private_keys.spend,
 			mixin,
 			sweeping,
-			function(err, returned_unusedOuts, per_byte_fee__string)
+			async function(err, returned_unusedOuts, per_byte_fee__string)
 			{
 				if (err) {
 					__trampolineFor_err_withErr(err);
@@ -176,19 +176,19 @@ function SendFunds( // TODO: migrate this to take a map of args
 					unspent_outs = returned_unusedOuts; // TODO: which one should be used? delete the other
 					fee_per_b__string = per_byte_fee__string; 
 				}
-				__reenterable_constructAndSendTx(
+				await __reenterable_constructAndSendTx(
 					null, // for the first try - passedIn_attemptAt_network_minimumFee
 					1
 				);
 			}
 		);
-		function __reenterable_constructAndSendTx(optl__passedIn_attemptAt_fee, constructionAttempt)
+		async function __reenterable_constructAndSendTx(optl__passedIn_attemptAt_fee, constructionAttempt)
 		{
 			// Now we need to establish some values for balance validation and to construct the transaction
 			preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.calculatingFee);
 			var step1_retVals;
 			try {
-				step1_retVals = monero_utils.send_step1__prepare_params_for_get_decoys(
+				step1_retVals = await monero_utils.send_step1__prepare_params_for_get_decoys(
 					sweeping,
 					sending_amount.toString(), // must be a string
 					fee_per_b__string,
@@ -214,21 +214,21 @@ function SendFunds( // TODO: migrate this to take a map of args
 			hostedMoneroAPIClient.RandomOuts(
 				step1_retVals.using_outs, 
 				step1_retVals.mixin, 
-				function(err, mix_outs)
+				async function(err, mix_outs)
 				{
 					if (err) {
 						__trampolineFor_err_withErr(err);
 						return;
 					}
-					___createTxAndAttemptToSend(mix_outs); 
+					await ___createTxAndAttemptToSend(mix_outs); 
 				}
 			);
-			function ___createTxAndAttemptToSend(mix_outs) 
+			async function ___createTxAndAttemptToSend(mix_outs) 
 			{
 				preSuccess_nonTerminal_statusUpdate_fn(SendFunds_ProcessStep_Code.constructingTransaction);
 				var step2_retVals;
 				try {
-					step2_retVals = monero_utils.send_step2__try_create_transaction(
+					step2_retVals = await monero_utils.send_step2__try_create_transaction(
 						wallet__public_address,
 						wallet__private_keys,
 						target_address,
@@ -266,7 +266,7 @@ function SendFunds( // TODO: migrate this to take a map of args
 						__trampolineFor_err_withStr("Unable to construct a transaction with sufficient fee for unknown reason.");
 						return;
 					}
-					__reenterable_constructAndSendTx(
+					await __reenterable_constructAndSendTx(
 						step2_retVals.fee_actually_needed, // we are re-entering the step1->step2 codepath after updating fee_actually_needed
 						constructionAttempt + 1
 					);
@@ -283,7 +283,7 @@ function SendFunds( // TODO: migrate this to take a map of args
 					wallet__public_address,
 					wallet__private_keys.view,
 					step2_retVals.signed_serialized_tx,
-					function(err) {
+					async function(err) {
 						if (err) {
 							__trampolineFor_err_withStr("Something unexpected occurred when submitting your transaction: " + err);
 							return;
@@ -292,7 +292,7 @@ function SendFunds( // TODO: migrate this to take a map of args
 						const finalTotalWOFee_amount = new JSBigInt(step1_retVals.final_total_wo_fee)
 						var final__payment_id = payment_id;
 						if (final__payment_id === null || typeof final__payment_id == "undefined" || !final__payment_id) {
-							const decoded  = monero_utils.decode_address(target_address, nettype);
+							const decoded  = await monero_utils.decode_address(target_address, nettype);
 							if (decoded.intPaymentId && typeof decoded.intPaymentId !== 'undefined') {
 								final__payment_id = decoded.intPaymentId // just preserving original return value - this retVal can eventually be removed
 							}

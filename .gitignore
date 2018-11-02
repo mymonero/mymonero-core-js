@@ -4,6 +4,7 @@ coverage
 .vscode
 
 build
+.idea/
 
 lib/
 contrib/boost*

@@ -89,7 +89,7 @@ function New_RequestFunds_URI(args) {
 }
 exports.New_RequestFunds_URI = New_RequestFunds_URI;
 //
-function New_ParsedPayload_FromPossibleRequestURIString(string, nettype, monero_utils/*pass this so this fn remains sync*/) {
+async function New_ParsedPayload_FromPossibleRequestURIString(string, nettype, monero_utils/*pass this so this fn remains sync*/) {
 	// throws; -> {}
 	//
 	// detect no-scheme moneroAddr and possible OA addr - if has no monero: prefix
@@ -107,7 +107,7 @@ function New_ParsedPayload_FromPossibleRequestURIString(string, nettype, monero_
 		}
 		var address__decode_result;
 		try {
-			address__decode_result = monero_utils.decode_address(
+			address__decode_result = await monero_utils.decode_address(
 				string,
 				nettype,
 			);

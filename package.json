@@ -8,9 +8,37 @@
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
   },
   "scripts": {
+    "build": "flow-remove-types js-src/ -d lib/ && flow-remove-types test/ -d lib/ &&npm run build:flow",
+    "build:clean": "rimraf lib",
+    "build:flow": "flow-copy-source -v -i '**/test/**' js-src lib",
+    "flow": "flow status",
     "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
-    "test": "mocha"
+    "lint": "eslint '*.js' 'js-src/**/*.js' && npm run flow",
+    "lint:fix": "eslint --fix 'js-src/**/*.js' && npm run flow",
+    "precommit": "npm run build && npm test",
+    "prepare": "npm run build",
+    "test": "npm run flow"
   },
+  "files": [
+    "bin/*",
+    "build/*",
+    "configs/*",
+    "cryptonote_utils/*",
+    "hostAPI/*",
+    "HostedMoneroAPIClient/*",
+    "lib/*",
+    "monero_utils/*",
+    "src/*",
+    "index.js",
+    "CMakeLists.txt",
+    "LICENSE.txt",
+    "wallaby.js",
+    "webpack.browser.dev.config.js",
+    "webpack.browser.prod.config.js",
+    "webpack.config.browser.common.js",
+    "yarn.lock",
+    "README.md"
+  ],
   "keywords": [
     "monero",
     "mymonero",
@@ -30,16 +58,23 @@
     "url": "https://github.com/mymonero/mymonero-core-js/issues"
   },
   "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
-  "dependencies": {},
   "devDependencies": {
     "babel-core": "6.26.3",
     "babel-loader": "8.0.2",
     "babel-minify": "0.4.3",
+    "flow-bin": "^0.83.0",
+    "flow-copy-source": "^2.0.2",
+    "flow-remove-types": "^1.2.3",
     "html5-fs": "0.1.1",
+    "husky": "^0.14.3",
     "mocha": "5.2.0",
+    "request": "^2.88.0",
     "webpack": "4.19.1",
     "webpack-cli": "3.1.0",
     "webpack-merge": "4.1.4"
+  },
+  "dependencies": {
+    "node-fetch": "^2.2.0"
   },
   "jest": {
     "testEnvironment": "node",
@@ -48,6 +83,12 @@
       "node_modules",
       "monero_utils/MyMoneroCoreCpp.js",
       "tests/emjs/*"
+    ]
+  },
+  "standard": {
+    "parser": "babel-eslint",
+    "plugins": [
+      "flowtype"
     ]
   }
 }
