@@ -8,16 +8,16 @@
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
   },
   "scripts": {
-    "build": "flow-remove-types js-src/ -d lib/ && flow-remove-types test/ -d lib/ &&npm run build:flow",
+    "build": "flow-remove-types js-src/ -d lib/ && flow-remove-types testsrc/ -d test/ && npm run build:flow",
     "build:clean": "rimraf lib",
     "build:flow": "flow-copy-source -v -i '**/test/**' js-src lib",
     "flow": "flow status",
     "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
     "lint": "eslint '*.js' 'js-src/**/*.js' && npm run flow",
     "lint:fix": "eslint --fix 'js-src/**/*.js' && npm run flow",
-    "precommit": "npm run build && npm test",
+    "precommit": "npm run build && npm run flow && npm test",
     "prepare": "npm run build",
-    "test": "npm run flow"
+    "test": "mocha"
   },
   "files": [
     "bin/*",

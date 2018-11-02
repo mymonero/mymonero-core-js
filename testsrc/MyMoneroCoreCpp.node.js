@@ -185,7 +185,7 @@ async function tests(Module)
 	}
 }
 console.time("Load module")
-require('../monero_utils/MyMoneroCoreBridge')({asmjs: false}).then(function(instance)
+require('../monero_utils/MyMoneroCoreBridgeNodeWeb.js')({asmjs: false}).then(function(instance)
 {	
 	console.timeEnd("Load module")
 	console.log("Loaded instance:", instance)

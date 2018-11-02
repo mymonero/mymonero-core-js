@@ -27,7 +27,7 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 "use strict";
-const mymonero_core_js = require("../");
+const { mymonero_core_js } = require("../");
 const net_service_utils = require('../hostAPI/net_service_utils')
 const monero_config = require('../monero_utils/monero_config') 
 const JSBigInt = mymonero_core_js.JSBigInt;

@@ -1,5 +1,6 @@
 "use strict";
-const mymonero = require("../");
+const { mymonero_core_js } = require("../");
+const mymonero = mymonero_core_js 
 // const assert = require("assert");
 
 var public_key =

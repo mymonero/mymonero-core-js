@@ -27,7 +27,8 @@
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 "use strict";
-const mymonero = require("../");
+const { mymonero_core_js } = require("../");
+const mymonero = mymonero_core_js
 const assert = require("assert");
 
 var public_key =
@@ -41,7 +42,7 @@ describe("cryptonote_utils tests", function() {
 
 	it("create_address aka address_and_keys_from_seed", async function() {
 		const monero_utils = await require("../monero_utils/monero_utils")
-		var decoded = monero_utils.address_and_keys_from_seed("9c973aa296b79bbf452781dd3d32ad7f", nettype);
+		var decoded = await monero_utils.address_and_keys_from_seed("9c973aa296b79bbf452781dd3d32ad7f", nettype);
 		assert.equal(
 			decoded.address_string,
 			"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg",
@@ -50,7 +51,7 @@ describe("cryptonote_utils tests", function() {
 
 	it("decode mainnet primary address", async function() {
 		const monero_utils = await require("../monero_utils/monero_utils")
-		var decoded = monero_utils.decode_address(
+		var decoded = await monero_utils.decode_address(
 			"49qwWM9y7j1fvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNRHuCbTr",
 			nettype,
 		);
@@ -67,7 +68,7 @@ describe("cryptonote_utils tests", function() {
 
 	it("decode mainnet integrated address", async function() {
 		const monero_utils = await require("../monero_utils/monero_utils")
-		var decoded = monero_utils.decode_address(
+		var decoded = await monero_utils.decode_address(
 			"4KYcX9yTizXfvaBK684Y5sMbN8MZ3XwDLcSaqcKwjh5W9kn9qFigPBNBwzdq6TCAm2gKxQWrdZuEZQBMjQodi9cNd3mZpgrjXBKMx9ee7c",
 			nettype,
 		);
@@ -97,7 +98,7 @@ describe("cryptonote_utils tests", function() {
 			}
 		]
 		const fee_per_b = "24658"
-		const step1_retVals = monero_utils.send_step1__prepare_params_for_get_decoys(
+		const step1_retVals = await monero_utils.send_step1__prepare_params_for_get_decoys(
 			false, // sweeping
 			"200000000", // sending_amount
 			fee_per_b, // fee_per_b,
@@ -152,7 +153,7 @@ describe("cryptonote_utils tests", function() {
 			mix_outs[0].outputs.length, 
 			step1_retVals.mixin + 1 
 		)
-		const step2_retVals = monero_utils.send_step2__try_create_transaction(
+		const step2_retVals = await monero_utils.send_step2__try_create_transaction(
 			"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg", // from_address_string,
 			{ // sec keys
 				view: "7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104", 
@@ -197,7 +198,7 @@ describe("cryptonote_utils tests", function() {
 
 	it("generate key derivation", async function() {
 		const monero_utils = await require("../monero_utils/monero_utils")
-		var derivation = monero_utils.generate_key_derivation(
+		var derivation = await monero_utils.generate_key_derivation(
 			public_key,
 			private_key,
 		);
@@ -209,11 +210,11 @@ describe("cryptonote_utils tests", function() {
 
 	it("derive public key", async function() {
 		const monero_utils = await require("../monero_utils/monero_utils")
-		var derivation = monero_utils.generate_key_derivation(
+		var derivation = await monero_utils.generate_key_derivation(
 			public_key,
 			private_key,
 		);
-		var output_key = monero_utils.derive_public_key(
+		var output_key = await monero_utils.derive_public_key(
 			derivation,
 			1,
 			public_key,
@@ -226,11 +227,11 @@ describe("cryptonote_utils tests", function() {
 
 	it("derive subaddress public key", async function() {
 		const monero_utils = await require("../monero_utils/monero_utils")
-		var derivation = monero_utils.generate_key_derivation(
+		var derivation = await monero_utils.generate_key_derivation(
 			public_key,
 			private_key,
 		);
-		var subaddress_public_key = monero_utils.derive_subaddress_public_key(
+		var subaddress_public_key = await monero_utils.derive_subaddress_public_key(
 			public_key,
 			derivation,
 			1,
@@ -274,7 +275,7 @@ describe("cryptonote_utils tests", function() {
 				}
 			]
 		};
-		var ret = monero_utils.decodeRct(rv, sk, i);
+		var ret = await monero_utils.decodeRct(rv, sk, i);
 		assert.equal(
 			ret.mask,
 			"3f59c741c9ad560bfea92f42449a180bc8362f1b5ddd957e3b5772dbaf7f840e",

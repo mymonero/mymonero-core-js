@@ -6,6 +6,7 @@ coverage
 build
 .idea/
 
+test/
 lib/
 contrib/boost*
 contrib/boost-sdk/bjam
