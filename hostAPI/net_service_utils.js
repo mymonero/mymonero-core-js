@@ -51,7 +51,7 @@ function AddUserAgentParamters(
 exports.AddUserAgentParamters = AddUserAgentParamters;
 //
 function HTTPRequest(
-	request_conformant_module, // such as 'request' or 'xhr' .. TODO: consider switching to 'fetch'
+	fetch, // such as 'request' or 'xhr' .. TODO: consider switching to 'fetch'
 	apiAddress_authority, // authority means [subdomain.]host.…[:…] with no trailing slash
 	endpointPath,
 	final_parameters,
@@ -66,26 +66,24 @@ function HTTPRequest(
 		_new_APIAddress_baseURLString(apiAddress_authority) + endpointPath;
 	console.log("📡  " + completeURL);
 	//
-	const request_options = _new_requestOptions_base(
-		"POST",
-		completeURL,
-		final_parameters,
-	);
-	const requestHandle = request_conformant_module(request_options, function(
-		err_orProgressEvent,
-		res,
-		body,
-	) {
-		_new_HTTPRequestHandlerFunctionCallingFn(fn)(
-			// <- called manually instead of directly passed to request_conformant_module call to enable passing completeURL
-			completeURL,
-			err_orProgressEvent,
-			res,
-			body,
-		);
-	});
-	//
-	return requestHandle;
+
+	const request_options = {
+		method: 'POST',
+		headers: {
+		  'Content-Type': 'application/json',
+		  'Accept': 'application/json'
+		},
+		body: JSON.stringify(final_parameters)
+	}
+	console.log(request_options)
+	fetch(completeURL, request_options).then((res) => {
+		return res.json()
+	}).then(body => {
+		fn(null, body)
+	}).catch(e => {
+		fn(e)
+	})
+	return 0;
 }
 exports.HTTPRequest = HTTPRequest;
 //

@@ -45,9 +45,10 @@ class HostedMoneroAPIClient_Base
 		self.options = options
 		self.context = context
 		//
-		self.request = options.request_conformant_module
-		if (!self.request) {
-			throw `${self.constructor.name} requires an options.request_conformant_module such as require('request' / 'xhr')`
+		self.fetch = options.fetch
+		// self.request = options.request_conformant_module
+		if (!self.fetch) {
+			throw `${self.constructor.name} requires an options.fetch such as require('node-fetch')`
 		}
 		//
 		self.setup()
@@ -82,7 +83,7 @@ class HostedMoneroAPIClient_Base
 		parameters.create_account = true
 		parameters.generated_locally = generated_locally
 		const requestHandle = net_service_utils.HTTPRequest(
-			self.request,
+			self.fetch,
 			self._new_apiAddress_authority(),
 			endpointPath, 
 			parameters,
@@ -120,7 +121,7 @@ class HostedMoneroAPIClient_Base
 		const endpointPath = "get_address_info"
 		const parameters = net_service_utils.New_ParametersForWalletRequest(address, view_key__private)
 		const requestHandle = net_service_utils.HTTPRequest(
-			self.request,
+			self.fetch,
 			self._new_apiAddress_authority(),
 			endpointPath,
 			parameters,
@@ -203,7 +204,7 @@ class HostedMoneroAPIClient_Base
 		const endpointPath = "get_address_txs"
 		const parameters = net_service_utils.New_ParametersForWalletRequest(address, view_key__private)
 		const requestHandle = net_service_utils.HTTPRequest(
-			self.request,
+			self.fetch,
 			self._new_apiAddress_authority(),
 			endpointPath,
 			parameters,
@@ -272,7 +273,7 @@ class HostedMoneroAPIClient_Base
 			self.appUserAgent_version
 		)
 		const requestHandle = net_service_utils.HTTPRequest(
-			self.request,
+			self.fetch,
 			self._new_apiAddress_authority(),
 			endpointPath,
 			parameters,
@@ -328,7 +329,7 @@ class HostedMoneroAPIClient_Base
 			self.appUserAgent_version
 		)
 		const requestHandle = net_service_utils.HTTPRequest(
-			self.request,
+			self.fetch,
 			self._new_apiAddress_authority(),
 			endpointPath,
 			parameters,
@@ -400,7 +401,7 @@ class HostedMoneroAPIClient_Base
 			self.appUserAgent_version
 		)
 		const requestHandle = net_service_utils.HTTPRequest(
-			self.request,
+			self.fetch,
 			self._new_apiAddress_authority(),
 			endpointPath,
 			parameters,
@@ -455,7 +456,7 @@ class HostedMoneroAPIClient_Base
 			self.appUserAgent_version
 		)
 		const requestHandle = net_service_utils.HTTPRequest(
-			self.request,
+			self.fetch,
 			self._new_apiAddress_authority(),
 			endpointPath,
 			parameters,
