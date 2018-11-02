@@ -1,5 +1,6 @@
 "use strict";
 const mymonero = require("../");
+const assert = require('assert')
 // const assert = require("assert");
 
 var public_key =
@@ -53,6 +54,33 @@ async function t1()
 		console.log(e)
 	}
 
+	try {
+		const blockchain_height = 1231231
+		const tx = 
+		{
+			unlock_time: blockchain_height + 5,
+		}
+		const reason = mymonero.monero_txParsing_utils.TransactionLockedReason(tx, blockchain_height)
+		console.log("reason" , reason)
+		assert.equal(0, reason.indexOf("Will be unlocked in 5 blocks, ~5 minutes, Today at"))
+	} catch (e) {
+		console.log(e)
+	}
+
+
+	try {
+		const blockchain_height = mymonero.monero_config.maxBlockNumber
+		const tx = 
+		{
+			unlock_time: blockchain_height * 10000,
+		}
+		const reason = mymonero.monero_txParsing_utils.TransactionLockedReason(tx, blockchain_height)
+		console.log("reason" , reason)
+		assert.equal(0, reason.indexOf("Will be unlocked in"))
+		assert.notEqual(-1, reason.indexOf("years"))
+	} catch (e) {
+		console.log(e)
+	}
 
 }
 t1()

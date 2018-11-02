@@ -29,6 +29,7 @@
 "use strict";
 //
 const monero_config = require("./monero_config");
+const moment = require("../cryptonote_utils/moment")
 //
 function IsTransactionConfirmed(tx, blockchain_height) 
 {
