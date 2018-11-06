@@ -30,6 +30,7 @@ export type MyMoneroWallet = {
 
 export type BalanceResults = {
     blockHeight: number,
+    lockedBalance: string,
     totalReceived: string,
     totalSent: string
 }
@@ -64,17 +65,6 @@ class MyMoneroApi {
         this.options = options
         this.keyImageCache = {}
         this.moneroUtils = _moneroUtils
-        if (options.randomBytes) {
-            if (!global) {
-                global = {}
-            } 
-            if (!global.crypto) {
-                global.crypto = {}
-            }
-            if (!global.crypto.randomBytes) {
-                global.crypto.randomBytes = options.randomBytes
-            }    
-        }
         const backgroundAPIResponseParser = new BackgroundResponseParser(_moneroUtils)
         this.hostedMoneroAPIClientContext = {
             backgroundAPIResponseParser,
@@ -84,6 +74,7 @@ class MyMoneroApi {
         this.hostedMoneroAPIClient = new HostedMoneroAPIClient({
             fetch: options.fetch,
             // request_conformant_module: options.request,
+            apiServer: options.apiServer,
             appUserAgent_product: 'agent-product',
             appUserAgent_version: '0.0.1',
         }, this.hostedMoneroAPIClientContext)      
@@ -159,6 +150,7 @@ class MyMoneroApi {
         const out: BalanceResults = {
             blockHeight: parsedAddrInfo.blockchain_height,
             totalReceived: parsedAddrInfo.total_received_String,
+            lockedBalance: parsedAddrInfo.locked_balance_String,
             totalSent: parsedAddrInfo.total_sent_String 
         }
         return out

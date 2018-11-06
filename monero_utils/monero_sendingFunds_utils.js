@@ -212,6 +212,10 @@ function SendFunds( // TODO: migrate this to take a map of args
 				__trampolineFor_err_withStr(errStr);
 				return;
 			}
+			if (step1_retVals.err_msg) {
+				__trampolineFor_err_withErr(step1_retVals.err_msg)
+				return
+			}
 			//
 			// prep for step2
 			// first, grab RandomOuts, then enter step2

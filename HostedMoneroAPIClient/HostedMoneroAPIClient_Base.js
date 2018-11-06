@@ -32,8 +32,7 @@
 const JSBigInt = require('../cryptonote_utils/biginteger.js').BigInteger // important: grab defined export
 const monero_config = require('../monero_utils/monero_config.js')
 const net_service_utils = require('../hostAPI/net_service_utils.js')
-//
-const config__MyMonero = require('./config__MyMonero')
+const apiServer = "https://api.mymonero.com:8443"
 //
 class HostedMoneroAPIClient_Base
 {
@@ -50,7 +49,9 @@ class HostedMoneroAPIClient_Base
 		if (!self.fetch) {
 			throw `${self.constructor.name} requires an options.fetch such as require('node-fetch')`
 		}
-		//
+		if (!self.options.apiServer) {
+			self.options.apiServer = apiServer
+		}
 		self.setup()
 	}
 	setup()
@@ -71,7 +72,7 @@ class HostedMoneroAPIClient_Base
 	// Runtime - Accessors - Private - Requests
 	_new_apiAddress_authority() 
 	{ // overridable
-		return config__MyMonero.API__authority
+		return this.options.apiServer
 	}
 	//
 	// Runtime - Accessors - Public - Requests

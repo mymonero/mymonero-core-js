@@ -43,7 +43,7 @@ async function t1()
 	}
 
 	try {
-		var fee = new mymonero.JSBigInt(mymonero.monero_utils.estimated_tx_network_fee(
+		var fee = new mymonero.JSBigInt(await mymonero.monero_utils.estimated_tx_network_fee(
 			"0", 1, "24658"
 			// fee_per_kb__string, priority, fee_per_b__string
 		));

@@ -5,6 +5,8 @@
 ; Ignore "BUCK" generated dirs
 <PROJECT_ROOT>/\.buckd/
 
+<PROJECT_ROOT>/contrib/
+
 ; Ignore unexpected extra "@providesModule"
 .*/node_modules/.*/node_modules/fbjs/.*
 
