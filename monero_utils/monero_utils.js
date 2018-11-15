@@ -97,7 +97,7 @@ const moneroUtils_promise_fn = function(options)
 			// 
 			// Resolves relative to the entrypoint of the main process.
 			const remoteModule = require('electron').remote.require(
-				"../mymonero_core_js/monero_utils/__IPCSafe_remote_monero_utils"
+				"mymonero-core-js/monero_utils/__IPCSafe_remote_monero_utils"
 			);
 			// Oftentimes this will be ready right away.. somehow.. but just in case.. the readiness
 			// state promise behavior should be preserved by the following codepath...
