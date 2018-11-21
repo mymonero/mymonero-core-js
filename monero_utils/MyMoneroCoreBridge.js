@@ -619,7 +619,21 @@ class MyMoneroCoreBridge
 			tx_key: ret.tx_key
 		};
 	}
-
+	derivation_to_scalar(derivation, output_index)
+	{
+		const args =
+		{
+			derivation: derivation,
+			output_index: output_index,
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.derivation_to_scalar(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
+		}
+		return ret.retVal;
+	}
 }
 //
 module.exports = function(options)

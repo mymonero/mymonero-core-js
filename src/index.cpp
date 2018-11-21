@@ -61,6 +61,7 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("derive_public_key", &serial_bridge::derive_public_key);
     emscripten::function("derive_subaddress_public_key", &serial_bridge::derive_subaddress_public_key);
     emscripten::function("decodeRct", &serial_bridge::decodeRct);
+    emscripten::function("derivation_to_scalar", &serial_bridge::derivation_to_scalar);
     //
 }
 extern "C"

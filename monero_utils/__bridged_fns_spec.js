@@ -50,5 +50,6 @@ exports.bridgedFn_names =
 	"calculate_fee",
 	"estimated_tx_network_fee",
 	"send_step1__prepare_params_for_get_decoys",
-	"send_step2__try_create_transaction"
+	"send_step2__try_create_transaction",
+	"derivation_to_scalar"
 ];

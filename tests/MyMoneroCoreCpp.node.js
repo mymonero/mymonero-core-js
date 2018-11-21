@@ -183,6 +183,13 @@ function tests(Module)
 		console.timeEnd("decodeRct")
 		console.log("decodeRct ret", ret_string)
 	}
+	{
+		console.time("derivation_to_scalar")
+		const args_str = '{"derivation":"7a4c13a037d4bd2a7dd99a8c24669e9e04ca4e8a90e5b6703e88e87ad51c1849","output_index":1}'
+		const ret_string = Module.derivation_to_scalar(args_str)
+		console.timeEnd("derivation_to_scalar")
+		console.log("derivation_to_scalar ret", ret_string)
+	}
 }
 console.time("Load module")
 require('../monero_utils/MyMoneroCoreBridge')({asmjs: false}).then(function(instance) // this can be switched to manually test asmjs vs wasm - can be exposed to option
