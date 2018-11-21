@@ -412,6 +412,21 @@ class MyMoneroCoreBridge
 		}
 		return ret.retVal;		
 	}
+	derivation_to_scalar(derivation, output_index)
+	{
+		const args =
+		{
+			derivation: derivation,
+			output_index: output_index,
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.derivation_to_scalar(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
+		}
+		return ret.retVal;
+	}
 	decodeRct(rv, sk, i)
 	{
 		const ecdhInfo = []; // should obvs be plural but just keeping exact names in-tact
