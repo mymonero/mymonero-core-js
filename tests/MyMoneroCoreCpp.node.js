@@ -134,6 +134,13 @@ function tests(Module)
 		console.log("estimated_tx_network_fee ret", ret_string)
 	}
 	{
+		console.time("estimate_rct_tx_size")
+		const args_str = '{"n_inputs":1,"mixin":10,"n_outputs":2,"extra_size":0,"bulletproof":true}'
+		const ret_string = Module.estimate_rct_tx_size(args_str)
+		console.timeEnd("estimate_rct_tx_size")
+		console.log("estimate_rct_tx_size ret", ret_string)
+	}
+	{
 		console.time("generate_key_image")
 		const args_str = '{"sec_viewKey_string":"7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104","sec_spendKey_string":"4e6d43cd03812b803c6f3206689f5fcc910005fc7e91d50d79b0776dbefcd803","pub_spendKey_string":"3eb884d3440d71326e27cc07a861b873e72abd339feb654660c36a008a0028b3","tx_pub_key":"fc7f85bf64c6e4f6aa612dbc8ddb1bb77a9283656e9c2b9e777c9519798622b2","out_index":"0"}'
 		const ret_string = Module.generate_key_image(args_str)
