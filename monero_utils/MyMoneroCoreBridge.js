@@ -329,6 +329,9 @@ class MyMoneroCoreBridge
 		if (spend_sec.length !== 64) {
 			return { err_msg: "Invalid spend_sec length" };
 		}
+		if (typeof output_index === 'undefined' || output_index === "" || output_index === null) {
+			return { err_msg: "Missing output_index" };
+		}
 		const args =
 		{
 			sec_viewKey_string: view_sec,
@@ -363,13 +366,19 @@ class MyMoneroCoreBridge
 		}
 		return ret.retVal;
 	}
-	derive_public_key(derivation, out_index, pub)
+	derive_public_key(derivation, out_index, pub) // TODO: fix legacy interface here by moving out_index to last arg pos
 	{
+		if (typeof pub === 'undefined' || pub === "" || pub === null) {
+			return { err_msg: "Missing pub arg (arg pos idx 2)" };
+		}
+		if (typeof out_index === 'undefined' || out_index === "" || out_index === null) {
+			return { err_msg: "Missing out_index arg (arg pos idx 1)" };
+		}
 		const args =
 		{
 			pub: pub,
 			derivation: derivation, 
-			out_index: out_index,
+			out_index: ""+out_index,
 		};
 		const args_str = JSON.stringify(args);
 		const ret_string = this.Module.derive_public_key(args_str);
@@ -381,9 +390,12 @@ class MyMoneroCoreBridge
 	}
 	derive_subaddress_public_key(
 		output_key,
-		derivation,
+		derivation, 
 		out_index
 	) {
+		if (typeof out_index === 'undefined' || out_index === "" || out_index === null) {
+			return { err_msg: "Missing out_index arg (arg pos idx 2)" };
+		}
 		const args =
 		{
 			output_key: output_key,

@@ -35,6 +35,8 @@ set(
     SRC_FILES
     #
     src/index.cpp
+    src/emscr_async_send_bridge.hpp
+    src/emscr_async_send_bridge.cpp
     #
     ${MYMONERO_CORE_CPP_SRC}/monero_address_utils.hpp
     ${MYMONERO_CORE_CPP_SRC}/monero_address_utils.cpp
@@ -52,6 +54,10 @@ set(
     ${MYMONERO_CORE_CPP_SRC}/monero_wallet_utils.cpp
     ${MYMONERO_CORE_CPP_SRC}/serial_bridge_index.hpp
     ${MYMONERO_CORE_CPP_SRC}/serial_bridge_index.cpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_send_routine.hpp
+    ${MYMONERO_CORE_CPP_SRC}/monero_send_routine.cpp
+    ${MYMONERO_CORE_CPP_SRC}/serial_bridge_utils.hpp
+    ${MYMONERO_CORE_CPP_SRC}/serial_bridge_utils.cpp
     ${MYMONERO_CORE_CPP_SRC}/tools__ret_vals.hpp
     ${MYMONERO_CORE_CPP_SRC}/tools__ret_vals.cpp
     #
@@ -102,60 +108,11 @@ set(
 
 set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
 
-# add_library(boost_atomic STATIC IMPORTED)
-# set_target_properties(
-#     boost_atomic PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_atomic.a
-# )
-# #
 add_library(boost_chrono STATIC IMPORTED)
 set_target_properties(
     boost_chrono PROPERTIES IMPORTED_LOCATION
     ${boost_DIR}/lib/libboost_chrono.a
 )
-# #
-# add_library(boost_date_time STATIC IMPORTED)
-# set_target_properties(
-#     boost_date_time PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_date_time.a
-# )
-# #
-# add_library(boost_filesystem STATIC IMPORTED)
-# set_target_properties(
-#     boost_filesystem PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_filesystem.a
-# )
-# #
-# add_library(boost_locale STATIC IMPORTED)
-# set_target_properties(
-#     boost_locale PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_locale.a
-# )
-# #
-# add_library(boost_program_options STATIC IMPORTED)
-# set_target_properties(
-#     boost_program_options PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_program_options.a
-# )
-# #
-# add_library(boost_regex STATIC IMPORTED)
-# set_target_properties(
-#     boost_regex PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_regex.a
-# )
-# #
-# add_library(boost_serialization STATIC IMPORTED)
-# set_target_properties(
-#     boost_serialization PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_serialization.a
-# )
-# #
-# add_library(boost_signals STATIC IMPORTED)
-# set_target_properties(
-#     boost_signals PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_signals.a
-# )
-#
 add_library(boost_system STATIC IMPORTED)
 set_target_properties(
     boost_system PROPERTIES IMPORTED_LOCATION
@@ -168,19 +125,6 @@ set_target_properties(
     ${boost_DIR}/lib/libboost_thread.a
 )
 #
-# add_library(boost_timer STATIC IMPORTED)
-# set_target_properties(
-#     boost_timer PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_timer.a
-# )
-# #
-# add_library(boost_wserialization STATIC IMPORTED)
-# set_target_properties(
-#     boost_wserialization PROPERTIES IMPORTED_LOCATION
-#     ${boost_DIR}/lib/libboost_wserialization.a
-# )
-#
-#
 #
 set (
     EMCC_LINKER_FLAGS___BASE
@@ -192,20 +136,22 @@ set (
 -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
 --llvm-lto 1 \
 -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
--s ASSERTIONS=1 \
+-s ASSERTIONS=2 \
 -s EXIT_RUNTIME=0 \
 -s \"BINARYEN_TRAP_MODE='clamp'\" \
 -s PRECISE_F32=1 \
--s DISABLE_EXCEPTION_CATCHING=1 \
+-s DISABLE_EXCEPTION_CATCHING=0 \
 -s EXCEPTION_DEBUG=1 \
 -s DEMANGLE_SUPPORT=1 \
 -s NO_DYNAMIC_EXECUTION=1 \
+-s EXTRA_EXPORTED_RUNTIME_METHODS='[\"UTF8ToString\"]' \
 "
     # • Disabling exception catching does not introduce silent failures 
     # • Probably don't need PRECISE_F32 but wouldn't want to not use it
     #
     #
-    # -s SAFE_HEAP=1
+    # -s SAFE_HEAP=1 \
+    # -g \
 )
 set(
     EMCC_LINKER_FLAGS__ASMJS

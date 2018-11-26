@@ -33,12 +33,14 @@
 #include <emscripten/bind.h>
 //
 #include "serial_bridge_index.hpp"
+#include "emscr_async_send_bridge.hpp"
 //
 EMSCRIPTEN_BINDINGS(my_module)
 { // C++ -> JS
-	//
-    emscripten::function("send_step1__prepare_params_for_get_decoys", &serial_bridge::send_step1__prepare_params_for_get_decoys);
-    emscripten::function("send_step2__try_create_transaction", &serial_bridge::send_step2__try_create_transaction);
+    emscripten::function("send_funds", &emscr_async_bridge::send_funds);
+    emscripten::function("send_cb_I__got_unspent_outs", &emscr_async_bridge::send_cb_I__got_unspent_outs);
+    emscripten::function("send_cb_II__got_random_outs", &emscr_async_bridge::send_cb_II__got_random_outs);
+    emscripten::function("send_cb_III__submitted_tx", &emscr_async_bridge::send_cb_III__submitted_tx);
     //
     emscripten::function("decode_address", &serial_bridge::decode_address);
     emscripten::function("is_subaddress", &serial_bridge::is_subaddress);
