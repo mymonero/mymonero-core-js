@@ -214,7 +214,9 @@ void emscr_async_bridge::send_funds(const string &args_string)
 //		send_app_handler__error(error_ret_json_from_message("Invalid JSON"));
 		return;
 	}
-	auto task_id = json_root.get<string>("task_id");
+	auto optl__task_id = json_root.get_optional<string>("task_id");
+	THROW_WALLET_EXCEPTION_IF(optl__task_id == none, error::wallet_internal_error, "Code fault: expected task_id (send_funds)");
+	const string &task_id = *optl__task_id;
     if (_heap_vals_ptrs_by_task_id.find(task_id) != _heap_vals_ptrs_by_task_id.end()) {
 		send_app_handler__error_msg(task_id, "Code fault: existing waiting heap vals container ptr found with that task id");
 		return;
@@ -338,8 +340,9 @@ void emscr_async_bridge::send_cb_I__got_unspent_outs(const string &args_string)
 //		send_app_handler__error(error_ret_json_from_message("Invalid JSON"));
 		return;
 	}
-	auto task_id = json_root.get<string>("task_id"); // required
-	// TODO throw if task_id not found in json
+	auto optl__task_id = json_root.get_optional<string>("task_id");
+	THROW_WALLET_EXCEPTION_IF(optl__task_id == none, error::wallet_internal_error, "Code fault: expected task_id (send_funds)");
+	const string &task_id = *optl__task_id;
 	// TODO: if args_string actually contains a server error, call error fn with it
 	// TODO: factor that into a shared function
 	//
@@ -440,8 +443,9 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 //		send_app_handler__error(error_ret_json_from_message("Invalid JSON"));
 		return;
 	}
-	auto task_id = json_root.get<string>("task_id"); // required
-	// TODO throw if task_id not found in json
+	auto optl__task_id = json_root.get_optional<string>("task_id");
+	THROW_WALLET_EXCEPTION_IF(optl__task_id == none, error::wallet_internal_error, "Code fault: expected task_id (send_funds)");
+	const string &task_id = *optl__task_id;
 	// TODO: if args_string actually contains a server error, call error fn with it
 	// TODO: factor that into a shared function
 	//
@@ -547,8 +551,9 @@ void emscr_async_bridge::send_cb_III__submitted_tx(const string &args_string)
 //		send_app_handler__error(error_ret_json_from_message("Invalid JSON"));
 		return;
 	}
-	auto task_id = json_root.get<string>("task_id"); // required
-	// TODO throw if task_id not found in json
+	auto optl__task_id = json_root.get_optional<string>("task_id");
+	THROW_WALLET_EXCEPTION_IF(optl__task_id == none, error::wallet_internal_error, "Code fault: expected task_id (send_funds)");
+	const string &task_id = *optl__task_id;
 	// TODO: if args_string actually contains a server error, call error fn with it
 	// TODO: factor that into a shared function
 	//
