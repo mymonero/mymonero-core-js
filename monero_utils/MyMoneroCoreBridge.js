@@ -98,7 +98,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.is_subaddress(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg;
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
@@ -113,7 +113,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.is_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg;
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
@@ -124,7 +124,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.new_payment_id(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg;
 		}
 		return ret.retVal;
 	}
@@ -135,7 +135,7 @@ class MyMoneroCoreBridge
 		nettype
 	) {
 		if (!short_pid || short_pid.length != 16) {
-			return { err_msg: "expected valid short_pid" };
+			throw "expected valid short_pid";
 		}
 		const args =
 		{
@@ -147,7 +147,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.new_integrated_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg;
 		}
 		return ret.retVal;
 	}
@@ -163,7 +163,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.decode_address(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg;
 		}
 		return {
 			spend: ret.pub_spendKey_string,
@@ -186,7 +186,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.newly_created_wallet(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			mnemonic_string: ret.mnemonic_string,
@@ -210,7 +210,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.are_equal_mnemonics(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg
 		}
 		return ret_val_boolstring_to_bool(ret.retVal);
 	}
@@ -228,7 +228,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.mnemonic_from_seed(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
+			throw ret.err_msg // TODO: maybe return this somehow
 		}
 		return ret.retVal;
 	}
@@ -246,7 +246,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.seed_and_keys_from_mnemonic(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			sec_seed_string: ret.sec_seed_string,
@@ -278,7 +278,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.validate_components_for_login(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			isValid: ret_val_boolstring_to_bool(ret.isValid),
@@ -301,7 +301,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.address_and_keys_from_seed(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			address_string: ret.address_string,
@@ -320,19 +320,19 @@ class MyMoneroCoreBridge
 		output_index
 	) {
 		if (tx_pub.length !== 64) {
-			return { err_msg: "Invalid tx_pub length" };
+			throw "Invalid tx_pub length";
 		}
 		if (view_sec.length !== 64) {
-			return { err_msg: "Invalid view_sec length" };
+			throw "Invalid view_sec length";
 		}
 		if (spend_pub.length !== 64) {
-			return { err_msg: "Invalid spend_pub length" };
+			throw "Invalid spend_pub length";
 		}
 		if (spend_sec.length !== 64) {
-			return { err_msg: "Invalid spend_sec length" };
+			throw "Invalid spend_sec length";
 		}
 		if (typeof output_index === 'undefined' || output_index === "" || output_index === null) {
-			return { err_msg: "Missing output_index" };
+			throw "Missing output_index";
 		}
 		const args =
 		{
@@ -346,7 +346,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.generate_key_image(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg };
+			throw ret.err_msg;
 		}
 		return ret.retVal;
 	}
@@ -364,17 +364,17 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.generate_key_derivation(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg };
+			throw ret.err_msg;
 		}
 		return ret.retVal;
 	}
 	derive_public_key(derivation, out_index, pub) // TODO: fix legacy interface here by moving out_index to last arg pos
 	{
 		if (typeof pub === 'undefined' || pub === "" || pub === null) {
-			return { err_msg: "Missing pub arg (arg pos idx 2)" };
+			throw "Missing pub arg (arg pos idx 2)";
 		}
 		if (typeof out_index === 'undefined' || out_index === "" || out_index === null) {
-			return { err_msg: "Missing out_index arg (arg pos idx 1)" };
+			throw "Missing out_index arg (arg pos idx 1)";
 		}
 		const args =
 		{
@@ -386,7 +386,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.derive_public_key(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg };
+			throw ret.err_msg;
 		}
 		return ret.retVal;
 	}
@@ -396,7 +396,7 @@ class MyMoneroCoreBridge
 		out_index
 	) {
 		if (typeof out_index === 'undefined' || out_index === "" || out_index === null) {
-			return { err_msg: "Missing out_index arg (arg pos idx 2)" };
+			throw "Missing out_index arg (arg pos idx 2)";
 		}
 		const args =
 		{
@@ -408,7 +408,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.derive_subaddress_public_key(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg };
+			throw ret.err_msg;
 		}
 		return ret.retVal;		
 	}
@@ -432,7 +432,7 @@ class MyMoneroCoreBridge
 				this_outPk_mask = this_outPk.mask; 
 			}
 			if (this_outPk_mask == null) {
-				return { err_msg: "Couldn't locate outPk mask value" }
+				throw "Couldn't locate outPk mask value";
 			}
   			outPk.push({
 				mask: this_outPk_mask
@@ -452,7 +452,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.decodeRct(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			amount: ret.amount, // string
@@ -472,7 +472,7 @@ class MyMoneroCoreBridge
 		const ret_string = this.Module.estimated_tx_network_fee(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg } // TODO: maybe return this somehow
+			throw ret.err_msg; // TODO: maybe return this somehow
 		}
 		return ret.retVal; // this is a string - pass it to new JSBigInt(…)
 	}
