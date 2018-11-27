@@ -343,9 +343,14 @@ void emscr_async_bridge::send_cb_I__got_unspent_outs(const string &args_string)
 	auto optl__task_id = json_root.get_optional<string>("task_id");
 	THROW_WALLET_EXCEPTION_IF(optl__task_id == none, error::wallet_internal_error, "Code fault: expected task_id (send_funds)");
 	const string &task_id = *optl__task_id;
-	// TODO: if args_string actually contains a server error, call error fn with it
-	// TODO: factor that into a shared function
 	//
+	auto optl__err_msg = json_root.get_optional<string>("err_msg");
+	if (optl__err_msg != none && (*optl__err_msg).size() > 0) { // if args_string actually contains a server error, call error fn with it - this must be done so that the heap alloc'd vals container can be freed
+		stringstream err_msg_ss;
+		err_msg_ss << "An error occurred while getting your latest balance: " << *(optl__err_msg);
+		send_app_handler__error_msg(task_id, err_msg_ss.str());
+		return;
+	}
 	Send_HeapValsContainer *ptrTo_heapValsContainer = _heap_vals_ptr_for(task_id);
 	if (ptrTo_heapValsContainer == NULL) { // an error will have been returned already - just bail.
 		return;
@@ -446,9 +451,14 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 	auto optl__task_id = json_root.get_optional<string>("task_id");
 	THROW_WALLET_EXCEPTION_IF(optl__task_id == none, error::wallet_internal_error, "Code fault: expected task_id (send_funds)");
 	const string &task_id = *optl__task_id;
-	// TODO: if args_string actually contains a server error, call error fn with it
-	// TODO: factor that into a shared function
 	//
+	auto optl__err_msg = json_root.get_optional<string>("err_msg");
+	if (optl__err_msg != none && (*optl__err_msg).size() > 0) { // if args_string actually contains a server error, call error fn with it - this must be done so that the heap alloc'd vals container can be freed
+		stringstream err_msg_ss;
+		err_msg_ss << "An error occurred while getting decoy outputs: " << *(optl__err_msg);
+		send_app_handler__error_msg(task_id, err_msg_ss.str());
+		return;
+	}
 	Send_HeapValsContainer *ptrTo_heapValsContainer = _heap_vals_ptr_for(task_id);
 	if (ptrTo_heapValsContainer == NULL) { // an error will have been returned already - just bail.
 		return;
@@ -554,9 +564,14 @@ void emscr_async_bridge::send_cb_III__submitted_tx(const string &args_string)
 	auto optl__task_id = json_root.get_optional<string>("task_id");
 	THROW_WALLET_EXCEPTION_IF(optl__task_id == none, error::wallet_internal_error, "Code fault: expected task_id (send_funds)");
 	const string &task_id = *optl__task_id;
-	// TODO: if args_string actually contains a server error, call error fn with it
-	// TODO: factor that into a shared function
 	//
+	auto optl__err_msg = json_root.get_optional<string>("err_msg");
+	if (optl__err_msg != none && (*optl__err_msg).size() > 0) { // if args_string actually contains a server error, call error fn with it - this must be done so that the heap alloc'd vals container can be freed
+		stringstream err_msg_ss;
+		err_msg_ss << "An error occurred while getting submitting your transaction: " << *(optl__err_msg);
+		send_app_handler__error_msg(task_id, err_msg_ss.str());
+		return;
+	}
 	Send_HeapValsContainer *ptrTo_heapValsContainer = _heap_vals_ptr_for(task_id);
 	if (ptrTo_heapValsContainer == NULL) { // an error will have been returned already - just bail.
 		return;
