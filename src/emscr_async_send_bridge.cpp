@@ -59,6 +59,12 @@ using namespace serial_bridge_utils;
 using namespace emscr_async_bridge;
 //
 // Runtime - Memory container - To ensure values stick around until end of async process
+enum _Send_ValsState
+{
+	WAIT_FOR_STEP1,
+	WAIT_FOR_STEP2,
+	WAIT_FOR_FINISH
+};
 struct _Send_ArgsContainer
 {
 	string from_address_string;
@@ -83,6 +89,8 @@ struct _Send_ArgsContainer
 	// re-entry params
 	optional<uint64_t> passedIn_attemptAt_fee;
 	size_t constructionAttempt;
+	//
+	_Send_ValsState valsState;
 	//
 	// step1_retVals held for step2 - making them optl for increased safety
 	optional<uint64_t> step1_retVals__final_total_wo_fee;
@@ -285,6 +293,8 @@ void emscr_async_bridge::send_funds(const string &args_string)
 			none, // passedIn_attemptAt_fee
 			0, // (re-)construction attempt,
 			//
+			WAIT_FOR_STEP1,
+			//
 			// step1 vals init
 			none, // final_total_wo_fee
 			none, // change_amount
@@ -406,6 +416,7 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 		send_app_handler__error_code(task_id, step1_retVals.errCode, step1_retVals.spendable_balance, step1_retVals.required_balance);
 		return;
 	}
+	THROW_WALLET_EXCEPTION_IF(args.valsState != WAIT_FOR_STEP1, error::wallet_internal_error, "Expected valsState of WAIT_FOR_STEP1"); // just for addtl safety
 	// now store step1_retVals for step2
 	args.step1_retVals__final_total_wo_fee = step1_retVals.final_total_wo_fee;
 	args.step1_retVals__using_fee = step1_retVals.using_fee;
@@ -415,6 +426,7 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 	BOOST_FOREACH(SpendableOutput &out, step1_retVals.using_outs) {
 		args.step1_retVals__using_outs.push_back(out); // move structs from stack's vector to heap's vector
 	}
+	args.valsState = WAIT_FOR_STEP2;
 	//
 	send_app_handler__status_update(task_id, fetchingDecoyOutputs);
 	//
@@ -503,6 +515,8 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 			send_app_handler__error_msg(task_id, "Unable to construct a transaction with sufficient fee for unknown reason.");
 			return;
 		}
+		args.valsState = WAIT_FOR_STEP1; // must reset this
+		//
 		args.constructionAttempt += 1; // increment for re-entry
 		args.passedIn_attemptAt_fee = step2_retVals.fee_actually_needed; // -> reconstruction attempt's step1's passedIn_attemptAt_fee
 		// reset step1 vals for correctness: (otherwise we end up, for example, with duplicate outs added)
@@ -520,11 +534,14 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 		_reenterable_construct_and_send_tx(task_id);
 		return;
 	}
+	THROW_WALLET_EXCEPTION_IF(args.valsState != WAIT_FOR_STEP2, error::wallet_internal_error, "Expected valsState of WAIT_FOR_STEP2"); // just for addtl safety
 	// move step2 vals onto heap for later:
 	args.step2_retVals__signed_serialized_tx_string = *(step2_retVals.signed_serialized_tx_string);
 	args.step2_retVals__tx_hash_string = *(step2_retVals.tx_hash_string);
 	args.step2_retVals__tx_key_string = *(step2_retVals.tx_key_string);
 	args.step2_retVals__tx_pub_key_string = *(step2_retVals.tx_pub_key_string);
+	//
+	args.valsState = WAIT_FOR_FINISH;
 	//
 	send_app_handler__status_update(task_id, submittingTransaction);
 	//
@@ -577,7 +594,7 @@ void emscr_async_bridge::send_cb_III__submitted_tx(const string &args_string)
 		return;
 	}
 	_Send_ArgsContainer &args = ptrTo_heapValsContainer->args;
-	//
+	THROW_WALLET_EXCEPTION_IF(args.valsState != WAIT_FOR_FINISH, error::wallet_internal_error, "Expected valsState of WAIT_FOR_FINISH"); // just for addtl safety
 	// not actually expecting anything in a success response, so no need to parse it
 	//
 	SendFunds_Success_RetVals success_retVals;
