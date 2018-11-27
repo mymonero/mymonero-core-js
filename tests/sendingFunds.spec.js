@@ -28,8 +28,6 @@
 
 "use strict";
 const mymonero_core_js = require("../");
-const net_service_utils = require('../hostAPI/net_service_utils')
-const monero_config = require('../monero_utils/monero_config') 
 const JSBigInt = mymonero_core_js.JSBigInt;
 const assert = require("assert");
 
@@ -47,61 +45,17 @@ class APIClient
 	}	
 	//
 	// Getting outputs for sending funds
-	UnspentOuts(
-		address, view_key__private,
-		spend_key__public, spend_key__private,
-		mixinNumber, sweeping,
-		fn
-	) { // -> RequestHandle
+	UnspentOuts(parameters, fn)
+	{ // -> RequestHandle
 		const self = this
-		mixinNumber = parseInt(mixinNumber) // jic
-		//
-		const parameters = net_service_utils.New_ParametersForWalletRequest(address, view_key__private)
-		parameters.amount = '0'
-		parameters.mixin = mixinNumber
-		parameters.use_dust = true // Client now filters unmixable by dustthreshold amount (unless sweeping) + non-rct 
-		parameters.dust_threshold = mymonero_core_js.monero_config.dustThreshold.toString()
 		const endpointPath = 'get_unspent_outs'
 		self.fetch.post(
 			self.hostBaseURL + endpointPath, parameters
 		).then(function(data) {
-			__proceedTo_parseAndCallBack(data)
+			fn(null, data)
 		}).catch(function(e) {
 			fn(e && e.Error ? e.Error : ""+e);
 		});
-		function __proceedTo_parseAndCallBack(data)
-		{
-			mymonero_core_js.monero_utils_promise.then(function(monero_utils)
-			{
-				mymonero_core_js.api_response_parser_utils.Parsed_UnspentOuts__keyImageManaged(
-					data,
-					address,
-					view_key__private,
-					spend_key__public,
-					spend_key__private,
-					monero_utils,
-					function(err, returnValuesByKey)
-					{
-						if (err) {
-							fn(err)
-							return
-						}
-						const per_byte_fee__string = returnValuesByKey.per_byte_fee__string
-						if (per_byte_fee__string == null || per_byte_fee__string == "" || typeof per_byte_fee__string === 'undefined') {
-							throw "Unexpected / missing per_byte_fee__string"
-						}
-						fn(
-							err, // no error
-							returnValuesByKey.unspentOutputs,
-							returnValuesByKey.per_byte_fee__string
-						)
-					}
-				)
-			}).catch(function(err)
-			{
-				fn(err)
-			})
-		}
 		const requestHandle = 
 		{
 			abort: function()
@@ -112,43 +66,17 @@ class APIClient
 		return requestHandle
 	}
 	//
-	RandomOuts(using_outs, mixinNumber, fn)
+	RandomOuts(parameters, fn)
 	{ // -> RequestHandle
 		const self = this
-		//
-		mixinNumber = parseInt(mixinNumber)
-		if (mixinNumber < 0 || isNaN(mixinNumber)) {
-			const errStr = "Invalid mixin - must be >= 0"
-			const err = new Error(errStr)
-			fn(err)
-			return
-		}
-		//
-		var amounts = [];
-		for (var l = 0; l < using_outs.length; l++) {
-			amounts.push(using_outs[l].rct ? "0" : using_outs[l].amount.toString())
-		}
-		//
-		var parameters =
-		{
-			amounts: amounts,
-			count: mixinNumber + 1 // Add one to mixin so we can skip real output key if necessary
-		}
 		const endpointPath = 'get_random_outs'
 		self.fetch.post(
 			self.hostBaseURL + endpointPath, parameters
 		).then(function(data) {
-			__proceedTo_parseAndCallBack(data)
+			fn(null, data)
 		}).catch(function(e) {
 			fn(e && e.Error ? e.Error : ""+e);
 		});
-		function __proceedTo_parseAndCallBack(data)
-		{
-			console.log("debug: info: random outs: data", data)
-			const amount_outs = data.amount_outs
-			// yield
-			fn(null, amount_outs)
-		}
 		const requestHandle = 
 		{
 			abort: function()
@@ -160,27 +88,17 @@ class APIClient
 	}
 	//
 	// Runtime - Imperatives - Public - Sending funds
-	SubmitSerializedSignedTransaction(
-		address, view_key__private,
-		serializedSignedTx,
-		fn // (err?) -> RequestHandle
-	) {
+	SubmitRawTx(parameters, fn)
+	{
 		const self = this
-		//
-		const parameters = net_service_utils.New_ParametersForWalletRequest(address, view_key__private)
-		parameters.tx = serializedSignedTx
 		const endpointPath = 'submit_raw_tx'
 		self.fetch.post(
 			self.hostBaseURL + endpointPath, parameters
 		).then(function(data) {
-			__proceedTo_parseAndCallBack(data)
+			fn(null, data)
 		}).catch(function(e) {
 			fn(e && e.Error ? e.Error : ""+e);
 		});
-		function __proceedTo_parseAndCallBack(data)
-		{
-			fn(null)
-		}
 		const requestHandle = 
 		{
 			abort: function()
@@ -257,37 +175,92 @@ describe("sendingFunds tests", function()
 {
 	it("can send", async function()
 	{
-		mymonero_core_js.monero_sendingFunds_utils.SendFunds(
-			"4L6Gcy9TAHqPVPMnqa5cPtJK25tr7maE7LrJe67vzumiCtWwjDBvYnHZr18wFexJpih71Mxsjv8b7EpQftpB9NjPaRYYBm62jmF59EWcj6", // target_address,
-			mymonero_core_js.nettype_utils.network_type.MAINNET,
-			"0.0002",// amount_orZeroWhenSweep,
-			false,// isSweep_orZeroWhenAmount, 
-			"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg",// wallet__public_address,
-			{view:"7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104",spend:"4e6d43cd03812b803c6f3206689f5fcc910005fc7e91d50d79b0776dbefcd803"},// wallet__private_keys,
-			{view:"080a6e9b17de47ec62c8a1efe0640b554a2cde7204b9b07bdf9bd225eeeb1c47",spend:"3eb884d3440d71326e27cc07a861b873e72abd339feb654660c36a008a0028b3"},// wallet__public_keys,
-			new APIClient({ fetch: new Fetch() }), 
-			null,// payment_id,
-			1,// simple_priority,
-			function(code)
-			{
-				console.log("Send funds step " + code + ": " + mymonero_core_js.monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[code])
-			},
-			function(to_addr, sentAmount, final__payment_id, tx_hash, tx_fee, tx_key, mixin)
-			{
-				assert.equal(mixin, 10);
-				assert.equal(sentAmount.toString(), "266009466")
-				assert.equal(final__payment_id, "d2f602b240fbe624")
-				console.log("Sendfunds success")
-				console.log("sentAmount", sentAmount.toString())
-				console.log("final__payment_id", final__payment_id)
-				console.log("tx_hash", tx_hash)
-				console.log("tx_fee", tx_fee.toString())
-				console.log("tx_key", tx_key)
-			},
-			function(err)
-			{
-				throw "SendFunds err:" + err // TODO: how to assert err msg not nil? didn't works
+		const apiClient = new APIClient({ fetch: new Fetch() });
+		const target_address = "4L6Gcy9TAHqPVPMnqa5cPtJK25tr7maE7LrJe67vzumiCtWwjDBvYnHZr18wFexJpih71Mxsjv8b7EpQftpB9NjPaRYYBm62jmF59EWcj6"
+		const is_sweeping = false;
+		const entered_amount = "0.0002";
+		var sending_amount; // possibly need this ; here for the JS parser
+		if (is_sweeping) {
+			sending_amount = "0"
+		} else {
+			try {
+				sending_amount = (mymonero_core_js.monero_amount_format_utils.parseMoney(entered_amount)).toString();
+			} catch (e) {
+				throw `Couldn't parse amount ${amount}: ${e}`
 			}
-		)
+		}
+		const simple_priority = 1;
+		const from_address = "43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg";
+		const sec_viewKey_string = "7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104";
+		const sec_spendKey_string = "4e6d43cd03812b803c6f3206689f5fcc910005fc7e91d50d79b0776dbefcd803";
+		const pub_spendKey_string = "3eb884d3440d71326e27cc07a861b873e72abd339feb654660c36a008a0028b3";
+		const payment_id = null; 
+		var coreBridge_instance;
+		try {
+			coreBridge_instance = await require('../monero_utils/MyMoneroCoreBridge')({ asmjs: undefined/*allow it to detect*/ });
+		} catch (e) {
+			console.error(e);
+			return;
+		}
+		coreBridge_instance.async__send_funds(
+			is_sweeping, 
+			payment_id, // may be nil or undefined
+			is_sweeping ? 0 : sending_amount, // sending amount
+			from_address,
+			sec_viewKey_string,
+			sec_spendKey_string,
+			pub_spendKey_string,
+			target_address,
+			simple_priority,
+			0, // unlock_time 
+			mymonero_core_js.nettype_utils.network_type.MAINNET,
+			//
+			function(req_params, cb)
+			{
+				apiClient.UnspentOuts(req_params, function(err_msg, res)
+				{
+					cb(err_msg, res);
+				});
+			},
+			function(req_params, cb)
+			{
+				apiClient.RandomOuts(req_params, function(err_msg, res)
+				{
+					cb(err_msg, res);
+				});
+			},
+			function(req_params, cb)
+			{
+				apiClient.SubmitRawTx(req_params, function(err_msg, res)
+				{
+					cb(err_msg, res);
+				});
+			},
+			//
+			function(params)
+			{
+				console.log("> Send funds step " + params.code + ": " + mymonero_core_js.monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[params.code])
+			},
+			function(params)
+			{
+				console.log("Error occurred.... ", params.err_msg)
+				// throw "SendFunds err:" + params.err_msg // TODO: how to assert err msg not nil? didn't works
+				assert.equal(true, false)
+			},
+			function(params)
+			{
+				assert.equal(params.mixin, 10);
+				assert.equal(params.total_sent, "266009466")
+				assert.equal(params.final_payment_id, "d2f602b240fbe624")
+				console.log("Sendfunds success")
+				console.log("sentAmount", params.total_sent)
+				console.log("final__payment_id", params.final_payment_id)
+				console.log("tx_hash", params.tx_hash)
+				console.log("tx_fee", params.used_fee)
+				console.log("tx_key", params.tx_key)
+				console.log("tx_hash", params.tx_hash)
+				console.log("tx_pub_key", params.tx_pub_key)
+			}
+		);
 	});
 });

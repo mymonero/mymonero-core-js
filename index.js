@@ -31,7 +31,8 @@
 // NOTE: The main downside to using an index.js file like this is that it will pull in all the code - rather than the consumer requiring code module-by-module
 // It's of course possible to construct your own stripped-down index.[custom name].js file for, e.g., special webpack bundling usages.
 const mymonero_core_js = {};
-mymonero_core_js.monero_utils_promise = require("./monero_utils/monero_utils")(); // NOTE: This is actually a promise. Call .then(function(monero_utils) { }) to actually use
+// TODO: add coreBridge_promise
+// mymonero_core_js.monero_utils_promise = require("./monero_utils/monero_utils")(); // NOTE: This is actually a promise. Call .then(function(monero_utils) { }) to actually use
 mymonero_core_js.monero_config = require("./monero_utils/monero_config");
 mymonero_core_js.monero_txParsing_utils = require("./monero_utils/monero_txParsing_utils");
 mymonero_core_js.monero_sendingFunds_utils = require("./monero_utils/monero_sendingFunds_utils");
