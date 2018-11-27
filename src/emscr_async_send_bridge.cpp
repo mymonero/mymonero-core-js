@@ -59,14 +59,16 @@ using namespace serial_bridge_utils;
 using namespace emscr_async_bridge;
 //
 // Runtime - Memory container - To ensure values stick around until end of async process
-enum _Send_ValsState
+enum _Send_Task_ValsState
 {
 	WAIT_FOR_STEP1,
 	WAIT_FOR_STEP2,
 	WAIT_FOR_FINISH
 };
-struct _Send_ArgsContainer
+struct Send_Task_AsyncContext
 {
+	string task_id;
+	//
 	string from_address_string;
 	string sec_viewKey_string;
 	string sec_spendKey_string;
@@ -90,7 +92,7 @@ struct _Send_ArgsContainer
 	optional<uint64_t> passedIn_attemptAt_fee;
 	size_t constructionAttempt;
 	//
-	_Send_ValsState valsState;
+	_Send_Task_ValsState valsState;
 	//
 	// step1_retVals held for step2 - making them optl for increased safety
 	optional<uint64_t> step1_retVals__final_total_wo_fee;
@@ -105,14 +107,9 @@ struct _Send_ArgsContainer
 	optional<string> step2_retVals__tx_key_string;
 	optional<string> step2_retVals__tx_pub_key_string;
 };
-struct Send_HeapValsContainer
-{
-	string task_id;
-	_Send_ArgsContainer args;
-};
 //
-std::unordered_map<string, Send_HeapValsContainer *> _heap_vals_ptrs_by_task_id;
-Send_HeapValsContainer *_heap_vals_ptr_for(const string &task_id)
+std::unordered_map<string, Send_Task_AsyncContext *> _heap_vals_ptrs_by_task_id;
+Send_Task_AsyncContext *_heap_vals_ptr_for(const string &task_id)
 {
     if (_heap_vals_ptrs_by_task_id.find(task_id) == _heap_vals_ptrs_by_task_id.end()) {
 		send_app_handler__error_msg(task_id, "Code fault: no waiting heap vals container ptr found");
@@ -267,54 +264,53 @@ void emscr_async_bridge::send_funds(const string &args_string)
 	}
 	vector<SpendableOutput> unspent_outs; // to be set after getting unspent outs
 	vector<SpendableOutput> using_outs; // to be set after step1
-	Send_HeapValsContainer *ptrTo_heapValsContainer = new Send_HeapValsContainer{
+	Send_Task_AsyncContext *ptrTo_taskAsyncContext = new Send_Task_AsyncContext{
 		task_id,
-		_Send_ArgsContainer{
-			from_address_string,
-			sec_viewKey_string,
-			sec_spendKey_string,
-			json_root.get<string>("to_address_string"),
-			json_root.get_optional<string>("payment_id_string"),
-			sending_amount,
-			is_sweeping,
-			(uint32_t)stoul(json_root.get<string>("priority")),
-			unlock_time,
-			nettype,
-			//
-			unspent_outs, // this gets pushed to after getting unspent outs
-			0, // fee_per_b - this gets set after getting unspent outs
-			//
-			// cached
-			sec_viewKey,
-			sec_spendKey,
-			pub_spendKey,
-			//
-			// re-entry param initialization/prep
-			none, // passedIn_attemptAt_fee
-			0, // (re-)construction attempt,
-			//
-			WAIT_FOR_STEP1,
-			//
-			// step1 vals init
-			none, // final_total_wo_fee
-			none, // change_amount
-			none, // using_fee
-			none, // mixin
-			using_outs,
-			//
-			// step2 vals init
-			none, // signed_serialized_tx_string
-			none, // tx_hash_string
-			none, // tx_key_string
-			none // tx_pub_key_string
-		}
+		//
+		from_address_string,
+		sec_viewKey_string,
+		sec_spendKey_string,
+		json_root.get<string>("to_address_string"),
+		json_root.get_optional<string>("payment_id_string"),
+		sending_amount,
+		is_sweeping,
+		(uint32_t)stoul(json_root.get<string>("priority")),
+		unlock_time,
+		nettype,
+		//
+		unspent_outs, // this gets pushed to after getting unspent outs
+		0, // fee_per_b - this gets set after getting unspent outs
+		//
+		// cached
+		sec_viewKey,
+		sec_spendKey,
+		pub_spendKey,
+		//
+		// re-entry param initialization/prep
+		none, // passedIn_attemptAt_fee
+		0, // (re-)construction attempt,
+		//
+		WAIT_FOR_STEP1,
+		//
+		// step1 vals init
+		none, // final_total_wo_fee
+		none, // change_amount
+		none, // using_fee
+		none, // mixin
+		using_outs,
+		//
+		// step2 vals init
+		none, // signed_serialized_tx_string
+		none, // tx_hash_string
+		none, // tx_key_string
+		none // tx_pub_key_string
 	};
 	// exception will be thrown if oom but JIC, since NULL ptrs are somehow legal in WASM
-	if (ptrTo_heapValsContainer == NULL) {
+	if (ptrTo_taskAsyncContext == NULL) {
 		send_app_handler__error_msg(task_id, "Out of memory (heap vals container)");
 		return;
 	}
-	_heap_vals_ptrs_by_task_id[task_id] = ptrTo_heapValsContainer; // store for later lookup
+	_heap_vals_ptrs_by_task_id[task_id] = ptrTo_taskAsyncContext; // store for later lookup
 	//
 	send_app_handler__status_update(task_id, fetchingLatestBalance);
 	//
@@ -361,72 +357,69 @@ void emscr_async_bridge::send_cb_I__got_unspent_outs(const string &args_string)
 		send_app_handler__error_msg(task_id, err_msg_ss.str());
 		return;
 	}
-	Send_HeapValsContainer *ptrTo_heapValsContainer = _heap_vals_ptr_for(task_id);
-	if (ptrTo_heapValsContainer == NULL) { // an error will have been returned already - just bail.
+	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
+	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
 		return;
 	}
-	_Send_ArgsContainer &args = ptrTo_heapValsContainer->args; // TODO: does it matter making this a ref? / is this correct?
 	//
 	auto parsed_res = new__parsed_res__get_unspent_outs(
 		json_root.get_child("res"),
-		args.sec_viewKey,
-		args.sec_spendKey,
-		args.pub_spendKey
+		ptrTo_taskAsyncContext->sec_viewKey,
+		ptrTo_taskAsyncContext->sec_spendKey,
+		ptrTo_taskAsyncContext->pub_spendKey
 	);
 	if (parsed_res.err_msg != none) {
 		send_app_handler__error_msg(task_id, std::move(*(parsed_res.err_msg)));
 		return;
 	}
-	THROW_WALLET_EXCEPTION_IF(args.unspent_outs.size() != 0, error::wallet_internal_error, "Expected 0 args.unspent_outs in cb I");
+	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->unspent_outs.size() != 0, error::wallet_internal_error, "Expected 0 ptrTo_taskAsyncContext->unspent_outs in cb I");
 	BOOST_FOREACH(SpendableOutput &out, *(parsed_res.unspent_outs)) {
-		args.unspent_outs.push_back(out); // move structs from stack's vector to heap's vector
+		ptrTo_taskAsyncContext->unspent_outs.push_back(out); // move structs from stack's vector to heap's vector
 	}
-	args.fee_per_b = *(parsed_res.per_byte_fee);
+	ptrTo_taskAsyncContext->fee_per_b = *(parsed_res.per_byte_fee);
 	_reenterable_construct_and_send_tx(task_id);
 }
 void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_id)
 {
-	Send_HeapValsContainer *ptrTo_heapValsContainer = _heap_vals_ptr_for(task_id);
-	if (ptrTo_heapValsContainer == NULL) { // an error will have been returned already - just bail.
+	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
+	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
 		return;
 	}
-	_Send_ArgsContainer &args = ptrTo_heapValsContainer->args; // TODO: does it matter making this a ref? / is this correct?
-	//
 	send_app_handler__status_update(task_id, calculatingFee);
 	//
 	Send_Step1_RetVals step1_retVals;
 	monero_transfer_utils::send_step1__prepare_params_for_get_decoys(
 		step1_retVals,
 		//
-		args.payment_id_string,
-		args.sending_amount,
-		args.is_sweeping,
-		args.simple_priority,
+		ptrTo_taskAsyncContext->payment_id_string,
+		ptrTo_taskAsyncContext->sending_amount,
+		ptrTo_taskAsyncContext->is_sweeping,
+		ptrTo_taskAsyncContext->simple_priority,
 		[] (uint8_t version, int64_t early_blocks) -> bool
 		{
 			return lightwallet_hardcoded__use_fork_rules(version, early_blocks);
 		},
-		args.unspent_outs,
-		args.fee_per_b,
+		ptrTo_taskAsyncContext->unspent_outs,
+		ptrTo_taskAsyncContext->fee_per_b,
 		//
-		args.passedIn_attemptAt_fee // use this for passing step2 "must-reconstruct" return values back in, i.e. re-entry; when none, defaults to attempt at network min
+		ptrTo_taskAsyncContext->passedIn_attemptAt_fee // use this for passing step2 "must-reconstruct" return values back in, i.e. re-entry; when none, defaults to attempt at network min
 		// ^- and this will be 'none' as initial value
 	);
 	if (step1_retVals.errCode != noError) {
 		send_app_handler__error_code(task_id, step1_retVals.errCode, step1_retVals.spendable_balance, step1_retVals.required_balance);
 		return;
 	}
-	THROW_WALLET_EXCEPTION_IF(args.valsState != WAIT_FOR_STEP1, error::wallet_internal_error, "Expected valsState of WAIT_FOR_STEP1"); // just for addtl safety
+	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->valsState != WAIT_FOR_STEP1, error::wallet_internal_error, "Expected valsState of WAIT_FOR_STEP1"); // just for addtl safety
 	// now store step1_retVals for step2
-	args.step1_retVals__final_total_wo_fee = step1_retVals.final_total_wo_fee;
-	args.step1_retVals__using_fee = step1_retVals.using_fee;
-	args.step1_retVals__change_amount = step1_retVals.change_amount;
-	args.step1_retVals__mixin = step1_retVals.mixin;
-	THROW_WALLET_EXCEPTION_IF(args.step1_retVals__using_outs.size() != 0, error::wallet_internal_error, "Expected 0 using_outs");
+	ptrTo_taskAsyncContext->step1_retVals__final_total_wo_fee = step1_retVals.final_total_wo_fee;
+	ptrTo_taskAsyncContext->step1_retVals__using_fee = step1_retVals.using_fee;
+	ptrTo_taskAsyncContext->step1_retVals__change_amount = step1_retVals.change_amount;
+	ptrTo_taskAsyncContext->step1_retVals__mixin = step1_retVals.mixin;
+	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->step1_retVals__using_outs.size() != 0, error::wallet_internal_error, "Expected 0 using_outs");
 	BOOST_FOREACH(SpendableOutput &out, step1_retVals.using_outs) {
-		args.step1_retVals__using_outs.push_back(out); // move structs from stack's vector to heap's vector
+		ptrTo_taskAsyncContext->step1_retVals__using_outs.push_back(out); // move structs from stack's vector to heap's vector
 	}
-	args.valsState = WAIT_FOR_STEP2;
+	ptrTo_taskAsyncContext->valsState = WAIT_FOR_STEP2;
 	//
 	send_app_handler__status_update(task_id, fetchingDecoyOutputs);
 	//
@@ -471,39 +464,38 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 		send_app_handler__error_msg(task_id, err_msg_ss.str());
 		return;
 	}
-	Send_HeapValsContainer *ptrTo_heapValsContainer = _heap_vals_ptr_for(task_id);
-	if (ptrTo_heapValsContainer == NULL) { // an error will have been returned already - just bail.
+	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
+	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
 		return;
 	}
-	_Send_ArgsContainer &args = ptrTo_heapValsContainer->args;
 	auto parsed_res = new__parsed_res__get_random_outs(json_root.get_child("res"));
 	if (parsed_res.err_msg != none) {
 		send_app_handler__error_msg(task_id, std::move(*(parsed_res.err_msg)));
 		return;
 	}
-	THROW_WALLET_EXCEPTION_IF(args.step1_retVals__using_outs.size() == 0, error::wallet_internal_error, "Expected non-0 using_outs");
+	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->step1_retVals__using_outs.size() == 0, error::wallet_internal_error, "Expected non-0 using_outs");
 	Send_Step2_RetVals step2_retVals;
 	monero_transfer_utils::send_step2__try_create_transaction(
 		step2_retVals,
 		//
-		args.from_address_string,
-		args.sec_viewKey_string,
-		args.sec_spendKey_string,
-		args.to_address_string,
-		args.payment_id_string,
-		*(args.step1_retVals__final_total_wo_fee),
-		*(args.step1_retVals__change_amount),
-		*(args.step1_retVals__using_fee),
-		args.simple_priority,
-		args.step1_retVals__using_outs,
-		args.fee_per_b,
+		ptrTo_taskAsyncContext->from_address_string,
+		ptrTo_taskAsyncContext->sec_viewKey_string,
+		ptrTo_taskAsyncContext->sec_spendKey_string,
+		ptrTo_taskAsyncContext->to_address_string,
+		ptrTo_taskAsyncContext->payment_id_string,
+		*(ptrTo_taskAsyncContext->step1_retVals__final_total_wo_fee),
+		*(ptrTo_taskAsyncContext->step1_retVals__change_amount),
+		*(ptrTo_taskAsyncContext->step1_retVals__using_fee),
+		ptrTo_taskAsyncContext->simple_priority,
+		ptrTo_taskAsyncContext->step1_retVals__using_outs,
+		ptrTo_taskAsyncContext->fee_per_b,
 		*(parsed_res.mix_outs),
 		[] (uint8_t version, int64_t early_blocks) -> bool
 		{
 			return lightwallet_hardcoded__use_fork_rules(version, early_blocks);
 		},
-		args.unlock_time,
-		args.nettype
+		ptrTo_taskAsyncContext->unlock_time,
+		ptrTo_taskAsyncContext->nettype
 	);
 	if (step2_retVals.errCode != noError) {
 		send_app_handler__error_code(task_id, step2_retVals.errCode);
@@ -511,43 +503,43 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 	}
 	if (step2_retVals.tx_must_be_reconstructed) {
 		// this will update status back to .calculatingFee
-		if (args.constructionAttempt > 15) { // just going to avoid an infinite loop here or particularly long stack
+		if (ptrTo_taskAsyncContext->constructionAttempt > 15) { // just going to avoid an infinite loop here or particularly long stack
 			send_app_handler__error_msg(task_id, "Unable to construct a transaction with sufficient fee for unknown reason.");
 			return;
 		}
-		args.valsState = WAIT_FOR_STEP1; // must reset this
+		ptrTo_taskAsyncContext->valsState = WAIT_FOR_STEP1; // must reset this
 		//
-		args.constructionAttempt += 1; // increment for re-entry
-		args.passedIn_attemptAt_fee = step2_retVals.fee_actually_needed; // -> reconstruction attempt's step1's passedIn_attemptAt_fee
+		ptrTo_taskAsyncContext->constructionAttempt += 1; // increment for re-entry
+		ptrTo_taskAsyncContext->passedIn_attemptAt_fee = step2_retVals.fee_actually_needed; // -> reconstruction attempt's step1's passedIn_attemptAt_fee
 		// reset step1 vals for correctness: (otherwise we end up, for example, with duplicate outs added)
-		args.step1_retVals__final_total_wo_fee = none;
-		args.step1_retVals__change_amount = none;
-		args.step1_retVals__using_fee = none;
-		args.step1_retVals__mixin = none;
-		args.step1_retVals__using_outs.clear(); // critical!
+		ptrTo_taskAsyncContext->step1_retVals__final_total_wo_fee = none;
+		ptrTo_taskAsyncContext->step1_retVals__change_amount = none;
+		ptrTo_taskAsyncContext->step1_retVals__using_fee = none;
+		ptrTo_taskAsyncContext->step1_retVals__mixin = none;
+		ptrTo_taskAsyncContext->step1_retVals__using_outs.clear(); // critical!
 		// and let's reset step2 just for clarity/explicitness, though we don't expect them to have values yet:
-		args.step2_retVals__signed_serialized_tx_string = none;
-		args.step2_retVals__tx_hash_string = none;
-		args.step2_retVals__tx_key_string = none;
-		args.step2_retVals__tx_pub_key_string = none;
+		ptrTo_taskAsyncContext->step2_retVals__signed_serialized_tx_string = none;
+		ptrTo_taskAsyncContext->step2_retVals__tx_hash_string = none;
+		ptrTo_taskAsyncContext->step2_retVals__tx_key_string = none;
+		ptrTo_taskAsyncContext->step2_retVals__tx_pub_key_string = none;
 		//
 		_reenterable_construct_and_send_tx(task_id);
 		return;
 	}
-	THROW_WALLET_EXCEPTION_IF(args.valsState != WAIT_FOR_STEP2, error::wallet_internal_error, "Expected valsState of WAIT_FOR_STEP2"); // just for addtl safety
+	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->valsState != WAIT_FOR_STEP2, error::wallet_internal_error, "Expected valsState of WAIT_FOR_STEP2"); // just for addtl safety
 	// move step2 vals onto heap for later:
-	args.step2_retVals__signed_serialized_tx_string = *(step2_retVals.signed_serialized_tx_string);
-	args.step2_retVals__tx_hash_string = *(step2_retVals.tx_hash_string);
-	args.step2_retVals__tx_key_string = *(step2_retVals.tx_key_string);
-	args.step2_retVals__tx_pub_key_string = *(step2_retVals.tx_pub_key_string);
+	ptrTo_taskAsyncContext->step2_retVals__signed_serialized_tx_string = *(step2_retVals.signed_serialized_tx_string);
+	ptrTo_taskAsyncContext->step2_retVals__tx_hash_string = *(step2_retVals.tx_hash_string);
+	ptrTo_taskAsyncContext->step2_retVals__tx_key_string = *(step2_retVals.tx_key_string);
+	ptrTo_taskAsyncContext->step2_retVals__tx_pub_key_string = *(step2_retVals.tx_pub_key_string);
 	//
-	args.valsState = WAIT_FOR_FINISH;
+	ptrTo_taskAsyncContext->valsState = WAIT_FOR_FINISH;
 	//
 	send_app_handler__status_update(task_id, submittingTransaction);
 	//
 	auto req_params = LightwalletAPI_Req_SubmitRawTx{
-		args.from_address_string,
-		args.sec_viewKey_string,
+		ptrTo_taskAsyncContext->from_address_string,
+		ptrTo_taskAsyncContext->sec_viewKey_string,
 		*(step2_retVals.signed_serialized_tx_string)
 	};
 	boost::property_tree::ptree req_params_root;
@@ -589,22 +581,21 @@ void emscr_async_bridge::send_cb_III__submitted_tx(const string &args_string)
 		send_app_handler__error_msg(task_id, err_msg_ss.str());
 		return;
 	}
-	Send_HeapValsContainer *ptrTo_heapValsContainer = _heap_vals_ptr_for(task_id);
-	if (ptrTo_heapValsContainer == NULL) { // an error will have been returned already - just bail.
+	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
+	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
 		return;
 	}
-	_Send_ArgsContainer &args = ptrTo_heapValsContainer->args;
-	THROW_WALLET_EXCEPTION_IF(args.valsState != WAIT_FOR_FINISH, error::wallet_internal_error, "Expected valsState of WAIT_FOR_FINISH"); // just for addtl safety
+	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->valsState != WAIT_FOR_FINISH, error::wallet_internal_error, "Expected valsState of WAIT_FOR_FINISH"); // just for addtl safety
 	// not actually expecting anything in a success response, so no need to parse it
 	//
 	SendFunds_Success_RetVals success_retVals;
-	success_retVals.used_fee = *(args.step1_retVals__using_fee); // NOTE: not the same thing as step2_retVals.fee_actually_needed
-	success_retVals.total_sent = *(args.step1_retVals__final_total_wo_fee) + *(args.step1_retVals__using_fee);
-	success_retVals.mixin = *(args.step1_retVals__mixin);
+	success_retVals.used_fee = *(ptrTo_taskAsyncContext->step1_retVals__using_fee); // NOTE: not the same thing as step2_retVals.fee_actually_needed
+	success_retVals.total_sent = *(ptrTo_taskAsyncContext->step1_retVals__final_total_wo_fee) + *(ptrTo_taskAsyncContext->step1_retVals__using_fee);
+	success_retVals.mixin = *(ptrTo_taskAsyncContext->step1_retVals__mixin);
 	{
-		optional<string> returning__payment_id = args.payment_id_string; // separated from submit_raw_tx_fn so that it can be captured w/o capturing all of args (FIXME: does this matter?)
+		optional<string> returning__payment_id = ptrTo_taskAsyncContext->payment_id_string; // separated from submit_raw_tx_fn so that it can be captured w/o capturing all of args (FIXME: does this matter anymore?)
 		if (returning__payment_id == none) {
-			auto decoded = monero::address_utils::decodedAddress(args.to_address_string, args.nettype);
+			auto decoded = monero::address_utils::decodedAddress(ptrTo_taskAsyncContext->to_address_string, ptrTo_taskAsyncContext->nettype);
 			if (decoded.did_error) { // would be very strange...
 				send_app_handler__error_msg(task_id, std::move(*(decoded.err_string)));
 				return;
@@ -615,10 +606,10 @@ void emscr_async_bridge::send_cb_III__submitted_tx(const string &args_string)
 		}
 		success_retVals.final_payment_id = returning__payment_id;
 	}
-	success_retVals.signed_serialized_tx_string = *(args.step2_retVals__signed_serialized_tx_string);
-	success_retVals.tx_hash_string = *(args.step2_retVals__tx_hash_string);
-	success_retVals.tx_key_string = *(args.step2_retVals__tx_key_string);
-	success_retVals.tx_pub_key_string = *(args.step2_retVals__tx_pub_key_string);
+	success_retVals.signed_serialized_tx_string = *(ptrTo_taskAsyncContext->step2_retVals__signed_serialized_tx_string);
+	success_retVals.tx_hash_string = *(ptrTo_taskAsyncContext->step2_retVals__tx_hash_string);
+	success_retVals.tx_key_string = *(ptrTo_taskAsyncContext->step2_retVals__tx_key_string);
+	success_retVals.tx_pub_key_string = *(ptrTo_taskAsyncContext->step2_retVals__tx_pub_key_string);
 	//
 	send_app_handler__success(task_id, success_retVals);
 }
