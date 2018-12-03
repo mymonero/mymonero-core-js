@@ -39,7 +39,7 @@ function Parsed_AddressInfo__sync(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 ) {
 	// -> returnValuesByKey
 	const total_received = new JSBigInt(data.total_received || 0);
@@ -62,7 +62,7 @@ function Parsed_AddressInfo__sync(
 			view_key__private,
 			spend_key__public,
 			spend_key__private,
-			monero_utils,
+			coreBridge_instance,
 		);
 		if (spent_output.key_image !== key_image) {
 			// console.log('💬  Output used as mixin (' + spent_output.key_image + '/' + key_image + ')')
@@ -98,7 +98,7 @@ function Parsed_AddressInfo__sync__keyImageManaged(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 ) {
 	// -> returnValuesByKey
 	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(
@@ -111,7 +111,7 @@ function Parsed_AddressInfo__sync__keyImageManaged(
 		view_key__private,
 		spend_key__public,
 		spend_key__private,
-		monero_utils,
+		coreBridge_instance,
 	);
 }
 function Parsed_AddressInfo(
@@ -121,7 +121,7 @@ function Parsed_AddressInfo(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 	fn, // (err?, returnValuesByKey) -> Void
 ) {
 	const returnValuesByKey = Parsed_AddressInfo__sync(
@@ -131,7 +131,7 @@ function Parsed_AddressInfo(
 		view_key__private,
 		spend_key__public,
 		spend_key__private,
-		monero_utils,
+		coreBridge_instance,
 	);
 	fn(null, returnValuesByKey);
 }
@@ -141,7 +141,7 @@ function Parsed_AddressInfo__keyImageManaged(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 	fn,
 ) {
 	// -> returnValuesByKey
@@ -152,7 +152,7 @@ function Parsed_AddressInfo__keyImageManaged(
 		view_key__private,
 		spend_key__public,
 		spend_key__private,
-		monero_utils,
+		coreBridge_instance,
 		fn,
 	);
 }
@@ -168,7 +168,7 @@ function Parsed_AddressTransactions(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 	fn, // (err?, returnValuesByKey) -> Void
 ) {
 	const returnValuesByKey = Parsed_AddressTransactions__sync(
@@ -178,7 +178,7 @@ function Parsed_AddressTransactions(
 		view_key__private,
 		spend_key__public,
 		spend_key__private,
-		monero_utils,
+		coreBridge_instance,
 	);
 	fn(null, returnValuesByKey);
 }
@@ -189,7 +189,7 @@ function Parsed_AddressTransactions__sync(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 ) {
 	const account_scanned_height = data.scanned_height || 0;
 	const account_scanned_block_height = data.scanned_block_height || 0;
@@ -211,7 +211,7 @@ function Parsed_AddressTransactions__sync(
 					view_key__private,
 					spend_key__public,
 					spend_key__private,
-					monero_utils,
+					coreBridge_instance,
 				);
 				if (transactions[i].spent_outputs[j].key_image !== key_image) {
 					// console.log('Output used as mixin, ignoring (' + transactions[i].spent_outputs[j].key_image + '/' + key_image + ')')
@@ -292,7 +292,7 @@ function Parsed_AddressTransactions__sync__keyImageManaged(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 ) {
 	const keyImageCache = monero_keyImage_cache_utils.Lazy_KeyImageCacheForWalletWith(
 		address,
@@ -304,7 +304,7 @@ function Parsed_AddressTransactions__sync__keyImageManaged(
 		view_key__private,
 		spend_key__public,
 		spend_key__private,
-		monero_utils,
+		coreBridge_instance,
 	);
 }
 function Parsed_AddressTransactions__keyImageManaged(
@@ -313,7 +313,7 @@ function Parsed_AddressTransactions__keyImageManaged(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils,
+	coreBridge_instance,
 	fn,
 ) {
 	Parsed_AddressTransactions(
@@ -323,7 +323,7 @@ function Parsed_AddressTransactions__keyImageManaged(
 		view_key__private,
 		spend_key__public,
 		spend_key__private,
-		monero_utils,
+		coreBridge_instance,
 		fn,
 	);
 }

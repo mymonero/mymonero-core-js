@@ -36,7 +36,7 @@ const Lazy_KeyImage = function(
 	view_key__private,
 	spend_key__public,
 	spend_key__private,
-	monero_utils // must pass this so this fn can remain synchronous
+	coreBridge_instance // must pass this so this fn can remain synchronous
 ) {
 	var cache_index = tx_pub_key + ":" + public_address + ":" + out_index;
 	const cached__key_image = mutable_keyImagesByCacheKey[cache_index];
@@ -46,7 +46,7 @@ const Lazy_KeyImage = function(
 	) {
 		return cached__key_image;
 	}
-	var key_image = monero_utils.generate_key_image(
+	var key_image = coreBridge_instance.generate_key_image(
 		tx_pub_key,
 		view_key__private,
 		spend_key__public,
