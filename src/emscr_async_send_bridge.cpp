@@ -596,7 +596,7 @@ void emscr_async_bridge::send_cb_III__submitted_tx(const string &args_string)
 	success_retVals.total_sent = *(ptrTo_taskAsyncContext->step1_retVals__final_total_wo_fee) + *(ptrTo_taskAsyncContext->step1_retVals__using_fee);
 	success_retVals.mixin = *(ptrTo_taskAsyncContext->step1_retVals__mixin);
 	{
-		optional<string> returning__payment_id = ptrTo_taskAsyncContext->payment_id_string; // separated from submit_raw_tx_fn so that it can be captured w/o capturing all of args (FIXME: does this matter anymore?)
+		optional<string> returning__payment_id = ptrTo_taskAsyncContext->payment_id_string; // separated from submit_raw_tx_fn so that it can be captured w/o capturing all of args
 		if (returning__payment_id == none) {
 			auto decoded = monero::address_utils::decodedAddress(ptrTo_taskAsyncContext->to_address_string, ptrTo_taskAsyncContext->nettype);
 			if (decoded.did_error) { // would be very strange...

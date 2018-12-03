@@ -550,7 +550,7 @@ class MyMoneroCoreBridge
 	async__send_funds(fn_args)
 	{
 		const self = this;
-		const task_id = self.__new_task_id(); // TODO: generate unique ID ... and return it ?
+		const task_id = self.__new_task_id();
 		// register cb handler fns to wait for calls with thi task id
 		if (typeof self._cb_handlers__send_funds == 'undefined' || !self._cb_handlers__send_funds) {
 			self._cb_handlers__send_funds = {}
