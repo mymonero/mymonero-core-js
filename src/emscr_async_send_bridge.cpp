@@ -108,28 +108,35 @@ struct Send_Task_AsyncContext
 	optional<string> step2_retVals__tx_pub_key_string;
 };
 //
-std::unordered_map<string, Send_Task_AsyncContext *> _heap_vals_ptrs_by_task_id;
-Send_Task_AsyncContext *_heap_vals_ptr_for(const string &task_id)
+typedef std::unordered_map<string, Send_Task_AsyncContext *> context_map;
+static context_map _heap_vals_ptrs_by_task_id;
+static context_map::iterator _heap_vals_iter_for(const string &task_id)
 {
-    if (_heap_vals_ptrs_by_task_id.find(task_id) == _heap_vals_ptrs_by_task_id.end()) {
+    auto found = _heap_vals_ptrs_by_task_id.find(task_id);
+    if (found == _heap_vals_ptrs_by_task_id.end()) {
 		send_app_handler__error_msg(task_id, "Code fault: no waiting heap vals container ptr found");
-		return NULL;
     }
-    return _heap_vals_ptrs_by_task_id[task_id];
+    return found;
+}
+static Send_Task_AsyncContext *_heap_vals_ptr_for(const string &task_id) 
+{
+    auto iter = _heap_vals_iter_for(task_id);
+    //
+    return iter != _heap_vals_ptrs_by_task_id.end() ? iter->second : nullptr;
 }
 void _delete_and_remove_heap_vals_ptr_for(const string &task_id)
 {
-	auto ptr = _heap_vals_ptr_for(task_id);
-	if (ptr != NULL) {
-		delete ptr;
-		_heap_vals_ptrs_by_task_id.erase(task_id);
+	auto iter = _heap_vals_iter_for(task_id);
+	if (iter != _heap_vals_ptrs_by_task_id.end()) {
+		delete iter->second;
+		_heap_vals_ptrs_by_task_id.erase(iter);
 	} else {
 		THROW_WALLET_EXCEPTION_IF(false, error::wallet_internal_error, "Expected _heap_vals_ptr_for(task_id)");
 	}
 }
 //
 // To-JS fn decls - Status updates and routine completions
-void send_app_handler__status_update(const string &task_id, SendFunds_ProcessStep code)
+static void send_app_handler__status_update(const string &task_id, SendFunds_ProcessStep code)
 {
 	boost::property_tree::ptree root;
 	root.put("code", code); // not 64bit so sendable in JSON
@@ -305,8 +312,8 @@ void emscr_async_bridge::send_funds(const string &args_string)
 		none, // tx_key_string
 		none // tx_pub_key_string
 	};
-	// exception will be thrown if oom but JIC, since NULL ptrs are somehow legal in WASM
-	if (ptrTo_taskAsyncContext == NULL) {
+	// exception will be thrown if oom but JIC, since null ptrs are somehow legal in WASM
+	if (!ptrTo_taskAsyncContext) {
 		send_app_handler__error_msg(task_id, "Out of memory (heap vals container)");
 		return;
 	}
@@ -358,7 +365,7 @@ void emscr_async_bridge::send_cb_I__got_unspent_outs(const string &args_string)
 		return;
 	}
 	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
-	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
+	if (!ptrTo_taskAsyncContext) { // an error will have been returned already - just bail.
 		return;
 	}
 	//
@@ -373,16 +380,14 @@ void emscr_async_bridge::send_cb_I__got_unspent_outs(const string &args_string)
 		return;
 	}
 	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->unspent_outs.size() != 0, error::wallet_internal_error, "Expected 0 ptrTo_taskAsyncContext->unspent_outs in cb I");
-	BOOST_FOREACH(SpendableOutput &out, *(parsed_res.unspent_outs)) {
-		ptrTo_taskAsyncContext->unspent_outs.push_back(out); // move structs from stack's vector to heap's vector
-	}
-	ptrTo_taskAsyncContext->fee_per_b = *(parsed_res.per_byte_fee);
+	ptrTo_taskAsyncContext->unspent_outs = std::move(*(parsed_res.unspent_outs)); // move structs from stack's vector to heap's vector
+	ptrTo_taskAsyncContext->fee_per_b = *(parsed_res.per_byte_fee); 
 	_reenterable_construct_and_send_tx(task_id);
 }
 void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_id)
 {
 	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
-	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
+	if (!ptrTo_taskAsyncContext) { // an error will have been returned already - just bail.
 		return;
 	}
 	send_app_handler__status_update(task_id, calculatingFee);
@@ -416,14 +421,12 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 	ptrTo_taskAsyncContext->step1_retVals__change_amount = step1_retVals.change_amount;
 	ptrTo_taskAsyncContext->step1_retVals__mixin = step1_retVals.mixin;
 	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->step1_retVals__using_outs.size() != 0, error::wallet_internal_error, "Expected 0 using_outs");
-	BOOST_FOREACH(SpendableOutput &out, step1_retVals.using_outs) {
-		ptrTo_taskAsyncContext->step1_retVals__using_outs.push_back(out); // move structs from stack's vector to heap's vector
-	}
+	ptrTo_taskAsyncContext->step1_retVals__using_outs = std::move(step1_retVals.using_outs); // move structs from stack's vector to heap's vector
 	ptrTo_taskAsyncContext->valsState = WAIT_FOR_STEP2;
 	//
 	send_app_handler__status_update(task_id, fetchingDecoyOutputs);
 	//
-	auto req_params = new__req_params__get_random_outs(step1_retVals.using_outs);
+	auto req_params = new__req_params__get_random_outs(ptrTo_taskAsyncContext->step1_retVals__using_outs); // use the one on the heap, since we've moved the one from step1_retVals
 	boost::property_tree::ptree req_params_root;
 	boost::property_tree::ptree amounts_ptree;
 	BOOST_FOREACH(const string &amount_string, req_params.amounts)
@@ -468,7 +471,7 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 		return;
 	}
 	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
-	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
+	if (!ptrTo_taskAsyncContext) { // an error will have been returned already - just bail.
 		return;
 	}
 	auto parsed_res = new__parsed_res__get_random_outs(json_root.get_child("res"));
@@ -585,7 +588,7 @@ void emscr_async_bridge::send_cb_III__submitted_tx(const string &args_string)
 		return;
 	}
 	Send_Task_AsyncContext *ptrTo_taskAsyncContext = _heap_vals_ptr_for(task_id);
-	if (ptrTo_taskAsyncContext == NULL) { // an error will have been returned already - just bail.
+	if (!ptrTo_taskAsyncContext) { // an error will have been returned already - just bail.
 		return;
 	}
 	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->valsState != WAIT_FOR_FINISH, error::wallet_internal_error, "Expected valsState of WAIT_FOR_FINISH"); // just for addtl safety
