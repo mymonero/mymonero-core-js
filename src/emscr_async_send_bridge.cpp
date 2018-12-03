@@ -428,8 +428,11 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 	boost::property_tree::ptree amounts_ptree;
 	BOOST_FOREACH(const string &amount_string, req_params.amounts)
 	{
-		req_params_root.add("amounts", amount_string);
+		property_tree::ptree amount_child;
+		amount_child.put("", amount_string);
+		amounts_ptree.push_back(std::make_pair("", amount_child));
 	}
+	req_params_root.add_child("amounts", amounts_ptree);
 	req_params_root.put("count", req_params.count);
 	stringstream req_params_ss;
 	boost::property_tree::write_json(req_params_ss, req_params_root, false/*pretty*/);
