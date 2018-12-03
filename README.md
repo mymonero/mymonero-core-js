@@ -139,11 +139,6 @@ Use these functions to directly interact with the key image cache.
 Contains functions to validating payment ID formats. To generate payment IDs, see `monero_utils`.
 
 -----
-### `monero_utils/monero_requestURI_utils`
-
-Functions for generating and parsing monero request URIs. Supports multiple currencies and formats.
-
------
 ### `monero_utils/monero_sendingFunds_utils`
 
 Contains convenience implementations such as `SendFunds(…)` for constructing arguments to `monero_utils/monero_utils:create_transaction`.
