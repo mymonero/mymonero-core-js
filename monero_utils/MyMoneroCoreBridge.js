@@ -547,27 +547,8 @@ class MyMoneroCoreBridge
 	{
 		return Math.random().toString(36).substr(2, 9); // doesn't have to be super random
 	}
-	async__send_funds(
-		is_sweeping,
-		payment_id_string, // may be nil or undefined
-		sending_amount,
-		from_address_string,
-		sec_viewKey_string,
-		sec_spendKey_string,
-		pub_spendKey_string,
-		to_address_string,
-		priority,
-		unlock_time, // optional (undef or null)
-		nettype,
-		//
-		get_unspent_outs_fn,
-		get_random_outs_fn,
-		submit_raw_tx_fn,
-		//
-		status_update_fn,
-		error_fn,
-		success_fn
-	) {
+	async__send_funds(fn_args)
+	{
 		const self = this;
 		const task_id = self.__new_task_id(); // TODO: generate unique ID ... and return it ?
 		// register cb handler fns to wait for calls with thi task id
@@ -576,7 +557,11 @@ class MyMoneroCoreBridge
 		}
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__get_unspent_outs(task_id)] = function(req_params)
 		{
-			get_unspent_outs_fn(req_params, function(err_msg, res)
+			// convert bridge-strings to native primitive types
+			req_params.use_dust = ret_val_boolstring_to_bool(req_params.use_dust)
+			req_params.mixin = parseInt(req_params.mixin)
+			//
+			fn_args.get_unspent_outs_fn(req_params, function(err_msg, res)
 			{
 				const args = self.__new_cb_args_with(task_id, err_msg, res);
 				self.Module.send_cb_I__got_unspent_outs(JSON.stringify(args))
@@ -584,7 +569,10 @@ class MyMoneroCoreBridge
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__get_random_outs(task_id)] = function(req_params)
 		{
-			get_random_outs_fn(req_params, function(err_msg, res)
+			// convert bridge-strings to native primitive types
+			req_params.count = parseInt(req_params.count)
+			//
+			fn_args.get_random_outs_fn(req_params, function(err_msg, res)
 			{
 				const args = self.__new_cb_args_with(task_id, err_msg, res);
 				self.Module.send_cb_II__got_random_outs(JSON.stringify(args))
@@ -592,7 +580,7 @@ class MyMoneroCoreBridge
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__submit_raw_tx(task_id)] = function(req_params)
 		{
-			submit_raw_tx_fn(req_params, function(err_msg, res)
+			fn_args.submit_raw_tx_fn(req_params, function(err_msg, res)
 			{
 				const args = self.__new_cb_args_with(task_id, err_msg, res);
 				self.Module.send_cb_III__submitted_tx(JSON.stringify(args))
@@ -600,34 +588,38 @@ class MyMoneroCoreBridge
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__status_update(task_id)] = function(params)
 		{
-			status_update_fn(params);
+			params.code = parseInt(params.code)
+			//
+			fn_args.status_update_fn(params);
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)] = function(params)
 		{
-			error_fn(params);
+			fn_args.error_fn(params);
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__success(task_id)] = function(params)
 		{
-			success_fn(params);
+			params.mixin = parseInt(params.mixin)
+			//
+			fn_args.success_fn(params);
 		};
 		const args = 
 		{
 			task_id: task_id,
-			is_sweeping: is_sweeping,
-			sending_amount: "" + sending_amount,
-			from_address_string: from_address_string,
-			sec_viewKey_string: sec_viewKey_string,
-			sec_spendKey_string: sec_spendKey_string,
-			pub_spendKey_string: pub_spendKey_string,
-			to_address_string: to_address_string,
-			priority: "" + priority,
-			nettype_string: nettype_utils.nettype_to_API_string(nettype)
+			is_sweeping: fn_args.is_sweeping,
+			sending_amount: "" + fn_args.sending_amount,
+			from_address_string: fn_args.from_address_string,
+			sec_viewKey_string: fn_args.sec_viewKey_string,
+			sec_spendKey_string: fn_args.sec_spendKey_string,
+			pub_spendKey_string: fn_args.pub_spendKey_string,
+			to_address_string: fn_args.to_address_string,
+			priority: "" + fn_args.priority,
+			nettype_string: nettype_utils.nettype_to_API_string(fn_args.nettype)
 		};
-		if (typeof payment_id_string !== 'undefined' && payment_id_string) {
-			args.payment_id_string = payment_id_string;
+		if (typeof fn_args.payment_id_string !== 'undefined' && fn_args.payment_id_string) {
+			args.payment_id_string = fn_args.payment_id_string;
 		}
-		if (typeof unlock_time !== 'undefined' && unlock_time !== null) {
-			args.unlock_time = "" + unlock_time; // bridge is expecting a string
+		if (typeof fn_args.unlock_time !== 'undefined' && fn_args.unlock_time !== null) {
+			args.unlock_time = "" + fn_args.unlock_time; // bridge is expecting a string
 		}
 		const args_str = JSON.stringify(args, null, '')
 		this.Module.send_funds(args_str);
