@@ -39,7 +39,7 @@ class APIClient
 		self.options = options
 		self.fetch = options.fetch
 		if (self.fetch == null || typeof self.fetch == 'undefined') {
-			throw "APIClient requires options.fetch"
+			throw new Error("APIClient requires options.fetch")
 		}
 		self.hostBaseURL = options.hostBaseURL || "http://localhost:9100/" // must include trailing /
 	}	
@@ -186,7 +186,7 @@ describe("sendingFunds tests", function()
 			try {
 				sending_amount = (mymonero_core_js.monero_amount_format_utils.parseMoney(entered_amount)).toString();
 			} catch (e) {
-				throw `Couldn't parse amount ${amount}: ${e}`
+				throw new Error(`Couldn't parse amount ${amount}: ${e}`)
 			}
 		}
 		const simple_priority = 1;
@@ -202,34 +202,34 @@ describe("sendingFunds tests", function()
 			console.error(e);
 			return;
 		}
-		coreBridge_instance.async__send_funds(
-			is_sweeping, 
-			payment_id, // may be nil or undefined
-			is_sweeping ? 0 : sending_amount, // sending amount
-			from_address,
-			sec_viewKey_string,
-			sec_spendKey_string,
-			pub_spendKey_string,
-			target_address,
-			simple_priority,
-			0, // unlock_time 
-			mymonero_core_js.nettype_utils.network_type.MAINNET,
+		coreBridge_instance.async__send_funds({
+			is_sweeping: is_sweeping, 
+			payment_id: payment_id, // may be nil or undefined
+			sending_amount: is_sweeping ? 0 : sending_amount, // sending amount
+			from_address_string: from_address,
+			sec_viewKey_string: sec_viewKey_string,
+			sec_spendKey_string: sec_spendKey_string,
+			pub_spendKey_string: pub_spendKey_string,
+			to_address_string: target_address,
+			priority: simple_priority,
+			unlock_time: 0, // unlock_time 
+			nettype: mymonero_core_js.nettype_utils.network_type.MAINNET,
 			//
-			function(req_params, cb)
+			get_unspent_outs_fn: function(req_params, cb)
 			{
 				apiClient.UnspentOuts(req_params, function(err_msg, res)
 				{
 					cb(err_msg, res);
 				});
 			},
-			function(req_params, cb)
+			get_random_outs_fn: function(req_params, cb)
 			{
 				apiClient.RandomOuts(req_params, function(err_msg, res)
 				{
 					cb(err_msg, res);
 				});
 			},
-			function(req_params, cb)
+			submit_raw_tx_fn: function(req_params, cb)
 			{
 				apiClient.SubmitRawTx(req_params, function(err_msg, res)
 				{
@@ -237,17 +237,18 @@ describe("sendingFunds tests", function()
 				});
 			},
 			//
-			function(params)
+			status_update_fn: function(params)
 			{
 				console.log("> Send funds step " + params.code + ": " + mymonero_core_js.monero_sendingFunds_utils.SendFunds_ProcessStep_MessageSuffix[params.code])
 			},
-			function(params)
+			error_fn: function(params)
 			{
 				console.log("Error occurred.... ", params.err_msg)
-				// throw "SendFunds err:" + params.err_msg // TODO: how to assert err msg not nil? didn't works
+				throw new Error("SendFunds err:" + params.err_msg) 
+				// TODO: how to assert err msg not nil? didn't work
 				assert.equal(true, false)
 			},
-			function(params)
+			success_fn: function(params)
 			{
 				assert.equal(params.mixin, 10);
 				assert.equal(params.total_sent, "266009466")
@@ -261,6 +262,6 @@ describe("sendingFunds tests", function()
 				console.log("tx_hash", params.tx_hash)
 				console.log("tx_pub_key", params.tx_pub_key)
 			}
-		);
+		});
 	});
 });
