@@ -28,13 +28,15 @@ This repository holds the Javascript source code for the Monero/CryptoNote crypt
 
 There is also a chain of build scripts which is capable of building a JS module by transpiling a subset of Monero source code via emscripten, which relies upon static boost libs, for which there is also a script for building from source. 
 
+**It's possible to run your own lightweight (hosted) wallet server by using either OpenMonero or the lightweight wallet server which MyMonero has developed specially to be open-sourced for the Monero community (PR is in the process of being merged). However, MyMonero also offers hosting to wallet app makers (for a nominal, scaling fee per active wallet per month) who would like to use this library, mymonero-core-js, to add hosted Monero wallets to their app but who aren't ready to run their own highly optimized server. The benefit of offering a hosted wallet rather than requiring users to use a remote node is that scanning doesn't have to take place on the mobile device, so the user doesn't have to download the blockchain and scan on their device, or wait when they switch to a new device or come back to the app after a period of time. For more information, please reach out to MyMonero at [support@mymonero.com](support@mymonero.com). One example customer using this paid service is [Edge Secure](https://edge.app). We're very interested in supporting the growth of the Monero ecosystem, and will be happy to work with integrators on flexible pricing.**
+
 ### Contents 
 
-`monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations, and the MyMonero JS and wasm implementations for the underlying cryptography behind Monero. 
+`monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations, and the MyMonero JS and wasm (and asm.js fallback/polyfill) implementations for the underlying cryptography behind Monero. 
 
 `monero_utils/MyMoneroCoreCpp*` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `monero_utils/MyMoneroCoreBridge.js`.
 
-A ready-made entrypoint for interacting with `MyMoneroCoreBridge` is located at `monero_utils/monero_utils.js` with usage `require("./monero_utils/monero_utils")({}).then(function(monero_utils) { })`.
+Library integrators may use `MyMoneroCoreBridge` by `require("./monero_utils/MyMoneroCoreBridge")({}).then(function(coreBridge_instance) { })`. (This was formerly accessed via the now-deprecated `monero_utils/monero_utils`). You may also access this MyMoneroCoreBridge promise via the existing `index.js` property `monero_utils_promise` (the name has been kept the same for API stability). 
 
 Many related utility functions and data structures are located throughout `monero_utils/`, `cryptonote_utils`, and `hostAPI`. Usage below.
 
@@ -47,7 +49,7 @@ This readme is located at `README.md`, and the license is located at `LICENSE.tx
 
 Use the functions in the modules in `hostAPI` for convenience implementations of (a) networking to a MyMonero-API-compatible server, (b) constructing common request bodies, and (c) parsing responses.
 
-For a working example usage of `hostAPI`, see [mymonero-app-js/HostedMoneroAPIClient](https://github.com/mymonero/mymonero-app-js/blob/master/local_modules/HostedMoneroAPIClient).
+For a working example usage of `hostAPI`, see [mymonero-app-js/HostedMoneroAPIClient](https://github.com/mymonero/mymonero-app-js/blob/master/local_modules/HostedMoneroAPIClient). However, there's no need to conform to this example's implementation, especially for sending transactions, as the response parsing and request construction for transactions is now handled within the implementation.
 
 #### Examples
 
@@ -141,24 +143,22 @@ Contains functions to validating payment ID formats. To generate payment IDs, se
 -----
 ### `monero_utils/monero_sendingFunds_utils`
 
-Contains convenience implementations such as `SendFunds(…)` for constructing arguments to `monero_utils/monero_utils:create_transaction`.
+Used to contain a convenience implementation of `SendFunds(…)` for constructing arguments to `create_transaction`-type functions. However that's been moved to C++ and exposed via a single function on `MyMoneroCoreBridge` called `async__send_funds`.
 
-This function will likely make it into `mymonero-core-cpp` in the future.
-
-One of the arguments to `SendFunds`, `preSuccess_nonTerminal_statusUpdate_fn`, supplies status updates via codes that can be translated into messages. Codes are located on `SendFunds_ProcessStep_Code` and messages are located at `SendFunds_ProcessStep_MessageSuffix`.
+One of the callbacks to this function, `status_update_fn`, supplies status updates via codes that can be translated into messages. Codes are located on `SendFunds_ProcessStep_Code` and messages are located at `SendFunds_ProcessStep_MessageSuffix` within this file, `monero_sendingFunds_utils`. This lookup will probably make it into `MyMoneroCoreBridge` for concision.
 
 
 ----
-### `monero_utils/monero_utils`
+### `monero_utils/MyMoneroCoreBridge`
 
 #### Examples
 
 ```
 const mymonero = require("mymonero_core_js/index");
-// or just "mymonero_core_js/monero_utils/monero_utils"
+// or just "mymonero_core_js/monero_utils/MyMoneroCoreBridge"
 async function foo()
 {
-	const monero_utils = await mymonero.monero_utils;
+	const monero_utils = await mymonero.monero_utils_promise;
 	const nettype = mymonero.nettype_utils.network_type.MAINNET;
 	const decoded = monero_utils.address_and_keys_from_seed("…", nettype);
 	// read decoded.address_string
@@ -173,13 +173,12 @@ var decoded = monero_utils.decode_address("…", nettype);
 
 #### Available functions
 
-Each of these functions is implemented<sup>*</sup> in `monero_utils/MyMoneroCoreBridge.js`, which you access through `monero_utils/monero_utils.js`<sup>\*\*</sup>.
+Each of these functions is implemented<sup>*</sup> in `monero_utils/MyMoneroCoreBridge.js`.
 
-The arguments and return values for these functions are explicitly called out by [MyMoneroCoreBridge.js](https://github.com/mymonero/mymonero-core-js/blob/develop/monero_utils/MyMoneroCoreBridge.js), so that will be the most complete documentation for the moment. Return values are all embedded within a JS dictionary unless they're singular values. Errors are thrown when functions are called via `monero_utils`.
+The arguments and return values for these functions are explicitly called out by [MyMoneroCoreBridge.js](https://github.com/mymonero/mymonero-core-js/blob/develop/monero_utils/MyMoneroCoreBridge.js), so that will be the most complete documentation for the moment. Return values are all embedded within a JS dictionary unless they're singular values. Errors are thrown as exceptions.
 
 <sup>* The functions' actual implementations are in WebAssembly which is produced via emscripten from exactly matching C++ functions in [mymonero-core-cpp](https://github.com/mymonero/mymonero-core-cpp). This allows core implementation to be shared across all platforms.</sup>
 
-<sup>** for proper exception handling given that `MyMoneroCoreBridge` functions return `{ err_msg: }` rather than throwing</sup>
 
 ```
 is_subaddress
@@ -216,7 +215,6 @@ address_and_keys_from_seed
 ```
 * This function was known as `create_address` in the previous mymonero-core-js API.
 
-
 ```
 generate_key_image
 ```
@@ -232,34 +230,15 @@ derive_subaddress_public_key
 ```
 decodeRct
 ```
-```
-estimate_rct_tx_size
-```
-
-```
-calculate_fee
-```
 
 ```
 estimated_tx_network_fee
 ```
 
-##### Creating Transactions
-
-These functions support Bulletproofs under the hood but don't take `bulletproof` as a parameter because that behavior is controlled by a hardcoded [`use_fork_rules` function](https://github.com/mymonero/mymonero-core-cpp/blob/master/src/monero_fork_rules.cpp#L49). Bulletproofs is not currently enabled.
-
 ```
-create_signed_transaction
+async__send_funds
 ```
-* Safe to call over IPC as it takes string rather than native JS objects as args.
-
-```
-create_signed_transaction__nonIPCsafe
-```
-* Takes JSBigInt rather than string args.
-
-
-
+* This method takes simple, familiar parameters in the form of a keyed dictionary, and has a handful of callbacks which supply pre-formed request parameters for sending directly to a MyMonero or lightweight wallet-compatible API server. Responses may be sent directly back to the callbacks' callbacks, as they are now parsed and handled entirely within the implementation. This function's interface used to reside in `monero_sendingFunds_utils`. See `tests/sendingFunds.spec.js` for example usage.
 
 
 # Contributing
