@@ -289,6 +289,8 @@ There's no need to build monero_utils/MyMoneroCoreCpp as a build is provided, bu
 
 ### Install Emscripten SDK
 
+**A version of emscripten of at least 1.38.13 with [these updates](https://github.com/kripken/emscripten/pull/7096) is required so that random bit generation safety can be ensured.**
+
 Ensure you've [properly installed Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) and exposed the Emscripten executables in your PATH, e.g.:
 
 	source ./emsdk_env.sh
