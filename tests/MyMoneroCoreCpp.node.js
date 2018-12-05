@@ -168,13 +168,6 @@ function tests(Module)
 		console.timeEnd("decodeRct")
 		console.log("decodeRct ret", ret_string)
 	}
-  {
-		console.time("decodeRctSimple")
-		const args_str = '{"i":"0","sk":"a2259749f7aad692e000af4b7f383f4441ba4085bf70e518081365750db73b06","rv":{"type":"3","ecdhInfo":[{"mask":"dc9a2e8a66a336f67bb1a150f6de4522f09c451a10f450d7ee096baa75660a05","amount":"0c8f7514fd1d7c4f49795f33254739ce8e96275b17f50a03c877ed4b56896601"},{"mask":"f0d94c21aa892ad4e0d492f5fce4b8e99ff5e1ed687134b9419a2290e8701004","amount":"dbaeca613d37b53ff0a22a1fb6e09150baa6f4f5f6e145ef78a78cc19624a702"}],"outPk":[{"mask":"4dd9e7e2a2d8f31f065562923079399ec6c90d4b155d289208001994815bd01f"},{"mask":"c23cdb07e56bcb6a9ad087122b7079f2c34e217bcbddd16ca6031ab8828f7a84"}]}}'
-		const ret_string = Module.decodeRctSimple(args_str)
-		console.timeEnd("decodeRctSimple")
-		console.log("decodeRctSimple ret", ret_string)
-  }
 	{
 		console.time("send_funds")
 		const task_id = "something unique";
