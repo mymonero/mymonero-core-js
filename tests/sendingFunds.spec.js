@@ -204,7 +204,7 @@ describe("sendingFunds tests", function()
 		}
 		coreBridge_instance.async__send_funds({
 			is_sweeping: is_sweeping, 
-			payment_id: payment_id, // may be nil or undefined
+			payment_id_string: payment_id, // may be nil or undefined
 			sending_amount: is_sweeping ? 0 : sending_amount, // sending amount
 			from_address_string: from_address,
 			sec_viewKey_string: sec_viewKey_string,
