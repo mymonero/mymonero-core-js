@@ -134,6 +134,13 @@ function tests(Module)
 		console.log("estimated_tx_network_fee ret", ret_string)
 	}
 	{
+		console.time("estimate_rct_tx_size")
+		const args_str = '{"n_inputs":1,"mixin":10,"n_outputs":2,"extra_size":0,"bulletproof":true}'
+		const ret_string = Module.estimate_rct_tx_size(args_str)
+		console.timeEnd("estimate_rct_tx_size")
+		console.log("estimate_rct_tx_size ret", ret_string)
+	}
+	{
 		console.time("generate_key_image")
 		const args_str = '{"sec_viewKey_string":"7bea1907940afdd480eff7c4bcadb478a0fbb626df9e3ed74ae801e18f53e104","sec_spendKey_string":"4e6d43cd03812b803c6f3206689f5fcc910005fc7e91d50d79b0776dbefcd803","pub_spendKey_string":"3eb884d3440d71326e27cc07a861b873e72abd339feb654660c36a008a0028b3","tx_pub_key":"fc7f85bf64c6e4f6aa612dbc8ddb1bb77a9283656e9c2b9e777c9519798622b2","out_index":"0"}'
 		const ret_string = Module.generate_key_image(args_str)
@@ -161,6 +168,13 @@ function tests(Module)
 		console.timeEnd("derive_subaddress_public_key")
 		console.log("derive_subaddress_public_key ret", ret_string)
 	}
+  {
+		console.time("derivation_to_scalar")
+		const args_str = '{"derivation":"7a4c13a037d4bd2a7dd99a8c24669e9e04ca4e8a90e5b6703e88e87ad51c1849","output_index":1}'
+		const ret_string = Module.derivation_to_scalar(args_str)
+		console.timeEnd("derivation_to_scalar")
+		console.log("derivation_to_scalar ret", ret_string)
+  }
 	{
 		console.time("decodeRct")
 		const args_str = '{"i":"1","sk":"9b1529acb638f497d05677d7505d354b4ba6bc95484008f6362f93160ef3e503","rv":{"type":"1","ecdhInfo":[{"mask":"3ad9d0b3398691b94558e0f750e07e5e0d7d12411cd70b3841159e6c6b10db02","amount":"b3189d8adb5a26568e497eb8e376a7d7d946ebb1daef4c2c87a2c30b65915506"},{"mask":"97b00af8ecba3cb71b9660cc9e1ac110abd21a4c5e50a2c125f964caa96bef0c","amount":"60269d8adb5a26568e497eb8e376a7d7d946ebb1daef4c2c87a2c30b65915506"},{"mask":"db67f5066d9455db404aeaf435ad948bc9f27344bc743e3a32583a9e6695cb08","amount":"b3189d8adb5a26568e497eb8e376a7d7d946ebb1daef4c2c87a2c30b65915506"}],"outPk":[{"mask":"9adc531a9c79a49a4257f24e5e5ea49c2fc1fb4eef49e00d5e5aba6cb6963a7d"},{"mask":"89f40499d6786a4027a24d6674d0940146fd12d8bc6007d338f19f05040e7a41"},{"mask":"f413d28bd5ffdc020528bcb2c19919d7484fbc9c3dd30de34ecff5b8a904e7f6"}]}}'
@@ -168,6 +182,13 @@ function tests(Module)
 		console.timeEnd("decodeRct")
 		console.log("decodeRct ret", ret_string)
 	}
+  {
+		console.time("decodeRctSimple")
+		const args_str = '{"i":"0","sk":"a2259749f7aad692e000af4b7f383f4441ba4085bf70e518081365750db73b06","rv":{"type":"3","ecdhInfo":[{"mask":"dc9a2e8a66a336f67bb1a150f6de4522f09c451a10f450d7ee096baa75660a05","amount":"0c8f7514fd1d7c4f49795f33254739ce8e96275b17f50a03c877ed4b56896601"},{"mask":"f0d94c21aa892ad4e0d492f5fce4b8e99ff5e1ed687134b9419a2290e8701004","amount":"dbaeca613d37b53ff0a22a1fb6e09150baa6f4f5f6e145ef78a78cc19624a702"}],"outPk":[{"mask":"4dd9e7e2a2d8f31f065562923079399ec6c90d4b155d289208001994815bd01f"},{"mask":"c23cdb07e56bcb6a9ad087122b7079f2c34e217bcbddd16ca6031ab8828f7a84"}]}}'
+		const ret_string = Module.decodeRctSimple(args_str)
+		console.timeEnd("decodeRctSimple")
+		console.log("decodeRctSimple ret", ret_string)
+  }
 	{
 		console.time("send_funds")
 		const task_id = "something unique";

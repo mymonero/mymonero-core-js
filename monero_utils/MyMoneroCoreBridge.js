@@ -412,6 +412,21 @@ class MyMoneroCoreBridge
 		}
 		return ret.retVal;		
 	}
+	derivation_to_scalar(derivation, output_index)
+	{
+		const args =
+		{
+			derivation: derivation,
+			output_index: output_index,
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.derivation_to_scalar(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg };
+		}
+		return ret.retVal;
+	}
 	decodeRct(rv, sk, i)
 	{
 		const ecdhInfo = []; // should obvs be plural but just keeping exact names in-tact
@@ -459,6 +474,53 @@ class MyMoneroCoreBridge
 			mask: ret.mask,
 		};
 	}
+	decodeRctSimple(rv, sk, i)
+	{
+		const ecdhInfo = []; // should obvs be plural but just keeping exact names in-tact
+		for (var j = 0 ; j < rv.outPk.length ; j++) {
+			var this_ecdhInfo = rv.ecdhInfo[j];
+  			ecdhInfo.push({
+				mask: this_ecdhInfo.mask,
+				amount: this_ecdhInfo.amount
+			})
+		}
+		const outPk = [];
+		for (var j = 0 ; j < rv.outPk.length ; j++) {
+			var this_outPk_mask = null;
+			var this_outPk = rv.outPk[j];
+			if (typeof this_outPk === 'string') {
+				this_outPk_mask = this_outPk;
+			} else if (typeof this_outPk === "object") {
+				this_outPk_mask = this_outPk.mask; 
+			}
+			if (this_outPk_mask == null) {
+				return { err_msg: "Couldn't locate outPk mask value" }
+			}
+  			outPk.push({
+				mask: this_outPk_mask
+			})
+		}
+		const args =
+		{
+			i: "" + i,  // must be passed as string
+			sk: sk,
+			rv: {
+				type: "" + rv.type/*must be string*/, // e.g. 1, 3 ... corresponding to rct::RCTType* in rctSigs.cpp
+				ecdhInfo: ecdhInfo,
+				outPk: outPk
+			}
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.decodeRctSimple(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg }
+		}
+		return { // calling these out so as to provide a stable ret val interface
+			amount: ret.amount, // string
+			mask: ret.mask,
+		};
+	}
 	estimated_tx_network_fee(fee_per_kb__string, priority, optl__fee_per_b_string) // this is until we switch the server over to fee per b
 	{ // TODO update this API to take object rather than arg list
 		const args =
@@ -475,6 +537,24 @@ class MyMoneroCoreBridge
 			throw ret.err_msg; // TODO: maybe return this somehow
 		}
 		return ret.retVal; // this is a string - pass it to new JSBigInt(…)
+	}
+	estimate_rct_tx_size(n_inputs, mixin, n_outputs, extra_size, bulletproof)
+	{
+		const args =
+		{
+			n_inputs,
+			mixin,
+			n_outputs,
+			extra_size,
+			bulletproof
+		};
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.estimate_rct_tx_size(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			return { err_msg: ret.err_msg }
+		}
+		return parseInt(ret.retVal, 10);
 	}
 	//
 	// Send
