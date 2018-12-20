@@ -37,7 +37,6 @@
 #include <boost/foreach.hpp>
 #include <emscripten.h>
 #include <unordered_map>
-#include <future>
 #include <memory>
 //
 #include "string_tools.h"
