@@ -222,6 +222,9 @@ generate_key_image
 generate_key_derivation
 ```
 ```
+derivation_to_scalar
+```
+```
 derive_public_key
 ```
 ```
@@ -230,9 +233,15 @@ derive_subaddress_public_key
 ```
 decodeRct
 ```
+```
+decodeRctSimple
+```
 
 ```
 estimated_tx_network_fee
+```
+```
+estimate_rct_tx_size
 ```
 
 ```
