@@ -40,10 +40,17 @@ Library integrators may use `MyMoneroCoreBridge` by `require("./monero_utils/MyM
 
 Many related utility functions and data structures are located throughout `monero_utils/`, `cryptonote_utils`, and `hostAPI`. Usage below.
 
+Various convenience scripts are provided in `./bin`.
+
 This readme is located at `README.md`, and the license is located at `LICENSE.txt`.
 
 
 ## Usage
+
+If you would like to package this library to run in a standalone manner within, e.g. a webpage, similarly to how the old mymonero.com used this library, a script is provided to bundle everything for you. It's located at `bin/package_browser_js`. If you package the library in this manner, the resulting `mymonero-core.js` file can be included via a script tag. The index.js of the library will then be available as the global variable `mymonero_core_js`.
+
+Alternatively you can bundle the contents in any other manner you prefer, including directly accessing them via your favorite module system. 
+
 
 ### `hostAPI`
 
