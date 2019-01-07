@@ -66,6 +66,7 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("decodeRct", &serial_bridge::decodeRct);
     emscripten::function("decodeRctSimple", &serial_bridge::decodeRctSimple);
     emscripten::function("derivation_to_scalar", &serial_bridge::derivation_to_scalar);
+    emscripten::function("encrypt_payment_id", &serial_bridge::encrypt_payment_id);
     //
 }
 extern "C"

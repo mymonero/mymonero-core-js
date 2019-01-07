@@ -261,6 +261,13 @@ function tests(Module)
 		const args_str = JSON.stringify(args, null, '')
 		Module.send_funds(args_str);
 	}
+	{
+		console.time("encrypt_payment_id")
+		const args_str = '{"payment_id":"f0756322689f8299","public_key":"9c8bd8a9ff8703ddd5e28a36dc5c5586d2ec0b4bfd9190adeea825db5808ead2","secret_key":"74f277a60613a4efa33258b9814c78e0ff7a53cf8d2cd248ee921ac7f607f800"}'
+		const ret_string = Module.encrypt_payment_id(args_str)
+		console.timeEnd("encrypt_payment_id")
+		console.log("encrypt_payment_id ret", ret_string)
+  }
 }
 console.time("Load module")
 require('../monero_utils/MyMoneroCoreBridge')({asmjs: false}).then(function(instance) // this can be switched to manually test asmjs vs wasm - can be exposed to option
