@@ -28,7 +28,9 @@ This repository holds the Javascript source code for the Monero/CryptoNote crypt
 
 There is also a chain of build scripts which is capable of building a JS module by transpiling a subset of Monero source code via emscripten, which relies upon static boost libs, for which there is also a script for building from source. 
 
-**It's possible to run your own lightweight (hosted) wallet server by using either OpenMonero or the lightweight wallet server which MyMonero has developed specially to be open-sourced for the Monero community (PR is in the process of being merged). However, MyMonero also offers hosting to wallet app makers (for a nominal, scaling fee per active wallet per month) who would like to use this library, mymonero-core-js, to add hosted Monero wallets to their app but who aren't ready to run their own highly optimized server. The benefit of offering a hosted wallet rather than requiring users to use a remote node is that scanning doesn't have to take place on the mobile device, so the user doesn't have to download the blockchain and scan on their device, or wait when they switch to a new device or come back to the app after a period of time. For more information, please reach out to MyMonero at [support@mymonero.com](support@mymonero.com). One example customer using this paid service is [Edge Secure](https://edge.app). We're very interested in supporting the growth of the Monero ecosystem, and will be happy to work with integrators on flexible pricing.**
+It's possible to run your own lightweight (hosted) wallet server by using either OpenMonero or the lightweight wallet server which MyMonero has developed specially to be open-sourced for the Monero community (PR is in the process of being merged). However, MyMonero also offers highly optimized, high throughput, secure hosting for a nominal, scaling fee per active wallet per month to wallet app makers who would like to use this library, mymonero-core-js, to add hosted Monero wallets to their app. 
+
+The benefit of offering a hosted wallet rather than requiring users to use a remote node is that scanning doesn't have to take place on the mobile device, so the user doesn't have to download the blockchain and scan on their device, or wait when they switch to a new device or come back to the app after a period of time. For more information, please reach out to Paul at [paul@mymonero.com](paul@mymonero.com). We work hard to support the growth of the Monero ecosystem, and will be happy to work with integrators on flexible pricing.
 
 ### Contents 
 
@@ -314,15 +316,29 @@ Or if you want to copy the build products to their distribution locations,
 **NOTE** If you want to build for asmjs instead of wasm, edit `CMakeLists.txt` to turn the `MM_EM_ASMJS` option to `ON` before you run either the `build` or `archive` script. Finally, at every place you instantiate a `MyMoneroCoreBridge` instance, ensure that the `asmjs` flag passed as an init argument is set to `true` (If not, loading will not work). 
 
 
-## Contributors
+## Maintainers and Advisors
 
 * 💿 `endogenic` ([Paul Shapiro](https://github.com/paulshapiro)) Maintainer
 
 * 🍄 `luigi` Major contiributor of original JS core crypto and Monero-specific routines; Advisor
 
-* 🏄‍♂️ `paullinator` ([Paul Puey](https://github.com/paullinator)) API design
 
-* 🔒 `cryptochangement` Subaddress send & decode support; Initial tests
+## Authors
 
-* 💩 `henrynguyen5` Tests; Ledger support research
+* Paul Shapiro
 
+* luigi1111
+
+* Lucas Jones     
+
+* gutenye
+
+* HenryNguyen5
+
+* cryptochangements34
+
+* bradoyler
+
+* rex4539
+
+* paullinator
