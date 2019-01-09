@@ -67,6 +67,5 @@ exports.compatible_code_from_locale = function(locale_string)
 			return short_code
 		}
 	}
-	throw "Didn't find a code"
-	// return undefined
+	return null
 }
