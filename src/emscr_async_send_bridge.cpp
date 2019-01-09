@@ -81,6 +81,7 @@ struct Send_Task_AsyncContext
 	//
 	vector<SpendableOutput> unspent_outs;
 	uint64_t fee_per_b;
+	uint64_t fee_mask;
 	//
 	// cached
 	secret_key sec_viewKey;
@@ -286,6 +287,7 @@ void emscr_async_bridge::send_funds(const string &args_string)
 		//
 		unspent_outs, // this gets pushed to after getting unspent outs
 		0, // fee_per_b - this gets set after getting unspent outs
+		0, // fee_mask - this gets set after getting unspent outs
 		//
 		// cached
 		sec_viewKey,
@@ -381,6 +383,7 @@ void emscr_async_bridge::send_cb_I__got_unspent_outs(const string &args_string)
 	THROW_WALLET_EXCEPTION_IF(ptrTo_taskAsyncContext->unspent_outs.size() != 0, error::wallet_internal_error, "Expected 0 ptrTo_taskAsyncContext->unspent_outs in cb I");
 	ptrTo_taskAsyncContext->unspent_outs = std::move(*(parsed_res.unspent_outs)); // move structs from stack's vector to heap's vector
 	ptrTo_taskAsyncContext->fee_per_b = *(parsed_res.per_byte_fee); 
+	ptrTo_taskAsyncContext->fee_mask = *(parsed_res.fee_mask);
 	_reenterable_construct_and_send_tx(task_id);
 }
 void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_id)
@@ -405,6 +408,7 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 		},
 		ptrTo_taskAsyncContext->unspent_outs,
 		ptrTo_taskAsyncContext->fee_per_b,
+		ptrTo_taskAsyncContext->fee_mask,
 		//
 		ptrTo_taskAsyncContext->passedIn_attemptAt_fee // use this for passing step2 "must-reconstruct" return values back in, i.e. re-entry; when none, defaults to attempt at network min
 		// ^- and this will be 'none' as initial value
@@ -494,6 +498,7 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 		ptrTo_taskAsyncContext->simple_priority,
 		ptrTo_taskAsyncContext->step1_retVals__using_outs,
 		ptrTo_taskAsyncContext->fee_per_b,
+		ptrTo_taskAsyncContext->fee_mask,
 		*(parsed_res.mix_outs),
 		[] (uint8_t version, int64_t early_blocks) -> bool
 		{
