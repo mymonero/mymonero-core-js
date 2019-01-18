@@ -33,8 +33,6 @@
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 const nettype_utils = require("../cryptonote_utils/nettype");
-const monero_config = require('./monero_config');
-const monero_amount_format_utils = require("../cryptonote_utils/money_format_utils")(monero_config);
 //
 function ret_val_boolstring_to_bool(boolstring)
 {
