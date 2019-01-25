@@ -31,9 +31,9 @@ function ret_val_boolstring_to_bool(boolstring)
 	if (typeof boolstring !== "string") {
 		throw "ret_val_boolstring_to_bool expected string input"
 	}
-	if (boolstring === "true") {
+	if (boolstring === "true" || boolstring === "1") {
 		return true
-	} else if (boolstring === "false") {
+	} else if (boolstring === "false" || boolstring === "0") {
 		return false
 	}
 	throw "ret_val_boolstring_to_bool given illegal input"
