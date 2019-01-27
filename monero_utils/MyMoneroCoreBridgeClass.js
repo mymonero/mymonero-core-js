@@ -301,6 +301,15 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		if (typeof self._cb_handlers__send_funds == 'undefined' || !self._cb_handlers__send_funds) {
 			self._cb_handlers__send_funds = {}
 		}
+		function freeAllCBHandlersForTask()
+		{
+			delete self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__get_unspent_outs(task_id)]
+			delete self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__get_random_outs(task_id)]
+			delete self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__submit_raw_tx(task_id)]
+			delete self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__status_update(task_id)]
+			delete self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)]
+			delete self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__success(task_id)]
+		}
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__get_unspent_outs(task_id)] = function(req_params)
 		{
 			// convert bridge-strings to native primitive types
@@ -341,12 +350,14 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)] = function(params)
 		{
 			fn_args.error_fn(params);
+			freeAllCBHandlersForTask(); // since we're done with the task
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__success(task_id)] = function(params)
 		{
 			params.mixin = parseInt(params.mixin)
 			//
 			fn_args.success_fn(params);
+			freeAllCBHandlersForTask(); // since we're done with the task
 		};
 		const args = 
 		{
