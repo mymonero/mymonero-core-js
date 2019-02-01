@@ -144,6 +144,7 @@ set (
 -s EXCEPTION_DEBUG=1 \
 -s DEMANGLE_SUPPORT=1 \
 -s NO_DYNAMIC_EXECUTION=1 \
+-s NODEJS_CATCH_EXIT=0 \
 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"UTF8ToString\"]' \
 "
     # • Disabling exception catching does not introduce silent failures 
