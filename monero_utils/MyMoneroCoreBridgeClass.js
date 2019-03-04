@@ -412,7 +412,6 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		const ret_string = this.Module.send_funds(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) { // this is actually an exception
-			console.log("~> 1 an err msg", ret.err_msg)
 			self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)]({ 
 				err_msg: ret.err_msg 
 			});
