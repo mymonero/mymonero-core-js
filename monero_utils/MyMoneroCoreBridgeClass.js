@@ -119,7 +119,7 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		const ret_string = this.Module.derivation_to_scalar(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg };
+			throw ret.err_msg;
 		}
 		return ret.retVal;
 	}
@@ -190,7 +190,7 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 				this_outPk_mask = this_outPk.mask; 
 			}
 			if (this_outPk_mask == null) {
-				return { err_msg: "Couldn't locate outPk mask value" }
+				throw "Couldn't locate outPk mask value";
 			}
 			outPk.push({
 				mask: this_outPk_mask
@@ -210,7 +210,7 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		const ret_string = this.Module.decodeRctSimple(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg;
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			amount: ret.amount, // string
@@ -231,7 +231,7 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		const ret_string = this.Module.estimate_rct_tx_size(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg }
+			throw ret.err_msg;
 		}
 		return parseInt(ret.retVal, 10);
 	}
@@ -319,7 +319,17 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 			fn_args.get_unspent_outs_fn(req_params, function(err_msg, res)
 			{
 				const args = self.__new_cb_args_with(task_id, err_msg, res);
-				self.Module.send_cb_I__got_unspent_outs(JSON.stringify(args))
+				const ret_string = self.Module.send_cb_I__got_unspent_outs(JSON.stringify(args))
+				const ret = JSON.parse(ret_string);
+				if (typeof ret.err_msg !== 'undefined' && ret.err_msg) { // this is actually an exception
+					self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)]({ 
+						err_msg: ret.err_msg 
+					});
+					// ^-- this will clean up cb handlers too
+					return;
+				} else {
+					// TODO: assert Object.keys(ret).length == 0
+				}
 			});
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__get_random_outs(task_id)] = function(req_params)
@@ -330,7 +340,17 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 			fn_args.get_random_outs_fn(req_params, function(err_msg, res)
 			{
 				const args = self.__new_cb_args_with(task_id, err_msg, res);
-				self.Module.send_cb_II__got_random_outs(JSON.stringify(args))
+				const ret_string = self.Module.send_cb_II__got_random_outs(JSON.stringify(args))
+				const ret = JSON.parse(ret_string);
+				if (typeof ret.err_msg !== 'undefined' && ret.err_msg) { // this is actually an exception
+					self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)]({ 
+						err_msg: ret.err_msg 
+					});
+					// ^-- this will clean up cb handlers too
+					return;
+				} else {
+					// TODO: assert Object.keys(ret).length == 0
+				}
 			});
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__submit_raw_tx(task_id)] = function(req_params)
@@ -338,7 +358,17 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 			fn_args.submit_raw_tx_fn(req_params, function(err_msg, res)
 			{
 				const args = self.__new_cb_args_with(task_id, err_msg, res);
-				self.Module.send_cb_III__submitted_tx(JSON.stringify(args))
+				const ret_string = self.Module.send_cb_III__submitted_tx(JSON.stringify(args))
+				const ret = JSON.parse(ret_string);
+				if (typeof ret.err_msg !== 'undefined' && ret.err_msg) { // this is actually an exception
+					self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)]({ 
+						err_msg: ret.err_msg 
+					});
+					// ^-- this will clean up cb handlers too
+					return;
+				} else {
+					// TODO: assert Object.keys(ret).length == 0
+				}
 			})
 		};
 		self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__status_update(task_id)] = function(params)
@@ -379,7 +409,18 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 			args.unlock_time = "" + fn_args.unlock_time; // bridge is expecting a string
 		}
 		const args_str = JSON.stringify(args, null, '')
-		this.Module.send_funds(args_str);
+		const ret_string = this.Module.send_funds(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) { // this is actually an exception
+			console.log("~> 1 an err msg", ret.err_msg)
+			self._cb_handlers__send_funds[self.__key_for_fromCpp__send_funds__error(task_id)]({ 
+				err_msg: ret.err_msg 
+			});
+			// ^-- this will clean up cb handlers too
+			return;
+		} else {
+			// TODO: assert Object.keys(ret).length == 0
+		}
 	}
 	encrypt_payment_id(payment_id, public_key, secret_key)
 	{
@@ -393,7 +434,7 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		const ret_string = this.Module.encrypt_payment_id(args_str);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			return { err_msg: ret.err_msg };
+			throw ret.err_msg;
 		}
 		return ret.retVal;
 	}
