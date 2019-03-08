@@ -307,7 +307,7 @@ class MyMoneroCoreBridgeEssentialsClass extends MyMoneroBridgeClass_Base
 		}
 		return ret.retVal;
 	}
-	estimated_tx_network_fee(fee_per_kb__string, priority, optl__fee_per_b_string) // this is until we switch the server over to fee per b
+	estimated_tx_network_fee(fee_per_kb__string, priority, optl__fee_per_b_string, optl__fork_version) // this is until we switch the server over to fee per b
 	{ // TODO update this API to take object rather than arg list
 		const args =
 		{
@@ -316,6 +316,11 @@ class MyMoneroCoreBridgeEssentialsClass extends MyMoneroBridgeClass_Base
 				: (new JSBigInt(fee_per_kb__string)).divide(1024).toString()/*kib -> b*/, 
 			priority: "" + priority,
 		};
+		if (typeof optl__fork_version !== 'undefined' && optl__fork_version !== null) {
+			args.fork_version = "" + optl__fork_version
+		} else {
+			// it will default to 0 which means use the latest fork rules
+		}
 		const args_str = JSON.stringify(args);
 		const ret_string = this.Module.estimated_tx_network_fee(args_str);
 		const ret = JSON.parse(ret_string);
