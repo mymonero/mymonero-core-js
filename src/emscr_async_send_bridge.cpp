@@ -82,6 +82,7 @@ struct Send_Task_AsyncContext
 	vector<SpendableOutput> unspent_outs;
 	uint64_t fee_per_b;
 	uint64_t fee_mask;
+	monero_fork_rules::use_fork_rules_fn_type use_fork_rules;
 	//
 	// cached
 	secret_key sec_viewKey;
@@ -288,6 +289,7 @@ void emscr_async_bridge::send_funds(const string &args_string)
 		unspent_outs, // this gets pushed to after getting unspent outs
 		0, // fee_per_b - this gets set after getting unspent outs
 		0, // fee_mask - this gets set after getting unspent outs
+		monero_fork_rules::make_use_fork_rules_fn(0), // this will get set again after getting unspent outs - though it's slightly unsafe to set it to 0 like this 
 		//
 		// cached
 		sec_viewKey,
@@ -384,6 +386,7 @@ void emscr_async_bridge::send_cb_I__got_unspent_outs(const string &args_string)
 	ptrTo_taskAsyncContext->unspent_outs = std::move(*(parsed_res.unspent_outs)); // move structs from stack's vector to heap's vector
 	ptrTo_taskAsyncContext->fee_per_b = *(parsed_res.per_byte_fee); 
 	ptrTo_taskAsyncContext->fee_mask = *(parsed_res.fee_mask);
+	ptrTo_taskAsyncContext->use_fork_rules = monero_fork_rules::make_use_fork_rules_fn(parsed_res.fork_version);
 	_reenterable_construct_and_send_tx(task_id);
 }
 void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_id)
@@ -402,10 +405,7 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 		ptrTo_taskAsyncContext->sending_amount,
 		ptrTo_taskAsyncContext->is_sweeping,
 		ptrTo_taskAsyncContext->simple_priority,
-		[] (uint8_t version, int64_t early_blocks) -> bool
-		{
-			return lightwallet_hardcoded__use_fork_rules(version, early_blocks);
-		},
+		ptrTo_taskAsyncContext->use_fork_rules,
 		ptrTo_taskAsyncContext->unspent_outs,
 		ptrTo_taskAsyncContext->fee_per_b,
 		ptrTo_taskAsyncContext->fee_mask,
@@ -500,10 +500,7 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 		ptrTo_taskAsyncContext->fee_per_b,
 		ptrTo_taskAsyncContext->fee_mask,
 		*(parsed_res.mix_outs),
-		[] (uint8_t version, int64_t early_blocks) -> bool
-		{
-			return lightwallet_hardcoded__use_fork_rules(version, early_blocks);
-		},
+		ptrTo_taskAsyncContext->use_fork_rules,
 		ptrTo_taskAsyncContext->unlock_time,
 		ptrTo_taskAsyncContext->nettype
 	);
