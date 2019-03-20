@@ -249,6 +249,22 @@ string encrypt_payment_id(const string &args_string)
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
+string send_step1__prepare_params_for_get_decoys(const string &args_string)
+{
+    try {
+        return serial_bridge::send_step1__prepare_params_for_get_decoys(args_string);
+    } catch (std::exception &e) {
+        return serial_bridge_utils::error_ret_json_from_message(e.what());
+    }
+}
+string send_step2__try_create_transaction(const string &args_string)
+{
+    try {
+        return serial_bridge::send_step2__try_create_transaction(args_string);
+    } catch (std::exception &e) {
+        return serial_bridge_utils::error_ret_json_from_message(e.what());
+    }
+}
 //
 EMSCRIPTEN_BINDINGS(my_module)
 { // C++ -> JS
@@ -283,6 +299,8 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("derivation_to_scalar", &derivation_to_scalar);
     emscripten::function("encrypt_payment_id", &encrypt_payment_id);
     //
+    emscripten::function("send_step1__prepare_params_for_get_decoys", &send_step1__prepare_params_for_get_decoys);
+    emscripten::function("send_step2__try_create_transaction", &send_step2__try_create_transaction);
 }
 extern "C"
 { // C -> JS
