@@ -243,6 +243,16 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		}
 		return ret.retVal;
 	}
+	estimate_tx_weight(args)
+	{
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.estimate_tx_weight(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg;
+		}
+		return parseInt(ret.retVal, 10);
+	}
 	estimate_rct_tx_size(n_inputs, mixin, n_outputs, extra_size, bulletproof)
 	{
 		const args =
