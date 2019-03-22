@@ -134,6 +134,13 @@ function tests(Module)
 		console.log("estimated_tx_network_fee ret", ret_string)
 	}
 	{
+		console.time("estimate_fee")
+		const args = {"use_per_byte_fee": "true", "use_rct": "true", "n_inputs": "2", "mixin": "10", "n_outputs": "2","extra_size": "0", "bulletproof": "true", "base_fee": "24658", "fee_quantization_mask": "10000", "priority": "2", "fork_version": "10"}
+		const ret_string = Module.estimate_fee(JSON.stringify(args))
+		console.timeEnd("estimate_fee")
+		console.log("estimate_fee ret", ret_string)
+	}
+	{
 		console.time("estimate_rct_tx_size")
 		const args_str = '{"n_inputs":1,"mixin":10,"n_outputs":2,"extra_size":0,"bulletproof":true}'
 		const ret_string = Module.estimate_rct_tx_size(args_str)

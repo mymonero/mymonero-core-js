@@ -175,6 +175,25 @@ string estimated_tx_network_fee(const string &args_string)
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
+//
+string estimate_fee(const string &args_string)
+{
+    try {
+        return serial_bridge::estimate_fee(args_string);
+    } catch (std::exception &e) {
+        return serial_bridge_utils::error_ret_json_from_message(e.what());
+    }
+}
+//
+string estimate_tx_weight(const string &args_string)
+{
+    try {
+        return serial_bridge::estimate_tx_weight(args_string);
+    } catch (std::exception &e) {
+        return serial_bridge_utils::error_ret_json_from_message(e.what());
+    }
+}
+//
 string estimate_rct_tx_size(const string &args_string)
 {
     try {
@@ -288,6 +307,7 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("address_and_keys_from_seed", &address_and_keys_from_seed);
     //
     emscripten::function("estimated_tx_network_fee", &estimated_tx_network_fee);
+    emscripten::function("estimate_fee", &estimate_fee);
     emscripten::function("estimate_rct_tx_size", &estimate_rct_tx_size);
     //
     emscripten::function("generate_key_image", &generate_key_image);

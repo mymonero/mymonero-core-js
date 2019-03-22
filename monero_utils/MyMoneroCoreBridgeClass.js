@@ -233,6 +233,16 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 			mask: ret.mask,
 		};
 	}
+	estimate_fee(args)
+	{
+		const args_str = JSON.stringify(args);
+		const ret_string = this.Module.estimate_fee(args_str);
+		const ret = JSON.parse(ret_string);
+		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+			throw ret.err_msg;
+		}
+		return ret.retVal;
+	}
 	estimate_rct_tx_size(n_inputs, mixin, n_outputs, extra_size, bulletproof)
 	{
 		const args =
