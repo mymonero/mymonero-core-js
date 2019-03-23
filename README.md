@@ -247,7 +247,13 @@ decodeRctSimple
 ```
 
 ```
+estimate_fee
+```
+```
 estimated_tx_network_fee
+```
+```
+estimate_tx_weight
 ```
 ```
 estimate_rct_tx_size
