@@ -141,6 +141,13 @@ function tests(Module)
 		console.log("estimate_fee ret", ret_string)
 	}
 	{
+		console.time("estimate_tx_weight")
+		const args = {"use_rct": "true", "n_inputs": "2", "mixin": "10", "n_outputs": "2","extra_size": "0", "bulletproof": "true"}
+		const ret_string = Module.estimate_tx_weight(JSON.stringify(args))
+		console.timeEnd("estimate_tx_weight")
+		console.log("estimate_tx_weight ret", ret_string)
+	}
+	{
 		console.time("estimate_rct_tx_size")
 		const args_str = '{"n_inputs":1,"mixin":10,"n_outputs":2,"extra_size":0,"bulletproof":true}'
 		const ret_string = Module.estimate_rct_tx_size(args_str)

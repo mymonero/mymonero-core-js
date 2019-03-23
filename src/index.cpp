@@ -292,6 +292,7 @@ EMSCRIPTEN_BINDINGS(my_module)
     //
     emscripten::function("estimated_tx_network_fee", &estimated_tx_network_fee);
     emscripten::function("estimate_fee", &estimate_fee);
+    emscripten::function("estimate_tx_weight", &estimate_tx_weight);
     emscripten::function("estimate_rct_tx_size", &estimate_rct_tx_size);
     //
     emscripten::function("generate_key_image", &generate_key_image);
