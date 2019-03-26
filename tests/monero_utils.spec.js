@@ -181,5 +181,39 @@ describe("cryptonote_utils tests", function() {
 			"4501", // TODO: is this correct? 
 		);
 	});
-
+	it("estimate_fee", async function() {
+		const monero_utils = await require("../monero_utils/MyMoneroCoreBridge")({})
+		var fee = monero_utils.estimate_fee({
+			use_per_byte_fee: true, 
+			use_rct: true, 
+			n_inputs: 2, 
+			mixin: 10, 
+			n_outputs: 2,
+			extra_size: 0, 
+			bulletproof: true,
+			base_fee: 24658, 
+			fee_quantization_mask: 10000,
+			priority: 2, 
+			fork_version: 10
+		});
+		assert.equal(
+			fee,
+			330050000
+		);
+	});
+	it("estimate_tx_weight", async function() {
+		const monero_utils = await require("../monero_utils/MyMoneroCoreBridge")({})
+		var weight = monero_utils.estimate_tx_weight({
+			use_rct: true, 
+			n_inputs: 2, 
+			mixin: 10, 
+			n_outputs: 2,
+			extra_size: 0, 
+			bulletproof: true,
+		});
+		assert.equal(
+			weight,
+			2677
+		);
+	});
 });
