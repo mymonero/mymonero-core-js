@@ -163,6 +163,7 @@ set(
 -s AGGRESSIVE_VARIABLE_ELIMINATION=1 \
 -s ALLOW_MEMORY_GROWTH=0 \
 --memory-init-file 0 \
+-s SEPARATE_ASM_MODULE_NAME=asmjs \
 "
     # --memory-init-file is explicitly set to 0 because optimization level is Oz, and some clients like React Native have trouble loading .mem files
     # .... it also didn't seem to have a giant impact on perf. but this should be tested again
