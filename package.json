@@ -3,6 +3,7 @@
   "version": "1.1.4",
   "description": "The JS library containing the Monero crypto plus lightweight wallet functions behind the official MyMonero apps",
   "main": "index.js",
+  "react-native": "index.rn.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
