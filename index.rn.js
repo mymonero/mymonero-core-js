@@ -8,7 +8,7 @@ function initMonero() {
 
 		const content = Buffer.from(ASM, "base64").toString("binary");
 		try {
-			new Function('Module', content)(Module);
+			new Function("Module", content)(Module);
 		} catch (e) {
 			reject(e);
 			return;
