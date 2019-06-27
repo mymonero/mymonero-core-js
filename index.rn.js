@@ -1,15 +1,14 @@
 const MyMoneroCoreBridgeClass = require("./monero_utils/MyMoneroCoreBridgeClass");
 const ASM = require("./monero_utils/MyMoneroCoreCpp_ASMJS.asm.rn");
-const { atob } = require("./utils");
 
 function initMonero() {
 	return new Promise((resolve, reject) => {
 		const Module_template = {};
 		let Module = {};
 
-		const content = atob(ASM);
+		const content = Buffer.from(ASM, "base64").toString("binary");
 		try {
-			eval(content);
+			new Function("Module", content)(Module);
 		} catch (e) {
 			reject(e);
 			return;
