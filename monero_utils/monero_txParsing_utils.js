@@ -28,8 +28,62 @@
 //
 "use strict";
 //
+const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 const monero_config = require("./monero_config");
 const moment = require("../cryptonote_utils/moment")
+const monero_keyImage_cache_utils = require("./monero_keyImage_cache_utils");
+const monero_amount_format_utils = require("./monero_amount_format_utils");
+//
+function ownedParsedTxFrom__orNil(
+	raw_tx,
+	address,
+	view_key__private,
+	spend_key__public,
+	spend_key__private,
+	keyImage_cache,
+	coreBridge_instance
+) {
+	var tx = JSON.parse(JSON.stringify(raw_tx)) // copy ... do we need/want to do this?
+	//
+	if ((tx.spent_outputs || []).length > 0) {
+		for (var j = 0; j < tx.spent_outputs.length; ++j) {
+			var key_image = monero_keyImage_cache_utils.Lazy_KeyImage(
+				keyImage_cache,
+				tx.spent_outputs[j].tx_pub_key,
+				tx.spent_outputs[j].out_index,
+				address,
+				view_key__private,
+				spend_key__public,
+				spend_key__private,
+				coreBridge_instance
+			);
+			if (tx.spent_outputs[j].key_image !== key_image) {
+				// console.log('Output used as mixin, ignoring (' + transactions[i].spent_outputs[j].key_image + '/' + key_image + ')')
+				tx.total_sent = (new JSBigInt(tx.total_sent)).subtract(tx.spent_outputs[j].amount).toString() // TODO: probably faster to keep it as a JSBigInt til we're done calculating			
+				tx.spent_outputs.splice(j, 1) // remove
+				j--
+			}
+		}
+	}
+	if (new JSBigInt(tx.total_received||0).add(tx.total_sent||0).compare(0) <= 0) {
+		return null // not own tx - discard
+	}
+	tx.amount = new JSBigInt(tx.total_received || 0).subtract(tx.total_sent || 0).toString()
+	tx.approx_float_amount = parseFloat(monero_amount_format_utils.formatMoney(tx.amount));
+	// tx.timestamp = tx.timestamp;
+	//
+	if (typeof tx.payment_id !== "undefined" && tx.payment_id) {
+		if (tx.payment_id.length == 16) {
+			// short (encrypted) pid
+			if (tx.approx_float_amount < 0) {
+				// outgoing
+				delete tx["payment_id"]; // need to filter these out .. because the server can't filter out short (encrypted) pids on outgoing txs
+			}
+		}
+	}
+	return tx
+}
+exports.ownedParsedTxFrom__orNil = ownedParsedTxFrom__orNil
 //
 function IsTransactionConfirmed(tx, blockchain_height) 
 {
