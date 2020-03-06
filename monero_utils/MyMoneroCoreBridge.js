@@ -28,6 +28,7 @@
 //
 const MyMoneroCoreBridgeClass = require('./MyMoneroCoreBridgeClass')
 const MyMoneroBridge_utils = require('./MyMoneroBridge_utils')
+const MyMoneroCoreCpp_ASMJS_base64 = require('./MyMoneroCoreCpp_ASMJS.asm.base64.js')
 //
 module.exports = function(options)
 {
@@ -137,8 +138,7 @@ module.exports = function(options)
 			} else {
 				throw "Unsupported environment - please implement file reading for asmjs fallback case"
 			}
-			const filepath = locateFile("MyMoneroCoreCpp_ASMJS.asm.js", scriptDirectory)
-			const content = read_fn(filepath)
+			const content = atob(MyMoneroCoreCpp_ASMJS_base64)
 			// TODO: verify content - for now, relying on same-origin and tls/ssl
 			var Module = {}
 			try {
@@ -149,7 +149,7 @@ module.exports = function(options)
 			}
 			setTimeout(function()
 			{ // "delaying even 1ms is enough to allow compilation memory to be reclaimed"
-				Module_template['asm'] = Module['asm']
+				Module_template['asm'] = Module['asm'] || asmjs
 				Module = null
 				resolve(new MyMoneroCoreBridgeClass(require("./MyMoneroCoreCpp_ASMJS")(Module_template)))
 			}, 1) 
