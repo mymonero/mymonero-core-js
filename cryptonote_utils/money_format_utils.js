@@ -106,16 +106,16 @@ module.exports = function(currencyConfig)
 				.exp10(config.coinUnitPlaces)
 				.add(
 					new JSBigInt(str.substr(decimalIndex + 1)).exp10(
-						decimalIndex + config.coinUnitPlaces - str.length + 1,
-					),
+						decimalIndex + config.coinUnitPlaces - str.length + 1
+					)
 				).negate;
 		}
 		return new JSBigInt(str.substr(0, decimalIndex))
 			.exp10(config.coinUnitPlaces)
 			.add(
 				new JSBigInt(str.substr(decimalIndex + 1)).exp10(
-					decimalIndex + config.coinUnitPlaces - str.length + 1,
-				),
+					decimalIndex + config.coinUnitPlaces - str.length + 1
+				)
 			);
 	};
 

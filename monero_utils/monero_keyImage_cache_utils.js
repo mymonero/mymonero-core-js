@@ -51,7 +51,7 @@ const Lazy_KeyImage = function(
 		view_key__private,
 		spend_key__public,
 		spend_key__private,
-		out_index,
+		out_index
 	);
 	// cache:
 	mutable_keyImagesByCacheKey[cache_index] = key_image;
