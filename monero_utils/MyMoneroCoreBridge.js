@@ -28,24 +28,58 @@
 //
 const MyMoneroCoreBridgeClass = require('./MyMoneroCoreBridgeClass')
 const MyMoneroBridge_utils = require('./MyMoneroBridge_utils')
-const asmModule = require('./MyMoneroCoreCpp_ASMJS.asm')
-const MyMoneroCoreCpp_ASMJS = require("./MyMoneroCoreCpp_ASMJS")
+// const asmModule = require('./MyMoneroCoreCpp_ASMJS.asm')
+// const MyMoneroCoreCpp_ASMJS = require("./MyMoneroCoreCpp_ASMJS")
+
+function locateFile(filename, scriptDirectory)
+{	
+	var this_scriptDirectory = scriptDirectory	
+	const lastChar = this_scriptDirectory.charAt(this_scriptDirectory.length - 1)	
+	if (lastChar == "/" || lastChar == "\\") { 	
+		// ^-- this is not a '\\' on Windows because emscripten actually appends a '/'	
+		this_scriptDirectory = this_scriptDirectory.substring(0, this_scriptDirectory.length - 1) // remove trailing "/"	
+	}	
+	var fullPath = null; // add trailing slash to this	
+	const path = require('path')	
+	const lastPathComponent = path.basename(this_scriptDirectory)	
+	fullPath = path.format({	
+		dir: this_scriptDirectory,	
+		base: filename	
+	})
+	if (fullPath == null) {	
+		throw "Unable to derive fullPath. Please pass locateFile() to bridge obj init."	
+	}	
+	//	
+	return fullPath	
+}	
 
 module.exports = function(options)
 {
+	const Module_template = {}
 	options = options || {}
 
 	MyMoneroBridge_utils.update_options_for_fallback_to_asmjs(options)
-
 	return new Promise(function(resolve, reject) {
-		var Module_template = {
-			asm: asmModule,
-		}
+		Module_template["locateFile"] = locateFile	
+		//	
+		// NOTE: This requires src/module-post.js to be included as post-js in CMakeLists.txt under a wasm build	
+		require(`./MyMoneroCoreCpp_WASM`)(Module_template).ready.then(function(thisModule) 	
+		{	
+			const instance = new MyMoneroCoreBridgeClass(thisModule);	
+			resolve(instance);	
+		}).catch(function(e) {	
+			console.error("Error loading WASM_MyMoneroCoreCpp:", e);	
+			reject(e);	
+		})
 
-		setTimeout(function()
-		{ // "delaying even 1ms is enough to allow compilation memory to be reclaimed"
-			resolve(new MyMoneroCoreBridgeClass(MyMoneroCoreCpp_ASMJS(Module_template)))
-		}, 1)
+		// var Module_template = {
+		// 	asm: asmModule,
+		// }
+
+		// setTimeout(function()
+		// { // "delaying even 1ms is enough to allow compilation memory to be reclaimed"
+		// 	resolve(new MyMoneroCoreBridgeClass(MyMoneroCoreCpp_ASMJS(Module_template)))
+		// }, 1)
 
 	});
 };
