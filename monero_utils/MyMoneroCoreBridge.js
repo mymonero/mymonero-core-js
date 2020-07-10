@@ -55,7 +55,6 @@ function locateFile(filename, scriptDirectory)
 
 module.exports = function(options)
 {
-	const Module_template = {}
 	options = options || {}
 
 	MyMoneroBridge_utils.update_options_for_fallback_to_asmjs(options)
