@@ -32,26 +32,26 @@ const MyMoneroBridge_utils = require('./MyMoneroBridge_utils')
 // const MyMoneroCoreCpp_ASMJS = require("./MyMoneroCoreCpp_ASMJS")
 
 function locateFile(filename, scriptDirectory)
-{	
-	var this_scriptDirectory = scriptDirectory	
-	const lastChar = this_scriptDirectory.charAt(this_scriptDirectory.length - 1)	
-	if (lastChar == "/" || lastChar == "\\") { 	
-		// ^-- this is not a '\\' on Windows because emscripten actually appends a '/'	
-		this_scriptDirectory = this_scriptDirectory.substring(0, this_scriptDirectory.length - 1) // remove trailing "/"	
-	}	
-	var fullPath = null; // add trailing slash to this	
-	const path = require('path')	
-	const lastPathComponent = path.basename(this_scriptDirectory)	
-	fullPath = path.format({	
-		dir: this_scriptDirectory,	
-		base: filename	
+{
+	var this_scriptDirectory = scriptDirectory
+	const lastChar = this_scriptDirectory.charAt(this_scriptDirectory.length - 1)
+	if (lastChar == "/" || lastChar == "\\") {
+		// ^-- this is not a '\\' on Windows because emscripten actually appends a '/'
+		this_scriptDirectory = this_scriptDirectory.substring(0, this_scriptDirectory.length - 1) // remove trailing "/"
+	}
+	var fullPath = null; // add trailing slash to this
+	const path = require('path')
+	const lastPathComponent = path.basename(this_scriptDirectory)
+	fullPath = path.format({
+		dir: this_scriptDirectory,
+		base: filename
 	})
-	if (fullPath == null) {	
-		throw "Unable to derive fullPath. Please pass locateFile() to bridge obj init."	
-	}	
-	//	
-	return fullPath	
-}	
+	if (fullPath == null) {
+		throw "Unable to derive fullPath. Please pass locateFile() to bridge obj init."
+	}
+	//
+	return fullPath
+}
 
 module.exports = function(options)
 {
@@ -60,17 +60,64 @@ module.exports = function(options)
 
 	MyMoneroBridge_utils.update_options_for_fallback_to_asmjs(options)
 	return new Promise(function(resolve, reject) {
-		Module_template["locateFile"] = locateFile	
-		//	
-		// NOTE: This requires src/module-post.js to be included as post-js in CMakeLists.txt under a wasm build	
-		require(`./MyMoneroCoreCpp_WASM`)(Module_template).ready.then(function(thisModule) 	
-		{	
-			const instance = new MyMoneroCoreBridgeClass(thisModule);	
-			resolve(instance);	
-		}).catch(function(e) {	
-			console.error("Error loading WASM_MyMoneroCoreCpp:", e);	
-			reject(e);	
-		})
+		var Module_template = {}
+
+		if (options.asmjs != true || options.wasm == true) { // wasm
+			console.log("Using wasm: ", true)
+			//
+			Module_template["locateFile"] = locateFile
+			//
+			// NOTE: This requires src/module-post.js to be included as post-js in CMakeLists.txt under a wasm build
+			require(`./MyMoneroCoreCpp_WASM`)(Module_template).ready.then(function(thisModule)
+			{
+				const instance = new MyMoneroCoreBridgeClass(thisModule);
+				resolve(instance);
+			}).catch(function(e) {
+				console.error("Error loading WASM_MyMoneroCoreCpp:", e);
+				reject(e);
+			})
+		} else {
+			console.log("Using wasm: ", false)
+
+			var scriptDirectory = ""; // this was extracted from emscripten - it could get factored if anything else would ever need it
+			var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
+
+			if(_scriptDir){
+				scriptDirectory = _scriptDir
+			}
+			if (scriptDirectory.indexOf("blob:") !== 0) {
+				scriptDirectory = scriptDirectory.substr(0,scriptDirectory.lastIndexOf("/")+1)
+			} else {
+				scriptDirectory = ""
+			}
+
+			var read_fn = function(url)
+			{ // it's an option to move this over to fetch, but, fetch requires a polyfill for these older browsers anyway - making fetch an automatic dep just for asmjs fallback - and the github/fetch polyfill does not appear to actually support mode (for 'same-origin' policy) anyway - probably not worth it yet
+				var xhr = new XMLHttpRequest()
+				xhr.open("GET", url, false)
+				xhr.send(null)
+				//
+				return xhr.responseText
+			};
+
+			const filepath = locateFile("MyMoneroCoreCpp_ASMJS.asm.js", scriptDirectory)
+			const content = read_fn(filepath)
+			// TODO: verify content - for now, relying on same-origin and tls/ssl
+			var Module = {}
+			try {
+				eval(content) // I do not believe this is a safety concern, because content is server-controlled; https://humanwhocodes.com/blog/2013/06/25/eval-isnt-evil-just-misunderstood/
+			} catch (e) {
+				reject(e)
+				return
+			}
+			setTimeout(function()
+			{ // "delaying even 1ms is enough to allow compilation memory to be reclaimed"
+				Module_template['asm'] = Module['asm']
+				Module = null
+				resolve(new MyMoneroCoreBridgeClass(require("./MyMoneroCoreCpp_ASMJS")(Module_template)))
+			}, 1)
+		}
+
 
 		// var Module_template = {
 		// 	asm: asmModule,
