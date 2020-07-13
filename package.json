@@ -30,7 +30,9 @@
     "url": "https://github.com/mymonero/mymonero-core-js/issues"
   },
   "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
-  "dependencies": {},
+  "dependencies": {
+    "path-format": "^1.2.1"
+  },
   "devDependencies": {
     "babel-core": "6.26.3",
     "babel-loader": "8.0.2",
