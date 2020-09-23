@@ -42,6 +42,27 @@
     "webpack-cli": "3.1.0",
     "webpack-merge": "4.1.4"
   },
+  "files": [
+    "index.js",
+    "cryptonote_utils/biginteger.js",
+    "cryptonote_utils/moment.js",
+    "cryptonote_utils/money_format_utils.js",
+    "cryptonote_utils/nettype.js",
+    "hostAPI/response_parser_utils.js",
+    "monero_utils/monero_amount_format_utils.js",
+    "monero_utils/monero_config.js",
+    "monero_utils/monero_keyImage_cache_utils.js",
+    "monero_utils/monero_paymentID_utils.js",
+    "monero_utils/monero_sendingFunds_utils.js",
+    "monero_utils/monero_txParsing_utils.js",
+    "monero_utils/MyMoneroBridgeClass_Base.js",
+    "monero_utils/MyMoneroBridge_utils.js",
+    "monero_utils/MyMoneroCoreBridgeClass.js",
+    "monero_utils/MyMoneroCoreBridgeEssentialsClass.js",
+    "monero_utils/MyMoneroCoreBridge.js",
+    "monero_utils/MyMoneroCoreCpp_WASM.js",
+    "monero_utils/MyMoneroCoreCpp_WASM.wasm"
+  ],
   "jest": {
     "testEnvironment": "node",
     "verbose": true,
