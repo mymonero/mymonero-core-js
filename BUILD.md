@@ -16,6 +16,7 @@ rm monero_utils/MyMoneroCoreCpp_*
 
 # Prepare boost source code
 curl -LO https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz
+shasum -a 256 boost_1_69_0.tar.gz # should be 9a2c2819310839ea373f42d69e733c339b4e9a19deab6bfec448281554aa4dbb, per https://www.boost.org/users/history/version_1_69_0.html
 mkdir -p contrib/boost-sdk
 tar zxf boost_1_69_0.tar.gz -C contrib/boost-sdk --strip-components=1
 ```
