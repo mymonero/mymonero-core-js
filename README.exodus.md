@@ -28,6 +28,8 @@ tar zxf boost_1_69_0.tar.gz -C contrib/boost-sdk --strip-components=1
 # Fetch changes
 git pull
 git submodule foreach --recursive git pull
+# temp until react-native-integration is renamed to master
+cd src/submodules/mymonero-core-cpp && git checkout 7de9e28 && cd -
 
 # Clean up old build files
 rm -rf build && mkdir build
