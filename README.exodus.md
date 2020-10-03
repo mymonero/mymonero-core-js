@@ -1,9 +1,3 @@
-## Upgrade submodules
-
-```
-bin/update_submodules   // only support master branch
-```
-
 ## Build
 
 > In order to create an deterministic build, we're using docker.
