@@ -1,7 +1,5 @@
 ## Build
 
-> In order to create an deterministic build, we're using docker.
-
 ### 1. Install Docker
 
 For macOS, download it at https://hub.docker.com/editions/community/docker-ce-desktop-mac
