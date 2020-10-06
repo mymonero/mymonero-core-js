@@ -10,6 +10,8 @@ For macOS, download it at https://hub.docker.com/editions/community/docker-ce-de
 # Clone repo and submodules
 git clone --recursive git@github.com:ExodusMovement/mymonero-core-js.git
 cd mymonero-core-js
+rm -r src/submodules/mymonero-core-cpp/contrib/monero-core-custom
+git clone git@github.com:ExodusMovement/monero-core-custom.git src/submodules/mymonero-core-cpp/contrib/monero-core-custom
 
 # Prepare boost source code
 curl -LO https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz
@@ -24,8 +26,7 @@ tar zxf boost_1_69_0.tar.gz -C contrib/boost-sdk --strip-components=1
 # Fetch changes
 git pull
 git submodule update
-rm -r src/submodules/mymonero-core-cpp/contrib/monero-core-custom
-git clone git@github.com:ExodusMovement/monero-core-custom.git src/submodules/mymonero-core-cpp/contrib/monero-core-custom
+cd src/submodules/mymonero-core-cpp/contrib/monero-core-custom && git pull && cd -
 
 # Clean up old build files
 rm -rf build && mkdir build
