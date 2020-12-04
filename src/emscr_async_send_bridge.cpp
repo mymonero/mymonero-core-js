@@ -500,6 +500,7 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 		ptrTo_taskAsyncContext->fee_per_b,
 		ptrTo_taskAsyncContext->fee_mask,
 		*(parsed_res.mix_outs),
+		200,
 		ptrTo_taskAsyncContext->use_fork_rules,
 		ptrTo_taskAsyncContext->unlock_time,
 		ptrTo_taskAsyncContext->nettype
