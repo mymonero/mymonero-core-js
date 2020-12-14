@@ -1,6 +1,6 @@
 {
   "name": "@exodus/mymonero-core-js",
-  "version": "17.0.1",
+  "version": "17.1.2",
   "description": "The JS library containing the Monero crypto plus lightweight wallet functions behind the official MyMonero apps",
   "main": "index.js",
   "repository": {
