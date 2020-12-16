@@ -473,6 +473,66 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 		}
 		return ret.retVal;
 	}
+	send_step1__prepare_params_for_get_decoys(
+			is_sweeping,
+			sending_amount, // this may be 0 if sweeping
+			fee_per_b,
+			fee_mask,
+			priority,
+			unspent_outputs,
+			optl__payment_id_string, // this may be nil
+			optl__passedIn_attemptAt_fee,
+			optl__fork_version,
+		) {
+			var sanitary__unspent_outputs = [];
+			for (let i in unspent_outputs) {
+				const sanitary__output = bridge_sanitized__spendable_out(unspent_outputs[i])
+				sanitary__unspent_outputs.push(sanitary__output);
+			}
+			const args =
+			{
+				sending_amount: sending_amount.toString(),
+				is_sweeping: "" + is_sweeping, // bool -> string
+				priority: "" + priority,
+				fee_per_b: fee_per_b.toString(),
+				fee_mask: fee_mask.toString(),
+				unspent_outs: sanitary__unspent_outputs // outs, not outputs
+			};
+			if (typeof optl__payment_id_string !== "undefined" && optl__payment_id_string && optl__payment_id_string != "") {
+				args.payment_id_string = optl__payment_id_string;
+			}
+			if (typeof optl__passedIn_attemptAt_fee !== "undefined" && optl__passedIn_attemptAt_fee && optl__passedIn_attemptAt_fee != "") {
+				args.passedIn_attemptAt_fee = optl__passedIn_attemptAt_fee.toString(); // ought to be a string but in case it's a JSBigInt…
+			}
+			if (typeof optl__fork_version !== "undefined" && optl__fork_version && optl__fork_version != "") {
+				args.fork_version = optl__fork_version.toString();
+			}
+			const args_str = JSON.stringify(args);
+			const ret_string = this.Module.send_step1__prepare_params_for_get_decoys(args_str);
+			const ret = JSON.parse(ret_string);
+			// special case: err_code of needMoreMoneyThanFound; rewrite err_msg
+			if (ret.err_code == "90" || ret.err_code == 90) { // declared in mymonero-core-cpp/src/monero_transfer_utils.hpp
+				return {
+					required_balance: ret.required_balance,
+					spendable_balance: ret.spendable_balance,
+					err_msg: `Spendable balance too low. Have ${
+						monero_amount_format_utils.formatMoney(new JSBigInt(ret.spendable_balance))
+					} ${monero_config.coinSymbol}; need ${
+						monero_amount_format_utils.formatMoney(new JSBigInt(ret.required_balance))
+					} ${monero_config.coinSymbol}.`
+				};
+			}
+			if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
+				return { err_msg: ret.err_msg };
+			}
+			return { // calling these out to set an interface
+				mixin: parseInt(ret.mixin), // for the server API request to RandomOuts
+				using_fee: ret.using_fee, // string; can be passed to step2
+				change_amount: ret.change_amount, // string for step2
+				using_outs: ret.using_outs, // this can be passed straight to step2
+				final_total_wo_fee: ret.final_total_wo_fee // aka sending_amount for step2
+			};
+		}
 	send_step2__try_create_transaction( // send only IPC-safe vals - no JSBigInts
 			from_address_string,
 			sec_keys,
@@ -495,7 +555,7 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 			mix_outs = mix_outs || [];
 			// NOTE: we also do this check in the C++... may as well remove it from here
 			if (mix_outs.length !== using_outs.length && fake_outputs_count !== 0) {
-				return { 
+				return {
 					err_msg: "Wrong number of mix outs provided (" +
 						using_outs.length + " using_outs, " +
 						mix_outs.length + " mix outs)"
@@ -519,7 +579,7 @@ class MyMoneroCoreBridgeClass extends MyMoneroCoreBridgeEssentialsClass
 				const sanitary__mix_outs_and_amount =
 				{
 					amount: mix_outs[i].amount.toString(), // it should be a string, but in case it's not
-					outputs: [] 
+					outputs: []
 				};
 				if (mix_outs[i].outputs && typeof mix_outs[i].outputs !== 'undefined') {
 					for (let j in mix_outs[i].outputs) {
