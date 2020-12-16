@@ -2,10 +2,12 @@
 
 PLATFORM="emscripten"
 
+# SRC dr could be changed to tour boost-sdk dir eg `/User/boost` with B2 headers
 SRC_DIR="contrib/boost-sdk"
+
 INSTALL_DIR="build/boost"
 
-SRC_PATH="$(pwd)/$SRC_DIR"
+SRC_PATH="$SRC_DIR"
 INSTALL_PATH="$(pwd)/$INSTALL_DIR"
 JAM_CONFIG_PATH="$(pwd)/configs/$PLATFORM.jam"
 
@@ -14,6 +16,7 @@ if [ ! -d "$SRC_PATH" ]; then
   exit 1
 fi
 
+# $EMSCRIPTEN should be lookin at `/emsdk/upstream/emscripten`
 if [ -z "$EMSCRIPTEN" ]; then
   echo "EMSCRIPTEN MUST BE DEFINED!"
   exit -1  
