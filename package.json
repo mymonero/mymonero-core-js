@@ -1,6 +1,6 @@
 {
   "name": "mymonero-core-js",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "The JS library containing the Monero crypto plus lightweight wallet functions behind the official MyMonero apps",
   "main": "index.js",
   "repository": {
@@ -8,8 +8,18 @@
     "url": "git+https://github.com/mymonero/mymonero-core-js.git"
   },
   "scripts": {
+    "build:boost": "docker run --rm -it -v $(pwd):/app -w /app  -w /app -e EMSCRIPTEN=/emsdk/upstream/emscripten emscripten/emsdk ./bin/build-boost-emscripten.sh",
+    "build:emscripten": "docker run --rm -it -v $(pwd):/app -w /app -e EMSCRIPTEN=/emsdk/upstream/emscripten emscripten/emsdk ./bin/archive-emcpp.sh",
     "format": "find . -name '*.js*' | xargs prettier --write --config ./.prettierrc --config-precedence file-override",
-    "test": "mocha"
+    "test": "mocha",
+    "install": "napa"
+  },
+  "napa-config": {
+    "cache": false
+  },
+  "napa": {
+    "@mymonero/mymonero-core-cpp": "git+https://github.com/mymonero/mymonero-core-cpp",
+    "@mymonero/mymonero-core-custom": "git+https://github.com/mymonero/monero-core-custom"
   },
   "keywords": [
     "monero",
@@ -30,17 +40,19 @@
     "url": "https://github.com/mymonero/mymonero-core-js/issues"
   },
   "homepage": "https://github.com/mymonero/mymonero-core-js#readme",
-  "dependencies": {},
+  "dependencies": {
+    "napa": "^3.0.0"
+  },
   "devDependencies": {
     "babel-core": "6.26.3",
     "babel-loader": "8.0.2",
     "babel-minify": "0.4.3",
     "html5-fs": "0.1.1",
+    "lodash": "^4.17.21",
     "mocha": "5.2.0",
     "webpack": "4.19.1",
     "webpack-cli": "3.1.0",
-    "webpack-merge": "4.1.4",
-    "lodash": ">=4.17.13"
+    "webpack-merge": "4.1.4"
   },
   "jest": {
     "testEnvironment": "node",
