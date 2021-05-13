@@ -1,5 +1,5 @@
 "use strict";
-const mymonero = require("../");
+const mymonero = require("..");
 const assert = require('assert')
 // const assert = require("assert");
 
