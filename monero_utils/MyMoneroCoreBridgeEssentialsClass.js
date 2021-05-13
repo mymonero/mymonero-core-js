@@ -86,11 +86,7 @@ class MyMoneroCoreBridgeEssentialsClass extends MyMoneroBridgeClass_Base
 		return ret.retVal;
 	}
 
-	new__int_addr_from_addr_and_short_pid(
-		address,
-		short_pid,
-		nettype
-	) {
+	new__int_addr_from_addr_and_short_pid(address, short_pid, nettype) {
 		if (!short_pid || short_pid.length != 16) {
 			throw "expected valid short_pid";
 		}

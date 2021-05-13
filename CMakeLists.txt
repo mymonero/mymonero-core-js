@@ -146,12 +146,10 @@ set (
 -s DEMANGLE_SUPPORT=1 \
 -s NO_DYNAMIC_EXECUTION=1 \
 -s NODEJS_CATCH_EXIT=0 \
--s EXPORT_ES6=1 \
 -s EXPORTED_RUNTIME_METHODS='[\"UTF8ToString\"]' \
 -s WASM=1 \
 -Oz \
 -s ALLOW_MEMORY_GROWTH=1 \
---post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
 "
     # • Disabling exception catching does not introduce silent failures 
     # • Probably don't need PRECISE_F32 but wouldn't want to not use it

@@ -83,76 +83,18 @@ module.exports = function(options)
 	}
 	return new Promise(function(resolve, reject) {
 		var Module_template = {}
-		if (options.asmjs != true || options.wasm == true) { // wasm
-			console.log("Using wasm: ", true)
-			//
-			Module_template["locateFile"] = locateFile
-			//
-			// NOTE: This requires src/module-post.js to be included as post-js in CMakeLists.txt under a wasm build
-			require(`./MyMoneroCoreCpp_WASM`)(Module_template).ready.then(function(thisModule) 
-			{
-				const instance = new MyMoneroCoreBridgeClass(thisModule);
-				resolve(instance);
-			}).catch(function(e) {
-				console.error("Error loading WASM_MyMoneroCoreCpp:", e);
-				reject(e);
-			});
-		} else { // this is synchronous so we can resolve immediately
-			console.log("Using wasm: ", false)
-			//
-			var scriptDirectory=""; // this was extracted from emscripten - it could get factored if anything else would ever need it
-			if (ENVIRONMENT_IS_NODE) {
-				scriptDirectory=__dirname+"/";
-			} else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
-				if (ENVIRONMENT_IS_WORKER) {
-					scriptDirectory = self.location.href
-				} else if (document.currentScript) {
-					scriptDirectory = document.currentScript.src
-				}
-				var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
-				if(_scriptDir){
-					scriptDirectory = _scriptDir
-				}
-				if (scriptDirectory.indexOf("blob:") !== 0) {
-					scriptDirectory = scriptDirectory.substr(0,scriptDirectory.lastIndexOf("/")+1)
-				} else {
-					scriptDirectory = ""
-				}
-			}
-			var read_fn;
-			if (ENVIRONMENT_IS_NODE) {
-				read_fn = function(filepath)
-				{
-					return require("fs").readFileSync(require("path").normalize(filepath)).toString()
-				};
-			} else if (ENVIRONMENT_IS_WEB||ENVIRONMENT_IS_WORKER) {
-				read_fn = function(url)
-				{ // it's an option to move this over to fetch, but, fetch requires a polyfill for these older browsers anyway - making fetch an automatic dep just for asmjs fallback - and the github/fetch polyfill does not appear to actually support mode (for 'same-origin' policy) anyway - probably not worth it yet 
-					var xhr = new XMLHttpRequest()
-					xhr.open("GET", url, false)
-					xhr.send(null)
-					//
-					return xhr.responseText
-				};
-			} else {
-				throw "Unsupported environment - please implement file reading for asmjs fallback case"
-			}
-			const filepath = locateFile("MyMoneroCoreCpp_ASMJS.asm.js", scriptDirectory)
-			const content = read_fn(filepath)
-			// TODO: verify content - for now, relying on same-origin and tls/ssl
-			var Module = {}
-			try {
-				eval(content) // I do not believe this is a safety concern, because content is server-controlled; https://humanwhocodes.com/blog/2013/06/25/eval-isnt-evil-just-misunderstood/
-			} catch (e) {
-				reject(e)
-				return
-			}
-			setTimeout(function()
-			{ // "delaying even 1ms is enough to allow compilation memory to be reclaimed"
-				Module_template['asm'] = Module['asm']
-				Module = null
-				resolve(new MyMoneroCoreBridgeClass(require("./MyMoneroCoreCpp_ASMJS")(Module_template)))
-			}, 1) 
-		}
+		console.log("Using wasm: ", true)
+		//
+		Module_template["locateFile"] = locateFile
+		//
+		// NOTE: This requires src/module-post.js to be included as post-js in CMakeLists.txt under a wasm build
+		require(`./MyMoneroCoreCpp_WASM`)(Module_template).then(function(thisModule) 
+		{
+			const instance = new MyMoneroCoreBridgeClass(thisModule);
+			resolve(instance);
+		}).catch(function(e) {
+			console.error("Error loading WASM_MyMoneroCoreCpp:", e);
+			reject(e);
+		});
 	});
 };
