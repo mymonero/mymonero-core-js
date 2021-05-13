@@ -33,15 +33,32 @@
 // v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
 const JSBigInt = require("../cryptonote_utils/biginteger").BigInteger;
 const nettype_utils = require("../cryptonote_utils/nettype");
-//
-const MyMoneroBridgeClass_Base = require('./MyMoneroBridgeClass_Base')
 const MyMoneroBridge_utils = require('./MyMoneroBridge_utils')
 //
-class MyMoneroCoreBridgeEssentialsClass extends MyMoneroBridgeClass_Base
+class MyMoneroCoreBridgeEssentialsClass
 {
 	constructor(this_Module)
 	{
-		super(this_Module);
+		this.Module = this_Module;
+	}
+	//
+	//
+	__new_cb_args_with(task_id, err_msg, res)
+	{
+		const args = 
+		{
+			task_id: task_id
+		};
+		if (typeof err_msg !== 'undefined' && err_msg) {
+			args.err_msg = err_msg; // errors must be sent back so that C++ can free heap vals container
+		} else {
+			args.res = res;
+		}
+		return args;
+	}
+	__new_task_id()
+	{
+		return Math.random().toString(36).substr(2, 9); // doesn't have to be super random
 	}
 	//
 	//

@@ -98,7 +98,7 @@ describe("cryptonote_utils tests", function() {
 			public_key,
 			private_key,
 		);
-		assert.equal(
+		assert.strictEqual(
 			derivation,
 			"591c749f1868c58f37ec3d2a9d2f08e7f98417ac4f8131e3a57c1fd71273ad00",
 		);
