@@ -1,31 +1,3 @@
-// Copyright (c) 2014-2019, MyMonero.com
-//
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without modification, are
-// permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this list of
-//	conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list
-//	of conditions and the following disclaimer in the documentation and/or other
-//	materials provided with the distribution.
-//
-// 3. Neither the name of the copyright holder nor the names of its contributors may be
-//	used to endorse or promote products derived from this software without specific
-//	prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
-// THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-// STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-// THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 "use strict";
 const mymonero = require("../");
 const assert = require("assert");
@@ -42,7 +14,7 @@ describe("cryptonote_utils tests", function() {
 	it("create_address aka address_and_keys_from_seed", async function() {
 		const monero_utils = await require("../monero_utils/MyMoneroCoreBridge")({})
 		var decoded = monero_utils.address_and_keys_from_seed("9c973aa296b79bbf452781dd3d32ad7f", nettype);
-		assert.equal(
+		assert.strictEqual(
 			decoded.address_string,
 			"43zxvpcj5Xv9SEkNXbMCG7LPQStHMpFCQCmkmR4u5nzjWwq5Xkv5VmGgYEsHXg4ja2FGRD5wMWbBVMijDTqmmVqm93wHGkg",
 		);
@@ -62,7 +34,7 @@ describe("cryptonote_utils tests", function() {
 			view:
 				"576f0e61e250d941746ed147f602b5eb1ea250ca385b028a935e166e18f74bd7",
 		};
-		assert.deepEqual(decoded, expected);
+		assert.deepStrictEqual(decoded, expected);
 	});
 
 	it("decode mainnet integrated address", async function() {
@@ -79,7 +51,7 @@ describe("cryptonote_utils tests", function() {
 			isSubaddress: false,
 			intPaymentId: "83eab71fbee84eb9",
 		};
-		assert.deepEqual(decoded, expected);
+		assert.deepStrictEqual(decoded, expected);
 	});
 
 	// not implemented
@@ -98,10 +70,7 @@ describe("cryptonote_utils tests", function() {
 			public_key,
 			private_key,
 		);
-		assert.strictEqual(
-			derivation,
-			"591c749f1868c58f37ec3d2a9d2f08e7f98417ac4f8131e3a57c1fd71273ad00",
-		);
+		assert.strictEqual(derivation, "591c749f1868c58f37ec3d2a9d2f08e7f98417ac4f8131e3a57c1fd71273ad00");
 	});
 
 	it("derive public key", async function() {
@@ -115,10 +84,7 @@ describe("cryptonote_utils tests", function() {
 			1,
 			public_key,
 		);
-		assert.equal(
-			output_key,
-			"da26518ddb54cde24ccfc59f36df13bbe9bdfcb4ef1b223d9ab7bef0a50c8be3",
-		);
+		assert.strictEqual(output_key, "da26518ddb54cde24ccfc59f36df13bbe9bdfcb4ef1b223d9ab7bef0a50c8be3");
 	});
 
 	it("derive subaddress public key", async function() {
@@ -132,10 +98,7 @@ describe("cryptonote_utils tests", function() {
 			derivation,
 			1,
 		);
-		assert.equal(
-			subaddress_public_key,
-			"dfc9e4a0039e913204c1c0f78e954a7ec7ce291d8ffe88265632f0da9d8de1be",
-		);
+		assert.strictEqual(subaddress_public_key, "dfc9e4a0039e913204c1c0f78e954a7ec7ce291d8ffe88265632f0da9d8de1be");
 	});
 
 	it("decodeRct", async function() {
@@ -172,14 +135,8 @@ describe("cryptonote_utils tests", function() {
 			]
 		};
 		var ret = monero_utils.decodeRct(rv, sk, i);
-		assert.equal(
-			ret.mask,
-			"3f59c741c9ad560bfea92f42449a180bc8362f1b5ddd957e3b5772dbaf7f840e",
-		);
-		assert.equal(
-			ret.amount,
-			"4501", // TODO: is this correct? 
-		);
+		assert.strictEqual(ret.mask, "3f59c741c9ad560bfea92f42449a180bc8362f1b5ddd957e3b5772dbaf7f840e");
+		assert.strictEqual(ret.amount, "4501"); // TODO: is this correct? 
 	});
 	it("estimate_fee", async function() {
 		const monero_utils = await require("../monero_utils/MyMoneroCoreBridge")({})
@@ -196,10 +153,7 @@ describe("cryptonote_utils tests", function() {
 			priority: 2, 
 			fork_version: 10
 		});
-		assert.equal(
-			fee,
-			330050000
-		);
+		assert.strictEqual(fee,'330050000');
 	});
 	it("estimate_tx_weight", async function() {
 		const monero_utils = await require("../monero_utils/MyMoneroCoreBridge")({})
@@ -211,9 +165,6 @@ describe("cryptonote_utils tests", function() {
 			extra_size: 0, 
 			bulletproof: true,
 		});
-		assert.equal(
-			weight,
-			2677
-		);
+		assert.strictEqual(weight, 2677);
 	});
 });

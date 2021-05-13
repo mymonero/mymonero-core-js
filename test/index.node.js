@@ -62,7 +62,7 @@ async function t1()
 		}
 		const reason = mymonero.monero_txParsing_utils.TransactionLockedReason(tx, blockchain_height)
 		console.log("reason" , reason)
-		assert.equal(0, reason.indexOf("Will be unlocked in 5 blocks, ~5 minutes, Today at"))
+		assert.strictEqual(0, reason.indexOf("Will be unlocked in 5 blocks, ~5 minutes, Today at"))
 	} catch (e) {
 		console.log(e)
 	}
@@ -76,8 +76,8 @@ async function t1()
 		}
 		const reason = mymonero.monero_txParsing_utils.TransactionLockedReason(tx, blockchain_height)
 		console.log("reason" , reason)
-		assert.equal(0, reason.indexOf("Will be unlocked in"))
-		assert.notEqual(-1, reason.indexOf("years"))
+		assert.strictEqual(0, reason.indexOf("Will be unlocked in"))
+		assert.notStrictEqual(-1, reason.indexOf("years"))
 	} catch (e) {
 		console.log(e)
 	}
