@@ -28,19 +28,49 @@
 //
 "use strict";
 //
-// NOTE: The main downside to using an index.js file like this is that it will pull in all the code - rather than the consumer requiring code module-by-module
-// It's of course possible to construct your own stripped-down index.[custom name].js file for, e.g., special webpack bundling usages.
-const mymonero_core_js = {};
-mymonero_core_js.monero_utils_promise = require("./monero_utils/MyMoneroCoreBridge")(); // NOTE: This is actually a promise. Call .then(function(monero_utils) { }) to actually use
-mymonero_core_js.monero_config = require("./monero_utils/monero_config");
-mymonero_core_js.monero_txParsing_utils = require("./monero_utils/monero_txParsing_utils");
-mymonero_core_js.monero_sendingFunds_utils = require("./monero_utils/monero_sendingFunds_utils");
-mymonero_core_js.monero_keyImage_cache_utils = require("./monero_utils/monero_keyImage_cache_utils");
-mymonero_core_js.monero_paymentID_utils = require("./monero_utils/monero_paymentID_utils");
-mymonero_core_js.monero_amount_format_utils = require("./monero_utils/monero_amount_format_utils");
-mymonero_core_js.api_response_parser_utils = require("./hostAPI/response_parser_utils");
+function IsValidPaymentIDOrNoPaymentID(payment_id__orNil) {
+	if (
+		payment_id__orNil == null ||
+		payment_id__orNil == "" ||
+		typeof payment_id__orNil == "undefined"
+	) {
+		return true; // no pid
+	}
+	let payment_id = payment_id__orNil;
+	if (IsValidShortPaymentID(payment_id)) {
+		return true;
+	}
+	if (IsValidLongPaymentID(payment_id)) {
+		return true;
+	}
+	return false;
+}
+exports.IsValidPaymentIDOrNoPaymentID = IsValidPaymentIDOrNoPaymentID;
 //
-mymonero_core_js.nettype_utils = require("./cryptonote_utils/nettype");
-mymonero_core_js.JSBigInt = require("./cryptonote_utils/biginteger").BigInteger; // so that it is available to a hypothetical consumer's language-bridging web context for constructing string arguments to the above modules
+function IsValidShortPaymentID(payment_id) {
+	return IsValidPaymentIDOfLength(payment_id, 16);
+}
+exports.IsValidShortPaymentID = IsValidShortPaymentID;
 //
-module.exports = mymonero_core_js;
+function IsValidLongPaymentID(payment_id) {
+	return IsValidPaymentIDOfLength(payment_id, 64);
+}
+exports.IsValidLongPaymentID = IsValidLongPaymentID;
+//
+function IsValidPaymentIDOfLength(payment_id, required_length) {
+	if (required_length != 16 && required_length != 64) {
+		throw "unexpected IsValidPaymentIDOfLength required_length";
+	}
+	let payment_id_length = payment_id.length;
+	if (payment_id_length !== required_length) {
+		// new encrypted short
+		return false; // invalid length
+	}
+	let pattern = RegExp("^[0-9a-fA-F]{" + required_length + "}$");
+	if (pattern.test(payment_id) != true) {
+		// not a valid required_length char pid
+		return false; // then not valid
+	}
+	return true;
+}
+exports.IsValidShortPaymentID = IsValidShortPaymentID;

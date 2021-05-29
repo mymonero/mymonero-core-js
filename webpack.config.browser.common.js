@@ -26,21 +26,90 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-"use strict";
+"use strict"
 //
-// NOTE: The main downside to using an index.js file like this is that it will pull in all the code - rather than the consumer requiring code module-by-module
-// It's of course possible to construct your own stripped-down index.[custom name].js file for, e.g., special webpack bundling usages.
-const mymonero_core_js = {};
-mymonero_core_js.monero_utils_promise = require("./monero_utils/MyMoneroCoreBridge")(); // NOTE: This is actually a promise. Call .then(function(monero_utils) { }) to actually use
-mymonero_core_js.monero_config = require("./monero_utils/monero_config");
-mymonero_core_js.monero_txParsing_utils = require("./monero_utils/monero_txParsing_utils");
-mymonero_core_js.monero_sendingFunds_utils = require("./monero_utils/monero_sendingFunds_utils");
-mymonero_core_js.monero_keyImage_cache_utils = require("./monero_utils/monero_keyImage_cache_utils");
-mymonero_core_js.monero_paymentID_utils = require("./monero_utils/monero_paymentID_utils");
-mymonero_core_js.monero_amount_format_utils = require("./monero_utils/monero_amount_format_utils");
-mymonero_core_js.api_response_parser_utils = require("./hostAPI/response_parser_utils");
+const path = require('path')
 //
-mymonero_core_js.nettype_utils = require("./cryptonote_utils/nettype");
-mymonero_core_js.JSBigInt = require("./cryptonote_utils/biginteger").BigInteger; // so that it is available to a hypothetical consumer's language-bridging web context for constructing string arguments to the above modules
-//
-module.exports = mymonero_core_js;
+module.exports = 
+{
+	devtool: "source-map",
+	context: __dirname,
+	entry: "./index.js",
+	output: {
+		path: path.resolve(__dirname, "build"),
+		filename: "mymonero-core.js",
+        library: "mymonero_core_js",
+        libraryTarget: "umd"
+	},
+	cache: false,
+	resolve: {
+		alias: {
+			"fs": "html5-fs"
+		},
+		extensions: ['.js', '.jsx', '.wasm', '.css', '.json', 'otf', 'ttf', 'eot', 'svg'],
+		modules: [
+			'node_modules'
+		]
+	},
+	stats: {
+		colors: true
+	},
+	module: {
+		rules: [
+			{
+				test: /\.(otf|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+				use: [
+					{ loader: 'file-loader' }
+				]
+			},
+			{
+				test: /\.css$/,
+				use: [
+					{ loader: 'style!css!postcss' }
+				]
+			},
+			{
+				test: /\.styl$/,
+				use: [
+					{ loader: 'style!css!postcss!stylus?paths=node_modules' }
+				]
+			},
+			{
+				test: /\.js$/,
+				exclude: {
+					test: [
+						path.join(__dirname, 'node_modules')
+					],
+					exclude: [
+						'monero_utils/MyMoneroCoreCpp_ASMJS.asm.js',
+						'monero_utils/MyMoneroCoreCpp_ASMJS.wasm'
+					]
+				},
+				use: [
+					{
+						loader: 'babel-loader',
+						options: {
+							cacheDirectory: false
+							// ,
+							// presets: [ "es2015" ],
+							// plugins: ["transform-runtime"]
+						}
+					}
+				]
+			}
+		]
+	},
+	externals: [
+		(function () {
+			var IGNORES = [
+				'electron'
+			];
+			return function (context, request, callback) {
+				if (IGNORES.indexOf(request) >= 0) {
+					return callback(null, "require('" + request + "')");
+				}
+				return callback();
+			};
+		})()
+	]
+}

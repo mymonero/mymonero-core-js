@@ -25,22 +25,39 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+// Original Author: Lucas Jones
+// Modified to remove jQuery dep and support modular inclusion of deps by Paul Shapiro (2016)
+// Modified to add RingCT support by luigi1111 (2017)
 //
-"use strict";
+// v--- These should maybe be injected into a context and supplied to currencyConfig for future platforms
+const MyMoneroBridge_utils = require('./MyMoneroBridge_utils')
 //
-// NOTE: The main downside to using an index.js file like this is that it will pull in all the code - rather than the consumer requiring code module-by-module
-// It's of course possible to construct your own stripped-down index.[custom name].js file for, e.g., special webpack bundling usages.
-const mymonero_core_js = {};
-mymonero_core_js.monero_utils_promise = require("./monero_utils/MyMoneroCoreBridge")(); // NOTE: This is actually a promise. Call .then(function(monero_utils) { }) to actually use
-mymonero_core_js.monero_config = require("./monero_utils/monero_config");
-mymonero_core_js.monero_txParsing_utils = require("./monero_utils/monero_txParsing_utils");
-mymonero_core_js.monero_sendingFunds_utils = require("./monero_utils/monero_sendingFunds_utils");
-mymonero_core_js.monero_keyImage_cache_utils = require("./monero_utils/monero_keyImage_cache_utils");
-mymonero_core_js.monero_paymentID_utils = require("./monero_utils/monero_paymentID_utils");
-mymonero_core_js.monero_amount_format_utils = require("./monero_utils/monero_amount_format_utils");
-mymonero_core_js.api_response_parser_utils = require("./hostAPI/response_parser_utils");
+class MyMoneroBridgeClass_Base
+{
+	constructor(this_Module)
+	{
+		this.Module = this_Module;
+	}
+	//
+	//
+	__new_cb_args_with(task_id, err_msg, res)
+	{
+		const args = 
+		{
+			task_id: task_id
+		};
+		if (typeof err_msg !== 'undefined' && err_msg) {
+			args.err_msg = err_msg; // errors must be sent back so that C++ can free heap vals container
+		} else {
+			args.res = res;
+		}
+		return args;
+	}
+	__new_task_id()
+	{
+		return Math.random().toString(36).substr(2, 9); // doesn't have to be super random
+	}
+}
 //
-mymonero_core_js.nettype_utils = require("./cryptonote_utils/nettype");
-mymonero_core_js.JSBigInt = require("./cryptonote_utils/biginteger").BigInteger; // so that it is available to a hypothetical consumer's language-bridging web context for constructing string arguments to the above modules
-//
-module.exports = mymonero_core_js;
+module.exports = MyMoneroBridgeClass_Base

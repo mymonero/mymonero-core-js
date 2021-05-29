@@ -14,3 +14,6 @@ mkdir -p ./build/mymonero_core_js/monero_utils/;
 
 echo "🔁   cp monero_utils/MyMoneroCoreCpp_WASM.wasm ./build/mymonero_core_js/monero_utils/";
 cp monero_utils/MyMoneroCoreCpp_WASM.wasm ./build/mymonero_core_js/monero_utils/;
+
+echo "🔁   cp monero_utils/MyMoneroCoreCpp_ASMJS.asm.js ./build/mymonero_core_js/monero_utils/";
+cp monero_utils/MyMoneroCoreCpp_ASMJS.asm.js ./build/mymonero_core_js/monero_utils/;

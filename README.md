@@ -30,7 +30,7 @@ There is also a chain of build scripts which is capable of building a JS module 
 
 It's possible to run your own lightweight (hosted) wallet server by using either OpenMonero or the lightweight wallet server which MyMonero has developed specially to be open-sourced for the Monero community (PR is in the process of being merged). However, MyMonero also offers highly optimized, high throughput, secure hosting for a nominal, scaling fee per active wallet per month to wallet app makers who would like to use this library, mymonero-core-js, to add hosted Monero wallets to their app. 
 
-The benefit of offering a hosted wallet rather than requiring users to use a remote node is that scanning doesn't have to take place on the mobile device, so the user doesn't have to download the blockchain and scan on their device, or wait when they switch to a new device or come back to the app after a period of time. For more information, please reach out to Devin at [support@mymonero.com](support@mymonero.com). We work hard to support the growth of the Monero ecosystem, and will be happy to work with integrators on flexible pricing.
+The benefit of offering a hosted wallet rather than requiring users to use a remote node is that scanning doesn't have to take place on the mobile device, so the user doesn't have to download the blockchain and scan on their device, or wait when they switch to a new device or come back to the app after a period of time. For more information, please reach out to Paul at [paul@mymonero.com](paul@mymonero.com). We work hard to support the growth of the Monero ecosystem, and will be happy to work with integrators on flexible pricing.
 
 ### Contents 
 
@@ -93,21 +93,29 @@ In other words, if your app only needs to generate a mnemonic, you can avoid usi
 -----
 ### `cryptonote_utils/nettype`
 
-nettype has been moved to a npm package
+You'll need this module to construct the `nettype` argument for passing to various other functions.
 
-[mymonero-nettype](https://www.npmjs.com/package/@mymonero/mymonero-nettype)
+#### Examples
+
+`const nettype = require('cryptonote_utils/nettype').network_type.MAINNET`
 
 -----
 ### `cryptonote_utils/biginteger`
 
-BigInteger has been moved to a npm package
+Used extensively for managing Monero amounts in atomic units to ensure precision.
 
-[mymonero-bigint](https://www.npmjs.com/package/@mymonero/mymonero-bigint)
+#### Examples
+
+```
+const JSBigInt = require('../mymonero_core_js/cryptonote_utils/biginteger').BigInteger
+const amount = new JSBigInt('12300000')
+const amount_str = monero_amount_format_utils.formatMoney(amount)
+```
 
 -----
 ### `cryptonote_utils/money_format_utils`
 
-[mymonero-money-format](https://www.npmjs.com/package/@mymonero/mymonero-money-format)
+It's not necessary to use this module directly. See `monero_utils/monero_amount_format_utils`.
 
 -----
 ### `monero_utils/monero_amount_format_utils`
@@ -139,12 +147,10 @@ Use these functions to directly interact with the key image cache.
 -----
 ### `monero_utils/monero_paymentID_utils`
 
-[mymonero-paymentid-utils](https://www.npmjs.com/package/@mymonero/mymonero-paymentid-utils)
+Contains functions to validating payment ID formats. To generate payment IDs, see `monero_utils`.
 
 -----
 ### `monero_utils/monero_sendingFunds_utils`
-
-[mymonero-sendfunds-utils](https://www.npmjs.com/package/@mymonero/mymonero-sendfunds-utils)
 
 Used to contain a convenience implementation of `SendFunds(…)` for constructing arguments to `create_transaction`-type functions. However that's been moved to C++ and exposed via a single function on `MyMoneroCoreBridge` called `async__send_funds`.
 
@@ -279,35 +285,46 @@ We often collaborate over IRC in #mymonero on Freenode.
 
 There's no need to build monero_utils/MyMoneroCoreCpp as a build is provided, but if you were for example interested in adding a C++ function, you could use the information in this section to transpile it to JS.
 
-## Building New WASM
+### Repository Setup
 
-1. Clone the repo `git clone https://github.com/mymonero/mymonero-core-js.git`
-2. `cd mymonero-core-js`
-3. Run `npm install`
-4. Download Boost libraries
-* `curl -LO https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz` or `wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz` - For Mac, you can verify the integrity of the archive by running `shasum -a 256 boost_1_76_0.tar.gz`. You should see the following hash: `7bd7ddceec1a1dfdcbdb3e609b60d01739c38390a5f956385a12f3122049f0ca`
-5. `mkdir -p contrib/boost-sdk`
-6. `tar zxf boost_1_76_0.tar.gz -C contrib/boost-sdk --strip-components=1`
-7. `rm -rf build && mkdir build`
-8. `rm monero_utils/MyMoneroCoreCpp_*`
+* Execute `bin/update_submodules` 
 
-### Build boost emscripten
-9. `npm run build:boost`
 
-### Build MyMonero emscripten
-10. `npm run build:emscripten`
- * If you get '#error Including <emscripten/bind.h> requires building with -std=c++11 or newer!' error, re-run step 10. 
- 
- By following these instructions, new WASM library are generated and copied to the monero_utils folder
+### Install Emscripten SDK
+
+**A version of emscripten of at least 1.38.13 with [these updates](https://github.com/kripken/emscripten/pull/7096) is required so that random bit generation safety can be ensured.**
+
+Ensure you've [properly installed Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html) and exposed the Emscripten executables in your PATH, e.g.:
+
+	source ./emsdk_env.sh
+
+
+### Boost for Emscripten
+
+*Depends upon:* Emscripten SDK
+
+Download a copy of the contents of the Boost source into `./contrib/boost-sdk/`.
+
+* Execute `bin/build-boost-emscripten.sh`
+
+
+
+### Emscripten Module
+
+*Depends upon:* Repository Setup, Emscripten SDK, Boost for Emscripten
+
+* Execute `bin/build-emcpp.sh`
+
+Or if you want to copy the build products to their distribution locations, 
+
+* Execute `bin/archive-emcpp.sh`
+
+**NOTE** If you want to build for asmjs instead of wasm, edit `CMakeLists.txt` to turn the `MM_EM_ASMJS` option to `ON` before you run either the `build` or `archive` script. Finally, at every place you instantiate a `MyMoneroCoreBridge` instance, ensure that the `asmjs` flag passed as an init argument is set to `true` (If not, loading will not work). 
 
 
 ## Maintainers and Advisors
 
-* 🍕 `Tekkzbadger` ([Devin Pearson](https://github.com/devinpearson)) Lead maintainer; core developer
-
-* 💱 `jkarlos` ([Karl Buys](https://github.com/karlbuys)) Maintainer; core developer
-
-* 💿 `endogenic` ([Paul Shapiro](https://github.com/paulshapiro)) Former core maintainer
+* 💿 `endogenic` ([Paul Shapiro](https://github.com/paulshapiro)) Maintainer
 
 * 🍄 `luigi` Major contiributor of original JS core crypto and Monero-specific routines; Advisor
 

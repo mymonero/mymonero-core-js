@@ -4,6 +4,6 @@
 
 mkdir -p build && 
 cd build && 
-emcmake cmake .. && 
+emconfigure cmake .. && 
 emmake cmake --build . && 
 emmake make .
