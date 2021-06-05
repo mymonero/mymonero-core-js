@@ -84,7 +84,7 @@ module.exports = function(options)
 	return new Promise(function(resolve, reject) {
 		var Module_template = {}
 		if (options.asmjs != true || options.wasm == true) { // wasm
-			console.log("Using wasm: ", true)
+			// console.log("Using wasm: ", true)
 			//
 			Module_template["locateFile"] = locateFile
 			//
@@ -98,7 +98,7 @@ module.exports = function(options)
 				reject(e);
 			});
 		} else { // this is synchronous so we can resolve immediately
-			console.log("Using wasm: ", false)
+			// console.log("Using wasm: ", false)
 			//
 			var scriptDirectory=""; // this was extracted from emscripten - it could get factored if anything else would ever need it
 			if (ENVIRONMENT_IS_NODE) {
