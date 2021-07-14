@@ -30,6 +30,6 @@
 //
 const monero_config = require("./monero_config")
 const money_format_utils = require("../cryptonote_utils/money_format_utils")
-const instance = money_format_utils(monero_config)
+const instance = new money_format_utils(monero_config)
 //
 module.exports = instance;
