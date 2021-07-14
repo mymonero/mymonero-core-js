@@ -284,6 +284,14 @@ string send_step2__try_create_transaction(const string &args_string)
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
+string extract_utxos(const string &args_string)
+{
+    try {
+        return serial_bridge::extract_utxos(args_string);
+    } catch (std::exception &e) {
+        return serial_bridge_utils::error_ret_json_from_message(e.what());
+    }
+}
 //
 EMSCRIPTEN_BINDINGS(my_module)
 { // C++ -> JS
@@ -322,6 +330,8 @@ EMSCRIPTEN_BINDINGS(my_module)
     //
     emscripten::function("send_step1__prepare_params_for_get_decoys", &send_step1__prepare_params_for_get_decoys);
     emscripten::function("send_step2__try_create_transaction", &send_step2__try_create_transaction);
+    //
+    emscripten::function("extract_utxos", &extract_utxos);
 }
 extern "C"
 { // C -> JS
