@@ -72,5 +72,10 @@
       "monero_utils/MyMoneroCoreCpp_WASM.js",
       "tests/emjs/*"
     ]
+  },
+  "standard": {
+    "ignore": [
+      "/monero_utils/MyMoneroCoreCpp_WASM.js"
+    ]
   }
 }
