@@ -4,15 +4,12 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 project(MyMoneroCoreCpp)
 #
-include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
-#
 include_directories("src")
 include_directories("node_modules")
 #
-set(MYMONERO_CORE_CPP "node_modules/@mymonero/mymonero-core-cpp")
 set(MONERO_SRC "node_modules/@mymonero/mymonero-core-custom")
-set(MYMONERO_CORE_CPP_SRC "${MYMONERO_CORE_CPP}/src")
-include_directories("${MYMONERO_CORE_CPP}/src")
+set(MYMONERO_CORE_CPP_SRC "node_modules/@mymonero/mymonero-core-cpp/src")
+include_directories("${MYMONERO_CORE_CPP_SRC}")
 #
 #set(MONERO_SRC "${MYMONERO_CUSTOM_CPP}/contrib/monero-core-custom")
 include_directories(${MONERO_SRC})
@@ -29,9 +26,6 @@ include_directories("${MONERO_SRC}/rpc")
 include_directories("${MONERO_SRC}/mnemonics")
 include_directories("${MONERO_SRC}/contrib/libsodium/include") # support sodium/… paths
 include_directories("${MONERO_SRC}/contrib/libsodium/include/sodium")
-#
-# keeping test files in a separate source directory 
-# file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/test_*.cpp)
 #
 set(
     SRC_FILES
@@ -108,38 +102,14 @@ set(
     ${MONERO_SRC}/contrib/libsodium/src/crypto_verify/verify.c
 )
 
-set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
-
-add_library(boost_chrono STATIC IMPORTED)
-set_target_properties(
-    boost_chrono PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_chrono.a
-)
-add_library(boost_system STATIC IMPORTED)
-set_target_properties(
-    boost_system PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_system.a
-)
 #
-add_library(boost_thread STATIC IMPORTED)
-set_target_properties(
-    boost_thread PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_thread.a
-)
-#
-#
-set (
-    EMCC_LINKER_FLAGS__WASM
-    #unsure if the -I...boost..include is necessary here due to include above
-    #
-    # TODO? does EXPORT_NAME need to be the same for both targets? (or should it be set per-target with …_WASM, …_ASMJS?)
-    "-Wall -std=c++11 \
+set (EMCC_LINKER_FLAGS__WASM
+"-Wall -std=c++11 \
 --bind -s MODULARIZE=1 \
 -s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
---llvm-lto 1 \
+-flto \
 -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 -s ASSERTIONS=2 \
--s EXIT_RUNTIME=0 \
 -s PRECISE_F32=1 \
 -s DISABLE_EXCEPTION_CATCHING=0 \
 -s EXCEPTION_DEBUG=1 \
@@ -150,40 +120,16 @@ set (
 -s WASM=1 \
 -Oz \
 -s ALLOW_MEMORY_GROWTH=1 \
-"
-    # • Disabling exception catching does not introduce silent failures 
-    # • Probably don't need PRECISE_F32 but wouldn't want to not use it
-    #
-    #
-    # -s SAFE_HEAP=1 \
-    # -g \
-)
+--post-js ${CMAKE_CURRENT_LIST_DIR}/src/module-post.js \
+")
 
 message(STATUS "EMCC_LINKER_FLAGS__WASM ${EMCC_LINKER_FLAGS__WASM}")
 #
 add_executable(MyMoneroCoreCpp_WASM ${SRC_FILES})
 #
-set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS__WASM}")
-#
-# set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES SUFFIX ".html")
-#
-# boost_atomic
-# boost_date_time
-# boost_filesystem
-# boost_locale
-# boost_program_options
-# boost_regex
-# boost_serialization
-# boost_signals
-# boost_timer
-# boost_wserialization
+set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES COMPILE_FLAGS "-s USE_BOOST_HEADERS=1" LINK_FLAGS "${EMCC_LINKER_FLAGS__WASM}")
 #
 target_link_libraries(
     MyMoneroCoreCpp_WASM
-    #
-    boost_chrono
-    boost_system
-    boost_thread
-    #
     ${log-lib}
 )
