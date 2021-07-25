@@ -284,7 +284,7 @@ There's no need to build monero_utils/MyMoneroCoreCpp as a build is provided, bu
 1. Clone the repo `git clone https://github.com/mymonero/mymonero-core-js.git`
 2. `cd mymonero-core-js`
 3. Run `npm install`
-4. `rm -rf build && mkdir build`
+4. `rm -rf build`
 5. `rm monero_utils/MyMoneroCoreCpp_*`
 
 ### Build MyMonero emscripten
