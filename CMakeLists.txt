@@ -104,18 +104,13 @@ set(
 
 #
 set (EMCC_LINKER_FLAGS__WASM
-"-Wall -std=c++11 \
---bind -s MODULARIZE=1 \
--s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
+"-Wall \
+-std=c++11 \
 -flto \
--s ERROR_ON_UNDEFINED_SYMBOLS=0 \
--s ASSERTIONS=2 \
--s PRECISE_F32=1 \
--s DISABLE_EXCEPTION_CATCHING=0 \
+--bind \
+-s MODULARIZE=1 \
+-s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
 -s EXCEPTION_DEBUG=1 \
--s DEMANGLE_SUPPORT=1 \
--s NO_DYNAMIC_EXECUTION=1 \
--s NODEJS_CATCH_EXIT=0 \
 -s EXPORTED_RUNTIME_METHODS='[\"UTF8ToString\"]' \
 -s WASM=1 \
 -Oz \
