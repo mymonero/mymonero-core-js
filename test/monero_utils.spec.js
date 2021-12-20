@@ -2,6 +2,8 @@
 const mymonero = require("../");
 const assert = require("assert");
 
+process.setMaxListeners(32);
+
 var public_key =
 	"904e49462268d771cc1649084c35aa1296bfb214880fe2e7f373620a3e2ba597";
 var private_key =
@@ -10,6 +12,7 @@ var private_key =
 var nettype = mymonero.nettype_utils.network_type.MAINNET;
 
 describe("cryptonote_utils tests", function() {
+	this.timeout(16000);
 
 	it("create_address aka address_and_keys_from_seed", async function() {
 		const monero_utils = await require("../monero_utils/MyMoneroCoreBridge")({})
