@@ -279,6 +279,15 @@ We often collaborate over IRC in #mymonero on Freenode.
 
 There's no need to build monero_utils/MyMoneroCoreCpp as a build is provided, but if you were for example interested in adding a C++ function, you could use the information in this section to transpile it to JS.
 
+## Build everything in one go
+
+```bash
+npm ci
+npm run build
+```
+
+If this does not work for you, proceed with the steps below.
+
 ## Building New WASM
 
 1. Clone the repo `git clone https://github.com/mymonero/mymonero-core-js.git`
