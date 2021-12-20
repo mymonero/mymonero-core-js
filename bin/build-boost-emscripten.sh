@@ -59,7 +59,7 @@ HOST_NCORES=$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1
 
 # threading=single \
 ./b2 -q -a -j$HOST_NCORES    \
-  toolset=clang-emscripten   \
+  toolset=emscripten         \
   link=static                \
   optimization=space         \
   variant=release            \
@@ -77,4 +77,9 @@ fi
 # ---
 
 cd "$INSTALL_PATH"
+
+for f in $(find -name '*.bc'); do
+    emar q "${f%.bc}.a" "$f";
+done
+
 ln -s "$SRC_PATH" include
