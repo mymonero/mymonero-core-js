@@ -26,19 +26,19 @@ All source code copyright © 2014-2018 by MyMonero. All rights reserved.
 
 This repository holds the Javascript source code for the Monero/CryptoNote cryptography and protocols, plus lightwallet functions which power the official [MyMonero](https://www.mymonero.com) apps.
 
-There is also a chain of build scripts which is capable of building a JS module by transpiling a subset of Monero source code via emscripten, which relies upon static boost libs, for which there is also a script for building from source. 
+There is also a chain of build scripts which is capable of building a JS module by transpiling a subset of Monero source code via emscripten, which relies upon static boost libs, for which there is also a script for building from source.
 
-It's possible to run your own lightweight (hosted) wallet server by using either OpenMonero or the lightweight wallet server which MyMonero has developed specially to be open-sourced for the Monero community (PR is in the process of being merged). However, MyMonero also offers highly optimized, high throughput, secure hosting for a nominal, scaling fee per active wallet per month to wallet app makers who would like to use this library, mymonero-core-js, to add hosted Monero wallets to their app. 
+It's possible to run your own lightweight (hosted) wallet server by using either OpenMonero or the lightweight wallet server which MyMonero has developed specially to be open-sourced for the Monero community (PR is in the process of being merged). However, MyMonero also offers highly optimized, high throughput, secure hosting for a nominal, scaling fee per active wallet per month to wallet app makers who would like to use this library, mymonero-core-js, to add hosted Monero wallets to their app.
 
 The benefit of offering a hosted wallet rather than requiring users to use a remote node is that scanning doesn't have to take place on the mobile device, so the user doesn't have to download the blockchain and scan on their device, or wait when they switch to a new device or come back to the app after a period of time. For more information, please reach out to Devin at [support@mymonero.com](support@mymonero.com). We work hard to support the growth of the Monero ecosystem, and will be happy to work with integrators on flexible pricing.
 
-### Contents 
+### Contents
 
-`monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations, and the MyMonero JS and wasm (and asm.js fallback/polyfill) implementations for the underlying cryptography behind Monero. 
+`monero_utils` contains Monero- and MyMonero-specific implementations, wrappers, and declarations, and the MyMonero JS and wasm (and asm.js fallback/polyfill) implementations for the underlying cryptography behind Monero.
 
 `monero_utils/MyMoneroCoreCpp*` are produced by transpiling Monero core C++ code to JS via Emscripten (See *Building MyMoneroCoreCpp*). A Module instance is managed by `monero_utils/MyMoneroCoreBridge.js`.
 
-Library integrators may use `MyMoneroCoreBridge` by `require("./monero_utils/MyMoneroCoreBridge")({}).then(function(coreBridge_instance) { })`. (This was formerly accessed via the now-deprecated `monero_utils/monero_utils`). You may also access this MyMoneroCoreBridge promise via the existing `index.js` property `monero_utils_promise` (the name has been kept the same for API stability). 
+Library integrators may use `MyMoneroCoreBridge` by `require("./monero_utils/MyMoneroCoreBridge")({}).then(function(coreBridge_instance) { })`. (This was formerly accessed via the now-deprecated `monero_utils/monero_utils`). You may also access this MyMoneroCoreBridge promise via the existing `index.js` property `monero_utils_promise` (the name has been kept the same for API stability).
 
 Many related utility functions and data structures are located throughout `monero_utils/`, `cryptonote_utils`, and `hostAPI`. Usage below.
 
@@ -51,7 +51,7 @@ This readme is located at `README.md`, and the license is located at `LICENSE.tx
 
 If you would like to package this library to run in a standalone manner within, e.g. a webpage, similarly to how the old mymonero.com used this library, a script is provided to bundle everything for you. It's located at `bin/package_browser_js`. If you package the library in this manner, the resulting `mymonero-core.js` file can be included via a script tag. The index.js of the library will then be available as the global variable `mymonero_core_js`.
 
-Alternatively you can bundle the contents in any other manner you prefer, including directly accessing them via your favorite module system. 
+Alternatively you can bundle the contents in any other manner you prefer, including directly accessing them via your favorite module system.
 
 
 ### `hostAPI`
@@ -67,7 +67,7 @@ const endpointPath = "get_address_info"
 const parameters = net_service_utils.New_ParametersForWalletRequest(address, view_key__private)
 ```
 
-```	
+```
 monero_utils_promise.then(function(monero_utils) {
 	response_parser_utils.Parsed_AddressTransactions__keyImageManaged(
 		data,
@@ -122,7 +122,7 @@ Functions: `formatMoneyFull`, `formatMoneyFullSymbol`, `formatMoney`, `formatMon
 -----
 ### `monero_utils/monero_txParsing_utils`
 
-Use these functions to derive additional state from transaction rows which were returned by a server and then parsed by `hostAPI`. 
+Use these functions to derive additional state from transaction rows which were returned by a server and then parsed by `hostAPI`.
 
 * `IsTransactionConfirmed(tx, blockchain_height)`
 * `IsTransactionUnlocked(tx, blockchain_height)`
@@ -293,20 +293,16 @@ If this does not work for you, proceed with the steps below.
 1. Clone the repo `git clone https://github.com/mymonero/mymonero-core-js.git`
 2. `cd mymonero-core-js`
 3. Run `npm install`
-4. Download Boost libraries
-* `curl -LO https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz` or `wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz` - For Mac, you can verify the integrity of the archive by running `shasum -a 256 boost_1_76_0.tar.gz`. You should see the following hash: `7bd7ddceec1a1dfdcbdb3e609b60d01739c38390a5f956385a12f3122049f0ca`
-5. `mkdir -p contrib/boost-sdk`
-6. `tar zxf boost_1_76_0.tar.gz -C contrib/boost-sdk --strip-components=1`
-7. `rm -rf build && mkdir build`
-8. `rm monero_utils/MyMoneroCoreCpp_*`
+4. `rm -rf build && mkdir build`
+5. `rm monero_utils/MyMoneroCoreCpp_*`
 
 ### Build boost emscripten
-9. `npm run build:boost`
+6. `npm run build:boost`
 
 ### Build MyMonero emscripten
-10. `npm run build:emscripten`
- * If you get '#error Including <emscripten/bind.h> requires building with -std=c++11 or newer!' error, re-run step 10. 
- 
+7. `npm run build:emscripten`
+ * If you get '#error Including <emscripten/bind.h> requires building with -std=c++11 or newer!' error, re-run step 7.
+
  By following these instructions, new WASM library are generated and copied to the monero_utils folder
 
 
@@ -327,7 +323,7 @@ If this does not work for you, proceed with the steps below.
 
 * luigi1111
 
-* Lucas Jones     
+* Lucas Jones
 
 * gutenye
 

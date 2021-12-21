@@ -1,7 +1,5 @@
 #!/bin/sh -xe
 
-docker build . -t emsdk-for-mymonero-core-js
-
 docker \
     run \
     --rm \
@@ -9,5 +7,5 @@ docker \
     -v $(pwd):/app \
     -w /app \
     -e EMSCRIPTEN=/emsdk/upstream/emscripten \
-    emsdk-for-mymonero-core-js \
+    emscripten/emsdk:3.0.1 \
     ./bin/build-all.sh
