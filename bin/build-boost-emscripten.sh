@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -xe
 
 PLATFORM="emscripten"
 
@@ -46,16 +46,16 @@ if [ $? != 0 ]; then
   exit 1
 fi
 
-cat "$JAM_CONFIG_PATH" >> project-config.jam
+if [ -f "$JAM_CONFIG_PATH" ]; then
+    cat "$JAM_CONFIG_PATH" >> project-config.jam
+fi
 
 # ---
 # Clean 
 rm -rf "$INSTALL_PATH"
 mkdir "$INSTALL_PATH"
 
-
-HOST_NCORES=$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
-
+HOST_NCORES=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
 
 # threading=single \
 ./b2 -q -a -j$HOST_NCORES    \
