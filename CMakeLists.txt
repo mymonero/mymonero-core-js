@@ -4,8 +4,6 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 project(MyMoneroCoreCpp)
 #
-include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
-#
 include_directories("src")
 include_directories("node_modules")
 #
@@ -30,7 +28,7 @@ include_directories("${MONERO_SRC}/mnemonics")
 include_directories("${MONERO_SRC}/contrib/libsodium/include") # support sodium/… paths
 include_directories("${MONERO_SRC}/contrib/libsodium/include/sodium")
 #
-# keeping test files in a separate source directory 
+# keeping test files in a separate source directory
 # file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/test_*.cpp)
 #
 set(
@@ -108,29 +106,10 @@ set(
     ${MONERO_SRC}/contrib/libsodium/src/crypto_verify/verify.c
 )
 
-set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
-
-add_library(boost_chrono STATIC IMPORTED)
-set_target_properties(
-    boost_chrono PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_chrono.a
-)
-add_library(boost_system STATIC IMPORTED)
-set_target_properties(
-    boost_system PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_system.a
-)
-#
-add_library(boost_thread STATIC IMPORTED)
-set_target_properties(
-    boost_thread PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_thread.a
-)
 #
 #
 set (
     EMCC_LINKER_FLAGS__WASM
-    #unsure if the -I...boost..include is necessary here due to include above
     #
     # TODO? does EXPORT_NAME need to be the same for both targets? (or should it be set per-target with …_WASM, …_ASMJS?)
     "-Wall -std=c++11 \
@@ -151,7 +130,7 @@ set (
 -Oz \
 -s ALLOW_MEMORY_GROWTH=1 \
 "
-    # • Disabling exception catching does not introduce silent failures 
+    # • Disabling exception catching does not introduce silent failures
     # • Probably don't need PRECISE_F32 but wouldn't want to not use it
     #
     #
@@ -167,23 +146,8 @@ set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES LINK_FLAGS "${EMCC_LINKER_
 #
 # set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES SUFFIX ".html")
 #
-# boost_atomic
-# boost_date_time
-# boost_filesystem
-# boost_locale
-# boost_program_options
-# boost_regex
-# boost_serialization
-# boost_signals
-# boost_timer
-# boost_wserialization
-#
 target_link_libraries(
     MyMoneroCoreCpp_WASM
-    #
-    boost_chrono
-    boost_system
-    boost_thread
     #
     ${log-lib}
 )
