@@ -40,13 +40,7 @@ class MyMoneroCoreBridgeEssentialsClass
 			address: addr,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.is_subaddress(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg;
-		}
-		return MyMoneroBridge_utils.ret_val_boolstring_to_bool(ret.retVal);
+		return this.Module.is_subaddress(args.addr, args.nettype_string);
 	}
 
 	is_integrated_address(addr, nettype) {
@@ -55,24 +49,11 @@ class MyMoneroCoreBridgeEssentialsClass
 			address: addr,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.is_integrated_address(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg;
-		}
-		return MyMoneroBridge_utils.ret_val_boolstring_to_bool(ret.retVal);
+		return this.Module.is_integrated_address(args.addr, args.nettype_string);
 	}
 
 	new_payment_id() {
-		const args = {};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.new_payment_id(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg;
-		}
-		return ret.retVal;
+		return this.Module.new_payment_id();
 	}
 
 	new__int_addr_from_addr_and_short_pid(address, short_pid, nettype) {
@@ -85,13 +66,7 @@ class MyMoneroCoreBridgeEssentialsClass
 			short_pid: short_pid,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.new_integrated_address(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg;
-		}
-		return ret.retVal;
+		return this.Module.new_integrated_address(args.address, args.short_pid, args.nettype_string);
 	}
 
 	decode_address(address, nettype)
@@ -101,16 +76,15 @@ class MyMoneroCoreBridgeEssentialsClass
 			address: address,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.decode_address(args_str);
+		const ret_string  = this.Module.decode_address(args.address, args.nettype_string);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg;
 		}
 		return {
-			spend: ret.pub_spendKey_string,
-			view: ret.pub_viewKey_string,
-			intPaymentId: ret.paymentID_string, // may be undefined
+			spend: ret.publicSpendKey,
+			view: ret.publicViewKey,
+			intPaymentId: ret.paymentId, // may be undefined
 			isSubaddress: MyMoneroBridge_utils.ret_val_boolstring_to_bool(ret.isSubaddress)
 		}
 	}
@@ -124,21 +98,20 @@ class MyMoneroCoreBridgeEssentialsClass
 			locale_language_code: locale_language_code, // NOTE: this function takes the locale, not the wordset name
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.newly_created_wallet(args_str);
+		const ret_string = this.Module.newly_created_wallet(args.locale_language_code, args.nettype_string);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
-			mnemonic_string: ret.mnemonic_string,
-			mnemonic_language: ret.mnemonic_language,
-			sec_seed_string: ret.sec_seed_string,
-			address_string: ret.address_string,
-			pub_viewKey_string: ret.pub_viewKey_string,
-			sec_viewKey_string: ret.sec_viewKey_string,
-			pub_spendKey_string: ret.pub_spendKey_string,
-			sec_spendKey_string: ret.sec_spendKey_string
+			mnemonic_string: ret.mnemonic,
+			mnemonic_language: ret.mnemonicLanguage,
+			sec_seed_string: ret.seed,
+			address_string: ret.address,
+			pub_viewKey_string: ret.publicViewKey,
+			sec_viewKey_string: ret.privateViewKey,
+			pub_spendKey_string: ret.publicSpendKey,
+			sec_spendKey_string: ret.privateSpendKey
 		};
 	}
 
@@ -148,13 +121,7 @@ class MyMoneroCoreBridgeEssentialsClass
 			a: a,
 			b: b
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.are_equal_mnemonics(args_str);
-		const ret = JSON.parse(ret_string);
-		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
-			throw ret.err_msg
-		}
-		return MyMoneroBridge_utils.ret_val_boolstring_to_bool(ret.retVal);
+		return this.Module.are_equal_mnemonics(args.a, args.b);
 	}
 
 	mnemonic_from_seed(
@@ -166,8 +133,7 @@ class MyMoneroCoreBridgeEssentialsClass
 			seed_string: seed_string,
 			wordset_name: MyMoneroBridge_utils.api_safe_wordset_name(wordset_name)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.mnemonic_from_seed(args_str);
+		const ret_string = this.Module.mnemonic_from_seed(args.seed_string, args.wordset_name);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg // TODO: maybe return this somehow
@@ -184,20 +150,19 @@ class MyMoneroCoreBridgeEssentialsClass
 			mnemonic_string: mnemonic_string,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.seed_and_keys_from_mnemonic(args_str);
+		const ret_string = this.Module.seed_and_keys_from_mnemonic(args.mnemonic_string, args.nettype_string);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
-			sec_seed_string: ret.sec_seed_string,
-			mnemonic_language: ret.mnemonic_language,
-			address_string: ret.address_string,
-			pub_viewKey_string: ret.pub_viewKey_string,
-			sec_viewKey_string: ret.sec_viewKey_string,
-			pub_spendKey_string: ret.pub_spendKey_string,
-			sec_spendKey_string: ret.sec_spendKey_string
+			sec_seed_string: ret.sec_seed,
+			mnemonic_language: ret.mnemonicLanguage,
+			address_string: ret.address,
+			pub_viewKey_string: ret.publicViewKey,
+			sec_viewKey_string: ret.privateViewKey,
+			pub_spendKey_string: ret.publicSpendKey,
+			sec_spendKey_string: ret.privateSpendKey
 		};
 	}
 
@@ -216,17 +181,16 @@ class MyMoneroCoreBridgeEssentialsClass
 			seed_string: seed_string,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.validate_components_for_login(args_str);
+		const ret_string = this.Module.validate_components_for_login(args.address_string, args.sec_viewKey_string, args.sec_spendKey_string, args.seed_string, args.nettype_string);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
 			isValid: MyMoneroBridge_utils.ret_val_boolstring_to_bool(ret.isValid),
-			isInViewOnlyMode: MyMoneroBridge_utils.ret_val_boolstring_to_bool(ret.isInViewOnlyMode),
-			pub_viewKey_string: ret.pub_viewKey_string,
-			pub_spendKey_string: ret.pub_spendKey_string
+			isInViewOnlyMode: MyMoneroBridge_utils.ret_val_boolstring_to_bool(ret.isViewOnly),
+			pub_viewKey_string: ret.publicViewKey,
+			pub_spendKey_string: ret.publicSpendKey
 		};
 	}
 
@@ -239,18 +203,17 @@ class MyMoneroCoreBridgeEssentialsClass
 			seed_string: seed_string,
 			nettype_string: nettype_utils.nettype_to_API_string(nettype)
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.address_and_keys_from_seed(args_str);
+		const ret_string = this.Module.address_and_keys_from_seed(args.seed_string, args.nettype_string);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg
 		}
 		return { // calling these out so as to provide a stable ret val interface
-			address_string: ret.address_string,
-			pub_viewKey_string: ret.pub_viewKey_string,
-			sec_viewKey_string: ret.sec_viewKey_string,
-			pub_spendKey_string: ret.pub_spendKey_string,
-			sec_spendKey_string: ret.sec_spendKey_string
+			address_string: ret.address,
+			pub_viewKey_string: ret.publicViewKey,
+			sec_viewKey_string: ret.privateViewKey,
+			pub_spendKey_string: ret.publicSpendKey,
+			sec_spendKey_string: ret.privateSpendKey
 		};
 	}
 
@@ -284,8 +247,7 @@ class MyMoneroCoreBridgeEssentialsClass
 			tx_pub_key: tx_pub,
 			out_index: "" + output_index
 		};
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.generate_key_image(args_str);
+		const ret_string = this.Module.generate_key_image(args.tx_pub_key, args.sec_viewKey_string, args.pub_spendKey_string, args.sec_spendKey_string, args.out_index);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg;
@@ -304,10 +266,11 @@ class MyMoneroCoreBridgeEssentialsClass
 		if (typeof optl__fork_version !== 'undefined' && optl__fork_version !== null) {
 			args.fork_version = "" + optl__fork_version
 		} else {
-			// it will default to 0 which means use the latest fork rules
+			// default to 0 which means use the latest fork rules
+			args.fork_version = "0"
+			
 		}
-		const args_str = JSON.stringify(args);
-		const ret_string = this.Module.estimated_tx_network_fee(args_str);
+		const ret_string = this.Module.estimated_tx_network_fee(args.priority, args.fee_per_b, args.fork_version);
 		const ret = JSON.parse(ret_string);
 		if (typeof ret.err_msg !== 'undefined' && ret.err_msg) {
 			throw ret.err_msg; // TODO: maybe return this somehow

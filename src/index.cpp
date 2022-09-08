@@ -84,194 +84,98 @@ string send_step2__try_create_transaction(const string &args_string)
     }
 }
 //
-string decode_address(const string &args_string)
+string decode_address(const string address, const string nettype)
 {
     try {
-        return serial_bridge::decode_address(args_string);
+        return serial_bridge::decode_address(address, nettype;
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
-string is_subaddress(const string &args_string)
+bool is_subaddress(const string address, const string nettype)
+{
+    return serial_bridge::is_subaddress(address, nettype);
+}
+bool is_integrated_address(const string address, const string nettype)
+{
+    return serial_bridge::is_integrated_address(address, nettype);
+}
+//
+string new_integrated_address(const string address, const string paymentId, const string nettype)
 {
     try {
-        return serial_bridge::is_subaddress(args_string);
+        return serial_bridge::new_integrated_address(address, paymentId, nettype);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
-string is_integrated_address(const string &args_string)
+string new_payment_id()
 {
     try {
-        return serial_bridge::is_integrated_address(args_string);
+        return serial_bridge::new_payment_id();
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
 //
-string new_integrated_address(const string &args_string)
+string newly_created_wallet(const string localeLanguageCode, const string nettype)
 {
     try {
-        return serial_bridge::new_integrated_address(args_string);
+        return serial_bridge::newly_created_wallet(localeLanguageCode, nettype);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
-string new_payment_id(const string &args_string)
+bool are_equal_mnemonics(const string mnemonicA, const string mnemonicB)
+{
+	return serial_bridge::are_equal_mnemonics(mnemnoicA, mnemonicB);
+}
+string address_and_keys_from_seed(const string seed, const string nettype)
 {
     try {
-        return serial_bridge::new_payment_id(args_string);
+        return serial_bridge::address_and_keys_from_seed(seed, nettype);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
-//
-string newly_created_wallet(const string &args_string)
+string mnemonic_from_seed(const string seed, const string wordsetName)
 {
     try {
-        return serial_bridge::newly_created_wallet(args_string);
+        return serial_bridge::mnemonic_from_seed(seed, wordsetName);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
-string are_equal_mnemonics(const string &args_string)
+string seed_and_keys_from_mnemonic(const string seed, const string wordsetName)
 {
     try {
-        return serial_bridge::are_equal_mnemonics(args_string);
+        return serial_bridge::seed_and_keys_from_mnemonic(seed, wordsetName);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
-string address_and_keys_from_seed(const string &args_string)
+string validate_components_for_login(const string address, const string privateViewKey, const string privateSpendKey, const string seed, const string nettype)
 {
     try {
-        return serial_bridge::address_and_keys_from_seed(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string mnemonic_from_seed(const string &args_string)
-{
-    try {
-        return serial_bridge::mnemonic_from_seed(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string seed_and_keys_from_mnemonic(const string &args_string)
-{
-    try {
-        return serial_bridge::seed_and_keys_from_mnemonic(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string validate_components_for_login(const string &args_string)
-{
-    try {
-        return serial_bridge::validate_components_for_login(args_string);
+        return serial_bridge::validate_components_for_login(address, privateViewKey, privateSpendKey, seed, nettype);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
 //
-string estimated_tx_network_fee(const string &args_string)
+string estimated_tx_network_fee(const string priority, const string feePerb, const string forkVersion)
 {
     try {
-        return serial_bridge::estimated_tx_network_fee(args_string);
+        return serial_bridge::estimated_tx_network_fee(priority, feePerb, forkVersion);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
 }
 //
-string estimate_fee(const string &args_string)
+string generate_key_image(const string txPublicKey, const string privateViewKey, const string publicSpendKey, const string privateSpendKey, const string outputIndex)
 {
     try {
-        return serial_bridge::estimate_fee(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-//
-string estimate_tx_weight(const string &args_string)
-{
-    try {
-        return serial_bridge::estimate_tx_weight(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-//
-string estimate_rct_tx_size(const string &args_string)
-{
-    try {
-        return serial_bridge::estimate_rct_tx_size(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-//
-string generate_key_image(const string &args_string)
-{
-    try {
-        return serial_bridge::generate_key_image(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-//
-string generate_key_derivation(const string &args_string)
-{
-    try {
-        return serial_bridge::generate_key_derivation(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string derive_public_key(const string &args_string)
-{
-    try {
-        return serial_bridge::derive_public_key(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string derive_subaddress_public_key(const string &args_string)
-{
-    try {
-        return serial_bridge::derive_subaddress_public_key(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string derivation_to_scalar(const string &args_string)
-{
-    try {
-        return serial_bridge::derivation_to_scalar(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string decodeRct(const string &args_string)
-{
-    try {
-        return serial_bridge::decodeRct(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string decodeRctSimple(const string &args_string)
-{
-    try {
-        return serial_bridge::decodeRctSimple(args_string);
-    } catch (std::exception &e) {
-        return serial_bridge_utils::error_ret_json_from_message(e.what());
-    }
-}
-string encrypt_payment_id(const string &args_string)
-{
-    try {
-        return serial_bridge::encrypt_payment_id(args_string);
+        return serial_bridge::generate_key_image(txPublicKey, privateViewKey, publicSpendKey, privateSpendKye, outputIndex);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
@@ -300,18 +204,8 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("address_and_keys_from_seed", &address_and_keys_from_seed);
     //
     emscripten::function("estimated_tx_network_fee", &estimated_tx_network_fee);
-    emscripten::function("estimate_fee", &estimate_fee);
-    emscripten::function("estimate_tx_weight", &estimate_tx_weight);
-    emscripten::function("estimate_rct_tx_size", &estimate_rct_tx_size);
     //
     emscripten::function("generate_key_image", &generate_key_image);
-    emscripten::function("generate_key_derivation", &generate_key_derivation);
-    emscripten::function("derive_public_key", &derive_public_key);
-    emscripten::function("derive_subaddress_public_key", &derive_subaddress_public_key);
-    emscripten::function("decodeRct", &decodeRct);
-    emscripten::function("decodeRctSimple", &decodeRctSimple);
-    emscripten::function("derivation_to_scalar", &derivation_to_scalar);
-    emscripten::function("encrypt_payment_id", &encrypt_payment_id);
 }
 extern "C"
 { // C -> JS
