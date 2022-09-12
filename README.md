@@ -221,36 +221,9 @@ address_and_keys_from_seed
 ```
 generate_key_image
 ```
-```
-generate_key_derivation
-```
-```
-derivation_to_scalar
-```
-```
-derive_public_key
-```
-```
-derive_subaddress_public_key
-```
-```
-decodeRct
-```
-```
-decodeRctSimple
-```
 
 ```
-estimate_fee
-```
-```
 estimated_tx_network_fee
-```
-```
-estimate_tx_weight
-```
-```
-estimate_rct_tx_size
 ```
 
 ```
