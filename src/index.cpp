@@ -87,7 +87,7 @@ string send_step2__try_create_transaction(const string &args_string)
 string decode_address(const string address, const string nettype)
 {
     try {
-        return serial_bridge::decode_address(address, nettype;
+        return serial_bridge::decode_address(address, nettype);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }
@@ -128,7 +128,7 @@ string newly_created_wallet(const string localeLanguageCode, const string nettyp
 }
 bool are_equal_mnemonics(const string mnemonicA, const string mnemonicB)
 {
-	return serial_bridge::are_equal_mnemonics(mnemnoicA, mnemonicB);
+	return serial_bridge::are_equal_mnemonics(mnemonicA, mnemonicB);
 }
 string address_and_keys_from_seed(const string seed, const string nettype)
 {
@@ -175,7 +175,7 @@ string estimated_tx_network_fee(const string priority, const string feePerb, con
 string generate_key_image(const string txPublicKey, const string privateViewKey, const string publicSpendKey, const string privateSpendKey, const string outputIndex)
 {
     try {
-        return serial_bridge::generate_key_image(txPublicKey, privateViewKey, publicSpendKey, privateSpendKye, outputIndex);
+        return serial_bridge::generate_key_image(txPublicKey, privateViewKey, publicSpendKey, privateSpendKey, outputIndex);
     } catch (std::exception &e) {
         return serial_bridge_utils::error_ret_json_from_message(e.what());
     }

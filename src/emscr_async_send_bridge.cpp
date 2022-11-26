@@ -73,7 +73,7 @@ struct Send_Task_AsyncContext
 	string sec_spendKey_string;
 	string to_address_string;
 	optional<string> payment_id_string;
-	uint64_t sending_amount;
+	vector<uint64_t> sending_amounts;
 	bool is_sweeping;
 	uint32_t simple_priority;
 	uint64_t unlock_time;
@@ -249,6 +249,7 @@ void emscr_async_bridge::send_funds(const string &args_string)
 	auto nettype = nettype_from_string(json_root.get<string>("nettype_string")); 
 	//
 	uint64_t sending_amount = is_sweeping ? 0 : _raw_sending_amount;
+	vector<uint64_t> sending_amounts = {sending_amount};
 	crypto::secret_key sec_viewKey{};
 	crypto::secret_key sec_spendKey{};
 	crypto::public_key pub_spendKey{};
@@ -280,7 +281,7 @@ void emscr_async_bridge::send_funds(const string &args_string)
 		sec_spendKey_string,
 		json_root.get<string>("to_address_string"),
 		json_root.get_optional<string>("payment_id_string"),
-		sending_amount,
+		sending_amounts,
 		is_sweeping,
 		(uint32_t)stoul(json_root.get<string>("priority")),
 		unlock_time,
@@ -402,7 +403,7 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 		step1_retVals,
 		//
 		ptrTo_taskAsyncContext->payment_id_string,
-		ptrTo_taskAsyncContext->sending_amount,
+		ptrTo_taskAsyncContext->sending_amounts,
 		ptrTo_taskAsyncContext->is_sweeping,
 		ptrTo_taskAsyncContext->simple_priority,
 		ptrTo_taskAsyncContext->use_fork_rules,
@@ -429,7 +430,7 @@ void emscr_async_bridge::_reenterable_construct_and_send_tx(const string &task_i
 	//
 	send_app_handler__status_update(task_id, fetchingDecoyOutputs);
 	//
-	auto req_params = new__req_params__get_random_outs(ptrTo_taskAsyncContext->step1_retVals__using_outs); // use the one on the heap, since we've moved the one from step1_retVals
+	auto req_params = new__req_params__get_random_outs(ptrTo_taskAsyncContext->step1_retVals__using_outs, boost::none); // use the one on the heap, since we've moved the one from step1_retVals
 	boost::property_tree::ptree req_params_root;
 	boost::property_tree::ptree amounts_ptree;
 	BOOST_FOREACH(const string &amount_string, req_params.amounts)
@@ -490,9 +491,9 @@ void emscr_async_bridge::send_cb_II__got_random_outs(const string &args_string)
 		ptrTo_taskAsyncContext->from_address_string,
 		ptrTo_taskAsyncContext->sec_viewKey_string,
 		ptrTo_taskAsyncContext->sec_spendKey_string,
-		ptrTo_taskAsyncContext->to_address_string,
+		{ptrTo_taskAsyncContext->to_address_string},
 		ptrTo_taskAsyncContext->payment_id_string,
-		*(ptrTo_taskAsyncContext->step1_retVals__final_total_wo_fee),
+		ptrTo_taskAsyncContext->sending_amounts,
 		*(ptrTo_taskAsyncContext->step1_retVals__change_amount),
 		*(ptrTo_taskAsyncContext->step1_retVals__using_fee),
 		ptrTo_taskAsyncContext->simple_priority,

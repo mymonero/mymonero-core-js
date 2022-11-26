@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.4.1)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-enum-constexpr-conversion")
+add_compile_definitions(MYMONERO_CORE_CUSTOM)
 
 project(MyMoneroCoreCpp)
 #
-include_directories("build/boost/include") # must exist already - run bin/build-boost-emscripten.sh
 #
 include_directories("src")
 include_directories("node_modules")
@@ -63,9 +63,13 @@ set(
     ${MYMONERO_CORE_CPP_SRC}/tools__ret_vals.hpp
     ${MYMONERO_CORE_CPP_SRC}/tools__ret_vals.cpp
     #
+    ${MONERO_SRC}/cryptonote_basic/cryptonote_basic.h
+    ${MONERO_SRC}/cryptonote_basic/cryptonote_basic_impl.h
     ${MONERO_SRC}/cryptonote_basic/cryptonote_basic_impl.cpp
-    ${MONERO_SRC}/cryptonote_basic/account.cpp
     ${MONERO_SRC}/cryptonote_basic/cryptonote_format_utils.cpp
+    ${MONERO_SRC}/cryptonote_basic/cryptonote_format_utils_basic.cpp
+    ${MONERO_SRC}/cryptonote_basic/cryptonote_format_utils.h
+    ${MONERO_SRC}/cryptonote_basic/account.cpp
     ${MONERO_SRC}/crypto/crypto.cpp
     ${MONERO_SRC}/crypto/hash.c
     ${MONERO_SRC}/crypto/slow-hash-dummied.cpp
@@ -102,68 +106,41 @@ set(
     ${MONERO_SRC}/ringct/rctCryptoOps.c
     ${MONERO_SRC}/ringct/rctSigs.cpp
     ${MONERO_SRC}/ringct/bulletproofs.cc
+    ${MONERO_SRC}/ringct/bulletproofs_plus.cc
     ${MONERO_SRC}/ringct/multiexp.cc
     ${MONERO_SRC}/mnemonics/electrum-words.cpp
     ${MONERO_SRC}/vtlogger/logger.cpp
     ${MONERO_SRC}/contrib/libsodium/src/crypto_verify/verify.c
 )
 
-set(boost_DIR ${CMAKE_SOURCE_DIR}/build/boost)
-
-add_library(boost_chrono STATIC IMPORTED)
-set_target_properties(
-    boost_chrono PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_chrono.a
-)
-add_library(boost_system STATIC IMPORTED)
-set_target_properties(
-    boost_system PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_system.a
-)
-#
-add_library(boost_thread STATIC IMPORTED)
-set_target_properties(
-    boost_thread PROPERTIES IMPORTED_LOCATION
-    ${boost_DIR}/lib/libboost_thread.a
-)
-#
-#
-set (
-    EMCC_LINKER_FLAGS__WASM
-    #unsure if the -I...boost..include is necessary here due to include above
-    #
-    # TODO? does EXPORT_NAME need to be the same for both targets? (or should it be set per-target with …_WASM, …_ASMJS?)
-    "-Wall -std=c++11 \
---bind -s MODULARIZE=1 \
--s 'EXPORT_NAME=\"MyMoneroCoreCpp\"' \
---llvm-lto 1 \
--s ERROR_ON_UNDEFINED_SYMBOLS=0 \
--s ASSERTIONS=2 \
--s EXIT_RUNTIME=0 \
--s PRECISE_F32=1 \
--s DISABLE_EXCEPTION_CATCHING=0 \
--s EXCEPTION_DEBUG=1 \
--s DEMANGLE_SUPPORT=1 \
--s NO_DYNAMIC_EXECUTION=1 \
--s NODEJS_CATCH_EXIT=0 \
--s EXPORTED_RUNTIME_METHODS='[\"UTF8ToString\"]' \
+set (EMCC_LINKER_FLAGS__WASM
+"-Wall \
+-gsource-map \
+-std=c++11 \
+-flto \
+--bind \
+-s STRICT=1 \
+-s MODULARIZE=1 \
+-s 'EXPORT_NAME=\"MyMoneroClient\"' \
 -s WASM=1 \
--Oz \
+-s ASSERTIONS=2 \
+-s DEMANGLE_SUPPORT=1 \
 -s ALLOW_MEMORY_GROWTH=1 \
-"
-    # • Disabling exception catching does not introduce silent failures 
-    # • Probably don't need PRECISE_F32 but wouldn't want to not use it
-    #
-    #
-    # -s SAFE_HEAP=1 \
-    # -g \
-)
+-s NO_DISABLE_EXCEPTION_CATCHING \
+-s NODEJS_CATCH_EXIT=1 \
+-s NODEJS_CATCH_REJECTION=0 \
+-s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+-s EXPORTED_RUNTIME_METHODS='[\"UTF8ToString\",\"stringToUTF8\"]' \
+-O3 \
+--source-map-base ${CMAKE_CURRENT_LIST_DIR}/sourcemap \
+--memory-init-file 1 \
+")  
 
 message(STATUS "EMCC_LINKER_FLAGS__WASM ${EMCC_LINKER_FLAGS__WASM}")
 #
 add_executable(MyMoneroCoreCpp_WASM ${SRC_FILES})
 #
-set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES LINK_FLAGS "${EMCC_LINKER_FLAGS__WASM}")
+set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES COMPILE_FLAGS "-s USE_BOOST_HEADERS=1" LINK_FLAGS "${EMCC_LINKER_FLAGS__WASM}")
 #
 # set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES SUFFIX ".html")
 #
@@ -178,12 +155,3 @@ set_target_properties(MyMoneroCoreCpp_WASM PROPERTIES LINK_FLAGS "${EMCC_LINKER_
 # boost_timer
 # boost_wserialization
 #
-target_link_libraries(
-    MyMoneroCoreCpp_WASM
-    #
-    boost_chrono
-    boost_system
-    boost_thread
-    #
-    ${log-lib}
-)
